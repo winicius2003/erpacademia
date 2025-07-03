@@ -15,6 +15,7 @@ import {
   ChevronDown,
   Globe,
 } from "lucide-react"
+import { usePathname } from 'next/navigation'
 
 import {
   SidebarProvider,
@@ -41,11 +42,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Logo } from "@/components/logo"
 
 const navItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/dashboard/members", icon: Users, label: "Members" },
-  { href: "/dashboard/workouts", icon: Dumbbell, label: "Workouts" },
-  { href: "/dashboard/access-control", icon: ShieldCheck, label: "Access Control" },
-  { href: "/dashboard/profile", icon: Settings, label: "Profile" },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Painel" },
+  { href: "/dashboard/members", icon: Users, label: "Membros" },
+  { href: "/dashboard/workouts", icon: Dumbbell, label: "Treinos" },
+  { href: "/dashboard/access-control", icon: ShieldCheck, label: "Controle de Acesso" },
+  { href: "/dashboard/profile", icon: Settings, label: "Perfil" },
 ]
 
 export default function DashboardLayout({
@@ -53,7 +54,8 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const [active, setActive] = React.useState("/dashboard")
+  const pathname = usePathname()
+  const activeItem = navItems.find(item => pathname.startsWith(item.href))
 
   return (
     <SidebarProvider>
@@ -71,8 +73,7 @@ export default function DashboardLayout({
                 <SidebarMenuItem key={item.href}>
                   <Link href={item.href} legacyBehavior passHref>
                     <SidebarMenuButton
-                      onClick={() => setActive(item.href)}
-                      isActive={active === item.href}
+                      isActive={pathname.startsWith(item.href)}
                       tooltip={item.label}
                     >
                       <item.icon />
@@ -88,12 +89,12 @@ export default function DashboardLayout({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="justify-start gap-2 w-full px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                   <Globe className="h-4 w-4" />
-                  <span className="truncate">Main Gym Location</span>
+                  <span className="truncate">Academia Principal</span>
                   <ChevronDown className="ml-auto h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel>Switch Gym</DropdownMenuLabel>
+                <DropdownMenuLabel>Trocar Academia</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Downtown Fitness</DropdownMenuItem>
                 <DropdownMenuItem>Uptown Strength</DropdownMenuItem>
@@ -106,7 +107,7 @@ export default function DashboardLayout({
             <SidebarTrigger className="md:hidden" />
             <div className="w-full flex-1">
               <h1 className="text-lg font-headline hidden md:block">
-                {navItems.find(item => item.href === active)?.label}
+                {activeItem?.label}
               </h1>
             </div>
             <DropdownMenu>
@@ -120,25 +121,25 @@ export default function DashboardLayout({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Admin Account</DropdownMenuLabel>
+                <DropdownMenuLabel>Conta de Administrador</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
+                  <span>Perfil</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <CreditCard className="mr-2 h-4 w-4" />
-                  <span>Billing</span>
+                  <span>Faturamento</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
+                  <span>Configurações</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <Link href="/" passHref>
                   <DropdownMenuItem>
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
+                    <span>Sair</span>
                   </DropdownMenuItem>
                 </Link>
               </DropdownMenuContent>

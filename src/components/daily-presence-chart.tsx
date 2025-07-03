@@ -7,13 +7,13 @@ import {
 } from "@/components/ui/chart"
 
 const chartData = [
-    { day: "Mon", checkins: 222 },
-    { day: "Tue", checkins: 289 },
-    { day: "Wed", checkins: 237 },
-    { day: "Thu", checkins: 173 },
-    { day: "Fri", checkins: 209 },
-    { day: "Sat", checkins: 310 },
-    { day: "Sun", checkins: 180 },
+    { day: "Seg", checkins: 222 },
+    { day: "Ter", checkins: 289 },
+    { day: "Qua", checkins: 237 },
+    { day: "Qui", checkins: 173 },
+    { day: "Sex", checkins: 209 },
+    { day: "Sáb", checkins: 310 },
+    { day: "Dom", checkins: 180 },
 ]
 
 const chartConfig = {

@@ -20,9 +20,9 @@ export default function ProfilePage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">Profile</CardTitle>
+        <CardTitle className="font-headline">Perfil</CardTitle>
         <CardDescription>
-          This is your personal profile. You can edit your information here.
+          Este é o seu perfil pessoal. Você pode editar suas informações aqui.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
@@ -32,31 +32,31 @@ export default function ProfilePage() {
             <AvatarFallback>AD</AvatarFallback>
           </Avatar>
           <div className="grid gap-1">
-            <h3 className="text-lg font-bold">Admin User</h3>
+            <h3 className="text-lg font-bold">Usuário Admin</h3>
             <p className="text-sm text-muted-foreground">admin@gymflow.com</p>
-            <Button variant="outline" size="sm" className="mt-2">Upload Photo</Button>
+            <Button variant="outline" size="sm" className="mt-2">Enviar Foto</Button>
           </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
           <div className="grid gap-2">
-            <Label htmlFor="name">Full Name</Label>
-            <Input id="name" defaultValue="Admin User" />
+            <Label htmlFor="name">Nome Completo</Label>
+            <Input id="name" defaultValue="Usuário Admin" />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="id">Staff ID</Label>
+            <Label htmlFor="id">ID do Funcionário</Label>
             <Input id="id" defaultValue="S-1001" readOnly />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">E-mail</Label>
             <Input id="email" type="email" defaultValue="admin@gymflow.com" />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="phone">Phone Number</Label>
-            <Input id="phone" type="tel" defaultValue="+1 (555) 123-4567" />
+            <Label htmlFor="phone">Telefone</Label>
+            <Input id="phone" type="tel" defaultValue="+55 (11) 99999-9999" />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="dob">Date of Birth</Label>
+            <Label htmlFor="dob">Data de Nascimento</Label>
              <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -67,7 +67,7 @@ export default function ProfilePage() {
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+                  {date ? format(date, "PPP") : <span>Escolha uma data</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -81,16 +81,16 @@ export default function ProfilePage() {
             </Popover>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="role">Role</Label>
+            <Label htmlFor="role">Cargo</Label>
              <Select defaultValue="admin">
               <SelectTrigger>
-                <SelectValue placeholder="Select a role" />
+                <SelectValue placeholder="Selecione um cargo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Administrator</SelectItem>
-                <SelectItem value="staff">Staff</SelectItem>
-                <SelectItem value="trainer">Trainer</SelectItem>
-                <SelectItem value="financial">Financial</SelectItem>
+                <SelectItem value="admin">Administrador</SelectItem>
+                <SelectItem value="staff">Funcionário</SelectItem>
+                <SelectItem value="trainer">Treinador</SelectItem>
+                <SelectItem value="financial">Financeiro</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -98,7 +98,7 @@ export default function ProfilePage() {
 
       </CardContent>
       <CardFooter className="border-t px-6 py-4">
-        <Button>Save Changes</Button>
+        <Button>Salvar Alterações</Button>
       </CardFooter>
     </Card>
   )

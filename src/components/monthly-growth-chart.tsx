@@ -7,17 +7,17 @@ import {
 } from "@/components/ui/chart"
 
 const chartData = [
-  { month: "January", members: 186 },
-  { month: "February", members: 305 },
-  { month: "March", members: 237 },
-  { month: "April", members: 273 },
-  { month: "May", members: 209 },
-  { month: "June", members: 250 },
+  { month: "Janeiro", members: 186 },
+  { month: "Fevereiro", members: 305 },
+  { month: "Março", members: 237 },
+  { month: "Abril", members: 273 },
+  { month: "Maio", members: 209 },
+  { month: "Junho", members: 250 },
 ]
 
 const chartConfig = {
   members: {
-    label: "New Members",
+    label: "Novos Membros",
     color: "hsl(var(--primary))",
   },
 }
