@@ -3,8 +3,9 @@
 
 import * as React from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { format } from "date-fns"
-import { MoreHorizontal, PlusCircle, Download, Calendar as CalendarIcon, DollarSign, TrendingUp, Users, AlertCircle, Trash2, X } from "lucide-react"
+import { format, isToday, isThisWeek, isThisMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, subDays } from "date-fns"
+import { ptBR } from "date-fns/locale"
+import { MoreHorizontal, PlusCircle, Download, Calendar as CalendarIcon, DollarSign, TrendingUp, Users, AlertCircle, Trash2, X, Target } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -62,16 +63,33 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { RevenueChart } from "@/components/revenue-chart"
+import { ProjectedRevenueChart } from "@/components/projected-revenue-chart"
 import { InvoiceDialog } from "@/components/invoice-dialog"
 import { Separator } from "@/components/ui/separator"
 
 const initialPayments = [
-  { id: "P001", student: "João Silva", items: [{id: 1, description: "Plano Anual", quantity: 1, price: 97.00}], amount: "97.00", date: "2024-07-01", status: "Pago" },
-  { id: "P002", student: "Maria Oliveira", items: [{id: 1, description: "Plano Trimestral", quantity: 1, price: 197.00}], amount: "197.00", date: "2024-07-05", status: "Pago" },
+  { id: "P001", student: "João Silva", items: [{id: 1, description: "Plano Anual", quantity: 1, price: 97.00}], amount: "97.00", date: format(new Date(), "yyyy-MM-dd"), status: "Pago" },
+  { id: "P002", student: "Maria Oliveira", items: [{id: 1, description: "Plano Trimestral", quantity: 1, price: 197.00}], amount: "197.00", date: format(subDays(new Date(), 2), "yyyy-MM-dd"), status: "Pago" },
   { id: "P003", student: "Carlos Pereira", items: [{id: 1, description: "Plano Mensal", quantity: 1, price: 97.00}], amount: "97.00", date: "2024-07-10", status: "Pendente" },
-  { id: "P004", student: "Ana Costa", items: [{id: 1, description: "Plano Anual", quantity: 1, price: 97.00}], amount: "97.00", date: "2024-07-15", status: "Pago" },
+  { id: "P004", student: "Ana Costa", items: [{id: 1, description: "Plano Anual", quantity: 1, price: 97.00}], amount: "97.00", date: format(subDays(new Date(), 1), "yyyy-MM-dd"), status: "Pago" },
   { id: "P005", student: "João Silva", items: [{id: 1, description: "Plano Mensal", quantity: 1, price: 97.00}], amount: "97.00", date: "2024-06-01", status: "Pago" },
 ]
+
+const initialMembers = [
+    { id: "A001", name: "João Silva", plan: "Anual", status: "Ativo" },
+    { id: "A002", name: "Maria Oliveira", plan: "Trimestral", status: "Ativo" },
+    { id: "A003", name: "Carlos Pereira", plan: "Mensal", status: "Atrasado" },
+    { id: "A004", name: "Ana Costa", plan: "Anual", status: "Ativo" },
+    { id: "A005", name: "Paulo Souza", plan: "Trimestral", status: "Ativo" },
+    { id: "A006", name: "Beatriz Lima", plan: "Mensal", status: "Ativo" },
+    { id: "A007", name: "Lucas Martins", plan: "Anual", status: "Ativo" },
+]
+
+const planPrices = {
+    "Mensal": { price: 97.00, duration: 30 },
+    "Trimestral": { price: 277.00, duration: 90 },
+    "Anual": { price: 997.00, duration: 365 },
+}
 
 const invoices = [
     { id: "F001", student: "João Silva", amount: "97.00", dueDate: "2024-08-01", status: "Pendente" },
@@ -99,6 +117,9 @@ export default function FinancialPage() {
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false)
     const [isInvoiceOpen, setIsInvoiceOpen] = React.useState(false)
     const [currentInvoice, setCurrentInvoice] = React.useState(null)
+    const [cashFlowData, setCashFlowData] = React.useState({ daily: {}, weekly: {}, monthly: {} })
+    const [projectionChartData, setProjectionChartData] = React.useState([])
+
 
     React.useEffect(() => {
         if (studentName) {
@@ -107,6 +128,64 @@ export default function FinancialPage() {
             setFilteredPayments(payments);
         }
     }, [studentName, payments]);
+    
+    React.useEffect(() => {
+        // --- Calculations ---
+        const activeMembers = initialMembers.filter(m => m.status === 'Ativo')
+        
+        // Projected Revenue
+        const projectedDailyRevenue = activeMembers.reduce((acc, member) => {
+            const plan = planPrices[member.plan]
+            if(plan) {
+                return acc + (plan.price / plan.duration)
+            }
+            return acc
+        }, 0)
+        
+        const projectedWeeklyRevenue = projectedDailyRevenue * 7
+        const projectedMonthlyRevenue = projectedDailyRevenue * 30
+
+        // Actual Revenue
+        const now = new Date()
+        const actualDailyRevenue = payments
+            .filter(p => isToday(new Date(p.date.replace(/-/g, '/'))))
+            .reduce((acc, p) => acc + parseFloat(p.amount), 0)
+        
+        const actualWeeklyRevenue = payments
+            .filter(p => isThisWeek(new Date(p.date.replace(/-/g, '/')), { weekStartsOn: 1 }))
+            .reduce((acc, p) => acc + parseFloat(p.amount), 0)
+
+        const actualMonthlyRevenue = payments
+            .filter(p => isThisMonth(new Date(p.date.replace(/-/g, '/'))))
+            .reduce((acc, p) => acc + parseFloat(p.amount), 0)
+
+        setCashFlowData({
+            daily: { actual: actualDailyRevenue, projected: projectedDailyRevenue },
+            weekly: { actual: actualWeeklyRevenue, projected: projectedWeeklyRevenue },
+            monthly: { actual: actualMonthlyRevenue, projected: projectedMonthlyRevenue }
+        })
+
+        // Projection Chart Data (last 7 days)
+        const past7Days = eachDayOfInterval({
+            start: subDays(now, 6),
+            end: now
+        });
+
+        const chartData = past7Days.map(day => {
+            const dailyActual = payments
+                .filter(p => isSameDay(new Date(p.date.replace(/-/g, '/')), day))
+                .reduce((acc, p) => acc + parseFloat(p.amount), 0)
+
+            return {
+                date: format(day, 'dd/MM'),
+                day: format(day, 'eee', { locale: ptBR }),
+                realizado: dailyActual,
+                previsto: projectedDailyRevenue,
+            }
+        });
+        setProjectionChartData(chartData)
+
+    }, [payments])
 
     const [newPaymentData, setNewPaymentData] = React.useState({
         student: "João Silva",
@@ -222,15 +301,26 @@ export default function FinancialPage() {
                             </CardContent>
                         </Card>
                     </div>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="font-headline">Receita (Últimos 6 meses)</CardTitle>
-                            <CardDescription>Visão geral da receita mensal.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <RevenueChart />
-                        </CardContent>
-                    </Card>
+                     <div className="grid gap-4 md:grid-cols-2">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="font-headline">Receita (Últimos 6 meses)</CardTitle>
+                                <CardDescription>Visão geral da receita mensal.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <RevenueChart />
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="font-headline">Projeção de Receita (7 dias)</CardTitle>
+                                <CardDescription>Receita realizada vs. prevista para a última semana.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <ProjectedRevenueChart data={projectionChartData} />
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
             </TabsContent>
             <TabsContent value="cashflow">
@@ -241,8 +331,86 @@ export default function FinancialPage() {
                             Acompanhe as entradas e saídas. Selecione o período.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="flex flex-col items-center justify-center h-96 text-muted-foreground">
-                        <p>Controle de fluxo de caixa diário, semanal, mensal e anual em breve.</p>
+                    <CardContent>
+                        <Tabs defaultValue="daily" className="w-full">
+                            <TabsList className="grid w-full grid-cols-3">
+                                <TabsTrigger value="daily">Diário</TabsTrigger>
+                                <TabsTrigger value="weekly">Semanal</TabsTrigger>
+                                <TabsTrigger value="monthly">Mensal</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="daily" className="mt-4">
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <Card>
+                                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                            <CardTitle className="text-sm font-medium">Receita Realizada (Hoje)</CardTitle>
+                                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="text-2xl font-bold">R$ {cashFlowData.daily.actual?.toFixed(2) || '0.00'}</div>
+                                            <p className="text-xs text-muted-foreground">Total de pagamentos recebidos hoje</p>
+                                        </CardContent>
+                                    </Card>
+                                    <Card>
+                                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                            <CardTitle className="text-sm font-medium">Receita Prevista (Hoje)</CardTitle>
+                                            <Target className="h-4 w-4 text-muted-foreground" />
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="text-2xl font-bold">R$ {cashFlowData.daily.projected?.toFixed(2) || '0.00'}</div>
+                                            <p className="text-xs text-muted-foreground">Projeção com base nos alunos ativos</p>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </TabsContent>
+                            <TabsContent value="weekly" className="mt-4">
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <Card>
+                                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                            <CardTitle className="text-sm font-medium">Receita Realizada (Semana)</CardTitle>
+                                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="text-2xl font-bold">R$ {cashFlowData.weekly.actual?.toFixed(2) || '0.00'}</div>
+                                            <p className="text-xs text-muted-foreground">Total de pagamentos recebidos na semana</p>
+                                        </CardContent>
+                                    </Card>
+                                    <Card>
+                                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                            <CardTitle className="text-sm font-medium">Receita Prevista (Semana)</CardTitle>
+                                            <Target className="h-4 w-4 text-muted-foreground" />
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="text-2xl font-bold">R$ {cashFlowData.weekly.projected?.toFixed(2) || '0.00'}</div>
+                                            <p className="text-xs text-muted-foreground">Projeção com base nos alunos ativos</p>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </TabsContent>
+                            <TabsContent value="monthly" className="mt-4">
+                                 <div className="grid gap-4 md:grid-cols-2">
+                                    <Card>
+                                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                            <CardTitle className="text-sm font-medium">Receita Realizada (Mês)</CardTitle>
+                                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="text-2xl font-bold">R$ {cashFlowData.monthly.actual?.toFixed(2) || '0.00'}</div>
+                                            <p className="text-xs text-muted-foreground">Total de pagamentos recebidos no mês</p>
+                                        </CardContent>
+                                    </Card>
+                                    <Card>
+                                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                            <CardTitle className="text-sm font-medium">Receita Prevista (Mês)</CardTitle>
+                                            <Target className="h-4 w-4 text-muted-foreground" />
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="text-2xl font-bold">R$ {cashFlowData.monthly.projected?.toFixed(2) || '0.00'}</div>
+                                            <p className="text-xs text-muted-foreground">Projeção com base nos alunos ativos</p>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </TabsContent>
+                        </Tabs>
                     </CardContent>
                 </Card>
             </TabsContent>
@@ -383,7 +551,7 @@ export default function FinancialPage() {
                                     <TableRow key={payment.id}>
                                         <TableCell className="font-medium">{payment.student}</TableCell>
                                         <TableCell>R$ {payment.amount}</TableCell>
-                                        <TableCell className="hidden md:table-cell">{format(new Date(payment.date), "dd/MM/yyyy")}</TableCell>
+                                        <TableCell className="hidden md:table-cell">{format(new Date(payment.date.replace(/-/g, '/')), "dd/MM/yyyy")}</TableCell>
                                         <TableCell>
                                             <Badge variant={payment.status === 'Pago' ? 'secondary' : 'destructive'}>
                                                 {payment.status}
@@ -464,5 +632,3 @@ export default function FinancialPage() {
     </>
   )
 }
-
-    
