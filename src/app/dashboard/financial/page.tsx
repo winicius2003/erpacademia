@@ -188,7 +188,7 @@ export default function FinancialPage() {
     }, [payments])
 
     const [newPaymentData, setNewPaymentData] = React.useState({
-        student: "João Silva",
+        student: "",
         date: new Date(),
         items: [{ id: 1, description: "Plano Mensal", quantity: 1, price: 97.00 }],
     })
@@ -451,17 +451,18 @@ export default function FinancialPage() {
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="grid gap-2">
                                                     <Label htmlFor="student">Aluno</Label>
-                                                    <Select value={newPaymentData.student} onValueChange={(value) => setNewPaymentData({...newPaymentData, student: value})}>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Selecione um aluno" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="João Silva">João Silva</SelectItem>
-                                                            <SelectItem value="Maria Oliveira">Maria Oliveira</SelectItem>
-                                                            <SelectItem value="Carlos Pereira">Carlos Pereira</SelectItem>
-                                                            <SelectItem value="Ana Costa">Ana Costa</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
+                                                    <Input
+                                                        id="student"
+                                                        value={newPaymentData.student}
+                                                        onChange={(e) => setNewPaymentData({ ...newPaymentData, student: e.target.value })}
+                                                        placeholder="Digite ou selecione um aluno"
+                                                        list="student-datalist"
+                                                    />
+                                                    <datalist id="student-datalist">
+                                                        {initialMembers.map((member) => (
+                                                            <option key={member.id} value={member.name} />
+                                                        ))}
+                                                    </datalist>
                                                 </div>
                                                 <div className="grid gap-2">
                                                     <Label htmlFor="paymentDate">Data</Label>
