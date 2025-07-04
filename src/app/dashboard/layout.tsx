@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Users,
   Dumbbell,
-  ShieldCheck,
   Settings,
   User,
   CreditCard,
@@ -16,7 +15,8 @@ import {
   Calendar,
   Wallet,
   HeartHandshake,
-  AreaChart
+  AreaChart,
+  UsersRound
 } from "lucide-react"
 import { usePathname } from 'next/navigation'
 
@@ -51,7 +51,7 @@ const navItems = [
   { href: "/dashboard/schedule", icon: Calendar, label: "Agenda" },
   { href: "/dashboard/financial", icon: Wallet, label: "Financeiro" },
   { href: "/dashboard/crm", icon: HeartHandshake, label: "CRM" },
-  { href: "/dashboard/access-control", icon: ShieldCheck, label: "Acesso" },
+  { href: "/dashboard/access-control", icon: UsersRound, label: "Funcionários" },
   { href: "/dashboard/reports", icon: AreaChart, label: "Relatórios" },
   { href: "/dashboard/profile", icon: Settings, label: "Configurações" },
 ]
