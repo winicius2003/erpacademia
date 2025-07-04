@@ -16,9 +16,10 @@ import {
   Wallet,
   HeartHandshake,
   AreaChart,
-  UsersRound
+  UsersRound,
+  Loader2
 } from "lucide-react"
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 import {
   SidebarProvider,
@@ -43,6 +44,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Logo } from "@/components/logo"
+import type { Role } from "./access-control/page"
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Painel" },
@@ -56,13 +58,55 @@ const navItems = [
   { href: "/dashboard/profile", icon: Settings, label: "Configurações" },
 ]
 
+const navPermissions: Record<Role, string[]> = {
+  Admin: ["Painel", "Alunos", "Treinos", "Agenda", "Financeiro", "CRM", "Funcionários", "Relatórios", "Configurações"],
+  Gestor: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Relatórios"],
+  Professor: ["Painel", "Alunos", "Treinos", "Agenda"],
+  Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Funcionários"],
+}
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const router = useRouter()
   const pathname = usePathname()
+  const [user, setUser] = React.useState<{ name: string; role: Role } | null>(null)
+  
+  React.useEffect(() => {
+    try {
+      const userData = sessionStorage.getItem("fitcore.user")
+      if (!userData) {
+        router.replace("/login")
+      } else {
+        setUser(JSON.parse(userData))
+      }
+    } catch (error) {
+      // In case of any error (e.g. sessionStorage not available), redirect to login
+      router.replace("/login")
+    }
+  }, [router])
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("fitcore.user")
+    router.push("/login")
+  }
+  
+  const visibleNavItems = user ? navItems.filter(item => {
+    const permissions = navPermissions[user.role] || []
+    return permissions.includes(item.label)
+  }) : []
+
   const activeItem = navItems.find(item => pathname.startsWith(item.href))
+
+  if (!user) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   return (
     <SidebarProvider>
@@ -76,7 +120,7 @@ export default function DashboardLayout({
           </SidebarHeader>
           <SidebarContent>
             <SidebarMenu>
-              {navItems.map((item) => (
+              {visibleNavItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <Link href={item.href}>
                     <SidebarMenuButton
@@ -122,18 +166,20 @@ export default function DashboardLayout({
                 <Button variant="secondary" size="icon" className="rounded-full">
                   <Avatar>
                     <AvatarImage src="https://placehold.co/40x40.png" alt="User" data-ai-hint="person face" />
-                    <AvatarFallback>AM</AvatarFallback>
+                    <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <span className="sr-only">Toggle user menu</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Conta Master</DropdownMenuLabel>
+                <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Perfil</span>
-                </DropdownMenuItem>
+                <Link href="/dashboard/profile">
+                  <DropdownMenuItem>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Perfil</span>
+                  </DropdownMenuItem>
+                </Link>
                 <DropdownMenuItem>
                   <CreditCard className="mr-2 h-4 w-4" />
                   <span>Faturamento</span>
@@ -143,12 +189,10 @@ export default function DashboardLayout({
                   <span>Configurações</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <Link href="/">
-                  <DropdownMenuItem>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sair</span>
-                  </DropdownMenuItem>
-                </Link>
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sair</span>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </header>

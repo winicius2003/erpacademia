@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { format } from "date-fns"
-import { Calendar as CalendarIcon } from "lucide-react"
+import { Calendar as CalendarIcon, Loader2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -13,9 +13,29 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useRouter } from "next/navigation"
 
 export default function SettingsPage() {
   const [date, setDate] = React.useState<Date>()
+  const [user, setUser] = React.useState<{ name: string; role: string } | null>(null)
+  const router = useRouter()
+
+  React.useEffect(() => {
+    const userData = sessionStorage.getItem("fitcore.user")
+    if (userData) {
+      setUser(JSON.parse(userData))
+    } else {
+      router.push("/login")
+    }
+  }, [router])
+
+  if (!user) {
+    return (
+      <div className="flex h-64 w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   return (
     <Card>
@@ -29,11 +49,11 @@ export default function SettingsPage() {
         <div className="flex items-center gap-4">
           <Avatar className="h-20 w-20">
             <AvatarImage src="https://placehold.co/80x80.png" data-ai-hint="person face" />
-            <AvatarFallback>AM</AvatarFallback>
+            <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="grid gap-1">
-            <h3 className="text-lg font-bold">Administrador Master</h3>
-            <p className="text-sm text-muted-foreground">admin@admin</p>
+            <h3 className="text-lg font-bold">{user.name}</h3>
+            <p className="text-sm text-muted-foreground">{user.name.toLowerCase().replace(" ", ".")}@fitcore.com</p>
             <Button variant="outline" size="sm" className="mt-2">Enviar Foto</Button>
           </div>
         </div>
@@ -41,7 +61,7 @@ export default function SettingsPage() {
         <div className="grid md:grid-cols-2 gap-6">
           <div className="grid gap-2">
             <Label htmlFor="name">Nome Completo</Label>
-            <Input id="name" defaultValue="Administrador Master" />
+            <Input id="name" defaultValue={user.name} />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="id">ID do Funcionário</Label>
@@ -49,7 +69,7 @@ export default function SettingsPage() {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="email">E-mail</Label>
-            <Input id="email" type="email" defaultValue="admin@admin" />
+            <Input id="email" type="email" defaultValue={`${user.name.toLowerCase().replace(" ", ".")}@fitcore.com`} />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="phone">Telefone</Label>
@@ -82,7 +102,7 @@ export default function SettingsPage() {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="role">Cargo</Label>
-             <Select defaultValue="admin">
+             <Select value={user.role.toLowerCase()} disabled>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um cargo" />
               </SelectTrigger>
@@ -90,8 +110,7 @@ export default function SettingsPage() {
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="gestor">Gestor</SelectItem>
                 <SelectItem value="professor">Professor</SelectItem>
-                <SelectItem value="recepcao">Recepção</SelectItem>
-                <SelectItem value="aluno">Aluno</SelectItem>
+                <SelectItem value="recepção">Recepção</SelectItem>
               </SelectContent>
             </Select>
           </div>

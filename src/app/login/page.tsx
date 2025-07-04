@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Mail, Lock } from "lucide-react"
+import { Lock, User } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -17,21 +17,46 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/logo"
 import { useToast } from "@/hooks/use-toast"
+import { initialEmployees } from "@/app/dashboard/access-control/page"
+
+const masterAdmin = {
+  name: "Administrador Master",
+  login: "admin",
+  password: "uUmope5Z",
+  role: "Admin",
+}
 
 export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [email, setEmail] = React.useState("")
+  const [login, setLogin] = React.useState("")
   const [password, setPassword] = React.useState("")
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (email === "admin@admin" && password === "uUmope5Z") {
+
+    let userFound = null
+
+    // Check for master admin
+    if (login === masterAdmin.login && password === masterAdmin.password) {
+      userFound = { name: masterAdmin.name, role: masterAdmin.role }
+    } else {
+      // Check for employees
+      const employee = initialEmployees.find(
+        (emp) => emp.login === login && emp.password === password
+      )
+      if (employee) {
+        userFound = { name: employee.name, role: employee.role }
+      }
+    }
+
+    if (userFound) {
+      sessionStorage.setItem("fitcore.user", JSON.stringify(userFound))
       router.push("/dashboard")
     } else {
       toast({
         title: "Credenciais inválidas",
-        description: "Por favor, verifique seu e-mail e senha e tente novamente.",
+        description: "Por favor, verifique seu login e senha e tente novamente.",
         variant: "destructive",
       })
     }
@@ -48,23 +73,23 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl font-headline text-center">Bem-vindo de volta</CardTitle>
           <CardDescription className="text-center">
-            Digite seu e-mail para acessar seu painel
+            Digite seu login para acessar seu painel
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="login">Login</Label>
               <div className="relative">
-                <Mail className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <User className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@admin"
+                  id="login"
+                  type="text"
+                  placeholder="seu.login"
                   required
                   className="pl-8"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={login}
+                  onChange={(e) => setLogin(e.target.value)}
                 />
               </div>
             </div>

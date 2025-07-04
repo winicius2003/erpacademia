@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Eye, MoreHorizontal, PlusCircle, Shield, Trash2 } from "lucide-react"
+import { Eye, MoreHorizontal, PlusCircle, Shield, Trash2, User, Lock } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -56,28 +56,30 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 
-const initialEmployees = [
-  { id: "F001", name: "Ana Beatriz", email: "ana.b@fitcore.com", role: "Recepção", status: "Ativo" },
-  { id: "F002", name: "Carlos de Souza", email: "carlos.s@fitcore.com", role: "Professor", status: "Ativo" },
-  { id: "F003", name: "Fernanda Costa", email: "fernanda.c@fitcore.com", role: "Gestor", status: "Ativo" },
-  { id: "F004", name: "Ricardo Alves", email: "ricardo.a@fitcore.com", role: "Professor", status: "Inativo" },
-  { id: "F005", name: "Administrador Master", email: "admin@admin", role: "Admin", status: "Ativo" },
+export const initialEmployees = [
+  { id: "F001", name: "Ana Beatriz", email: "ana.b@fitcore.com", login: "ana.b", password: "password123", role: "Recepção", status: "Ativo" },
+  { id: "F002", name: "Carlos de Souza", email: "carlos.s@fitcore.com", login: "carlos.s", password: "password123", role: "Professor", status: "Ativo" },
+  { id: "F003", name: "Fernanda Costa", email: "fernanda.c@fitcore.com", login: "fernanda.c", password: "password123", role: "Gestor", status: "Ativo" },
+  { id: "F004", name: "Ricardo Alves", email: "ricardo.a@fitcore.com", login: "ricardo.a", password: "password123", role: "Professor", status: "Inativo" },
+  { id: "F005", name: "Winicius", email: "wini@fitcore.com", login: "wini", password: "0503", role: "Professor", status: "Ativo" },
 ]
 
 type Employee = (typeof initialEmployees)[0]
-type Role = "Admin" | "Gestor" | "Professor" | "Recepção"
+export type Role = "Admin" | "Gestor" | "Professor" | "Recepção"
 
-const rolePermissions: Record<Role, string[]> = {
-  Admin: ["Painel", "Alunos", "Treinos", "Agenda", "Financeiro", "CRM", "Acesso", "Relatórios", "Configurações"],
+export const rolePermissions: Record<Role, string[]> = {
+  Admin: ["Painel", "Alunos", "Treinos", "Agenda", "Financeiro", "CRM", "Funcionários", "Relatórios", "Configurações"],
   Gestor: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Relatórios"],
-  Professor: ["Alunos", "Treinos", "Agenda"],
-  Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Acesso"],
+  Professor: ["Painel", "Alunos", "Treinos", "Agenda"],
+  Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Funcionários"],
 }
 
 const initialEmployeeFormState = {
   id: "",
   name: "",
   email: "",
+  login: "",
+  password: "",
   role: "Professor" as Role,
 }
 
@@ -129,6 +131,8 @@ export default function AccessControlPage() {
       id: employee.id,
       name: employee.name,
       email: employee.email,
+      login: employee.login,
+      password: employee.password,
       role: employee.role as Role,
     });
     setIsDialogOpen(true);
@@ -136,7 +140,7 @@ export default function AccessControlPage() {
 
   const handleSaveEmployee = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!employeeFormData.name || !employeeFormData.role || !employeeFormData.email) return
+    if (!employeeFormData.name || !employeeFormData.role || !employeeFormData.email || !employeeFormData.login || !employeeFormData.password) return
 
     if (isEditing) {
       setEmployees(prev => prev.map(e => {
@@ -145,6 +149,8 @@ export default function AccessControlPage() {
             ...e,
             name: employeeFormData.name,
             email: employeeFormData.email,
+            login: employeeFormData.login,
+            password: employeeFormData.password,
             role: employeeFormData.role,
           }
         }
@@ -156,6 +162,8 @@ export default function AccessControlPage() {
         id: `F${String(employees.length + 1).padStart(3, '0')}`,
         name: employeeFormData.name,
         email: employeeFormData.email,
+        login: employeeFormData.login,
+        password: employeeFormData.password,
         role: employeeFormData.role,
         status: "Ativo",
       }
@@ -193,10 +201,6 @@ export default function AccessControlPage() {
             </div>
              <div className="flex items-center gap-4">
                 <Button onClick={handleAddNewClick}><PlusCircle className="mr-2 h-4 w-4" />Adicionar Funcionário</Button>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Shield className="h-4 w-4" />
-                    <span>Acesso de Administrador</span>
-                </div>
             </div>
         </div>
       </CardHeader>
@@ -220,13 +224,11 @@ export default function AccessControlPage() {
                   <Select
                     defaultValue={employee.role}
                     onValueChange={(value: Role) => handleRoleChange(employee.id, value)}
-                    disabled={employee.role === "Admin"}
                   >
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Selecione uma função" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Admin">Admin</SelectItem>
                       <SelectItem value="Gestor">Gestor</SelectItem>
                       <SelectItem value="Professor">Professor</SelectItem>
                       <SelectItem value="Recepção">Recepção</SelectItem>
@@ -241,7 +243,7 @@ export default function AccessControlPage() {
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost" disabled={employee.role === "Admin"}>
+                      <Button aria-haspopup="true" size="icon" variant="ghost">
                         <MoreHorizontal className="h-4 w-4" />
                         <span className="sr-only">Menu de Ações</span>
                       </Button>
@@ -272,7 +274,7 @@ export default function AccessControlPage() {
         <DialogHeader>
           <DialogTitle>{isEditing ? "Editar Funcionário" : "Adicionar Novo Funcionário"}</DialogTitle>
           <DialogDescription>
-            {isEditing ? "Atualize os dados do funcionário." : "Preencha os dados do novo funcionário."}
+            {isEditing ? "Atualize os dados e credenciais do funcionário." : "Preencha os dados e credenciais do novo funcionário."}
           </DialogDescription>
         </DialogHeader>
         <form id="employee-form" onSubmit={handleSaveEmployee}>
@@ -284,6 +286,16 @@ export default function AccessControlPage() {
             <div className="grid gap-2">
               <Label htmlFor="email">E-mail</Label>
               <Input id="email" type="email" value={employeeFormData.email} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="email@exemplo.com" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="login">Login</Label>
+                <Input id="login" value={employeeFormData.login} onChange={(e) => handleInputChange('login', e.target.value)} placeholder="ex: wini" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input id="password" type="password" value={employeeFormData.password} onChange={(e) => handleInputChange('password', e.target.value)} placeholder="••••••••" />
+              </div>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="role">Função</Label>
