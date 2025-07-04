@@ -73,6 +73,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { getMembers, addMember, updateMember, deleteMember } from "@/services/members"
+import { useSubscription } from "@/lib/subscription-context"
 
 export type Member = {
   id: string,
@@ -119,6 +120,8 @@ type MemberFormData = typeof initialMemberFormState;
 export default function MembersPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { status: subscriptionStatus } = useSubscription()
+
   const [members, setMembers] = React.useState<Member[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [filteredMembers, setFilteredMembers] = React.useState<Member[]>([]);
@@ -129,6 +132,8 @@ export default function MembersPage() {
   const [memberToDelete, setMemberToDelete] = React.useState<Member | null>(null)
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false)
   const [user, setUser] = React.useState<{ name: string; role: string } | null>(null);
+
+  const isAddingBlocked = subscriptionStatus === 'blocked';
 
   const fetchMembers = React.useCallback(async () => {
     setIsLoading(true);
@@ -313,7 +318,9 @@ export default function MembersPage() {
                 {user.role !== 'Professor' && (
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button onClick={handleAddNewClick}><PlusCircle className="mr-2 h-4 w-4" />Adicionar Aluno</Button>
+                      <Button onClick={handleAddNewClick} disabled={isAddingBlocked} title={isAddingBlocked ? "Funcionalidade bloqueada por pendência de assinatura" : ""}>
+                        <PlusCircle className="mr-2 h-4 w-4" />Adicionar Aluno
+                      </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-2xl">
                       <DialogHeader>

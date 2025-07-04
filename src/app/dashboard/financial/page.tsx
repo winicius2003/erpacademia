@@ -69,6 +69,7 @@ import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { getMembers, type Member } from "@/services/members"
 import { getPayments, addPayment, type Payment } from "@/services/payments"
+import { useSubscription } from "@/lib/subscription-context"
 
 const planPrices = {
     "Mensal": { price: 97.00, duration: 30 },
@@ -96,6 +97,7 @@ export default function FinancialPage() {
     const searchParams = useSearchParams()
     const router = useRouter()
     const { toast } = useToast()
+    const { status: subscriptionStatus } = useSubscription()
     const studentName = searchParams.get('student')
 
     const [payments, setPayments] = React.useState<Payment[]>([])
@@ -108,6 +110,8 @@ export default function FinancialPage() {
     const [currentInvoice, setCurrentInvoice] = React.useState<Payment | null>(null)
     const [cashFlowData, setCashFlowData] = React.useState({ daily: {}, weekly: {}, monthly: {} })
     const [projectionChartData, setProjectionChartData] = React.useState([])
+
+    const isSalesBlocked = subscriptionStatus === 'overdue' || subscriptionStatus === 'blocked';
 
     const fetchData = React.useCallback(async () => {
         setIsLoading(true);
@@ -458,7 +462,9 @@ export default function FinancialPage() {
                                 )}
                                 <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
                                     <DialogTrigger asChild>
-                                        <Button><PlusCircle className="mr-2 h-4 w-4" />Registrar Pagamento</Button>
+                                        <Button disabled={isSalesBlocked} title={isSalesBlocked ? "Funcionalidade bloqueada por pendência de assinatura" : ""}>
+                                          <PlusCircle className="mr-2 h-4 w-4" />Registrar Pagamento
+                                        </Button>
                                     </DialogTrigger>
                                     <DialogContent className="sm:max-w-2xl">
                                         <DialogHeader>

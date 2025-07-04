@@ -18,10 +18,11 @@ import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/logo"
 import { useToast } from "@/hooks/use-toast"
 import { getEmployeeByLogin } from "@/services/employees"
+import { initializeSubscription } from "@/services/subscription"
 
 const masterAdmin = {
   name: "Administrador Master",
-  login: "admin@admin",
+  login: "jwinicius.souza@gmail.com",
   password: "uUmope5Z",
   role: "Admin",
 }
@@ -41,6 +42,8 @@ export default function LoginPage() {
 
     if (login === masterAdmin.login && password === masterAdmin.password) {
       userFound = { name: masterAdmin.name, role: masterAdmin.role }
+      // On first master login, ensure subscription exists
+      await initializeSubscription()
     } else {
       const employee = await getEmployeeByLogin(login)
       if (employee && employee.password === password) {
@@ -84,7 +87,7 @@ export default function LoginPage() {
                 <Input
                   id="login"
                   type="text"
-                  placeholder="seu.login ou admin@admin"
+                  placeholder="seu@email.com"
                   required
                   className="pl-8"
                   value={login}
