@@ -20,13 +20,6 @@ import { useToast } from "@/hooks/use-toast"
 import { getEmployeeByLogin } from "@/services/employees"
 import { initializeSubscription } from "@/services/subscription"
 
-const masterAdmin = {
-  name: "Administrador Master",
-  login: "jwinicius.souza@gmail.com",
-  password: "uUmope5Z",
-  role: "Admin",
-}
-
 export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -40,8 +33,12 @@ export default function LoginPage() {
 
     let userFound = null
 
-    if (login === masterAdmin.login && password === masterAdmin.password) {
-      userFound = { name: masterAdmin.name, role: masterAdmin.role }
+    const isMasterAdminLogin =
+      (login === "jwinicius.souza@gmail.com" || login === "admin@admin") &&
+      password === "uUmope5Z"
+
+    if (isMasterAdminLogin) {
+      userFound = { name: "Administrador Master", role: "Admin" }
       // On first master login, ensure subscription exists
       await initializeSubscription()
     } else {
