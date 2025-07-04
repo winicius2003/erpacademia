@@ -1,8 +1,10 @@
+
 "use client"
 
 import * as React from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { format } from "date-fns"
-import { MoreHorizontal, PlusCircle, Download, Calendar as CalendarIcon, DollarSign, TrendingUp, Users, AlertCircle, Trash2 } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Download, Calendar as CalendarIcon, DollarSign, TrendingUp, Users, AlertCircle, Trash2, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -68,6 +70,7 @@ const initialPayments = [
   { id: "P002", student: "Maria Oliveira", items: [{id: 1, description: "Plano Trimestral", quantity: 1, price: 197.00}], amount: "197.00", date: "2024-07-05", status: "Pago" },
   { id: "P003", student: "Carlos Pereira", items: [{id: 1, description: "Plano Mensal", quantity: 1, price: 97.00}], amount: "97.00", date: "2024-07-10", status: "Pendente" },
   { id: "P004", student: "Ana Costa", items: [{id: 1, description: "Plano Anual", quantity: 1, price: 97.00}], amount: "97.00", date: "2024-07-15", status: "Pago" },
+  { id: "P005", student: "João Silva", items: [{id: 1, description: "Plano Mensal", quantity: 1, price: 97.00}], amount: "97.00", date: "2024-06-01", status: "Pago" },
 ]
 
 const invoices = [
@@ -87,10 +90,23 @@ const availableProducts = [
 ]
 
 export default function FinancialPage() {
+    const searchParams = useSearchParams()
+    const router = useRouter()
+    const studentName = searchParams.get('student')
+
     const [payments, setPayments] = React.useState(initialPayments)
+    const [filteredPayments, setFilteredPayments] = React.useState(initialPayments)
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false)
     const [isInvoiceOpen, setIsInvoiceOpen] = React.useState(false)
     const [currentInvoice, setCurrentInvoice] = React.useState(null)
+
+    React.useEffect(() => {
+        if (studentName) {
+            setFilteredPayments(payments.filter(p => p.student === studentName));
+        } else {
+            setFilteredPayments(payments);
+        }
+    }, [studentName, payments]);
 
     const [newPaymentData, setNewPaymentData] = React.useState({
         student: "João Silva",
@@ -128,7 +144,6 @@ export default function FinancialPage() {
     const handleSavePayment = (e: React.FormEvent) => {
         e.preventDefault();
         if (!newPaymentData.student || newPaymentData.items.length === 0) {
-            // Add some validation feedback
             return;
         }
 
@@ -144,14 +159,19 @@ export default function FinancialPage() {
         setCurrentInvoice(newPayment);
         setIsPaymentDialogOpen(false);
         setIsInvoiceOpen(true);
-        // Reset form
         setNewPaymentData({ student: "", date: new Date(), items: [{ id: 1, description: "", quantity: 1, price: 0.00 }] });
     }
+
+    const clearFilter = () => {
+        router.push('/dashboard/financial');
+    };
+    
+    const defaultTab = studentName ? "payments" : "overview";
 
     return (
     <>
         <InvoiceDialog isOpen={isInvoiceOpen} onOpenChange={setIsInvoiceOpen} invoiceData={currentInvoice} />
-        <Tabs defaultValue="overview">
+        <Tabs defaultValue={defaultTab}>
             <TabsList className="grid w-full grid-cols-4 max-w-lg">
                 <TabsTrigger value="overview">Visão Geral</TabsTrigger>
                 <TabsTrigger value="cashflow">Fluxo de Caixa</TabsTrigger>
@@ -232,105 +252,119 @@ export default function FinancialPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <CardTitle className="font-headline">Pagamentos</CardTitle>
-                                <CardDescription>Gerencie os pagamentos dos alunos.</CardDescription>
+                                {studentName ? (
+                                    <CardDescription>
+                                        Exibindo histórico de pagamentos para <span className="font-bold text-foreground">{studentName}</span>.
+                                    </CardDescription>
+                                ) : (
+                                    <CardDescription>Gerencie os pagamentos dos alunos.</CardDescription>
+                                )}
                             </div>
-                            <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-                                <DialogTrigger asChild>
-                                    <Button><PlusCircle className="mr-2 h-4 w-4" />Registrar Pagamento</Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-2xl">
-                                    <DialogHeader>
-                                        <DialogTitle>Registrar Novo Pagamento</DialogTitle>
-                                        <DialogDescription>
-                                            Preencha os detalhes para registrar um pagamento e gerar a fatura.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <form id="payment-form" onSubmit={handleSavePayment}>
-                                    <div className="grid gap-4 py-4">
-                                        <div className="grid grid-cols-2 gap-4">
-                                             <div className="grid gap-2">
-                                                <Label htmlFor="student">Aluno</Label>
-                                                <Select value={newPaymentData.student} onValueChange={(value) => setNewPaymentData({...newPaymentData, student: value})}>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Selecione um aluno" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="João Silva">João Silva</SelectItem>
-                                                        <SelectItem value="Maria Oliveira">Maria Oliveira</SelectItem>
-                                                        <SelectItem value="Carlos Pereira">Carlos Pereira</SelectItem>
-                                                        <SelectItem value="Ana Costa">Ana Costa</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
+                            <div className="flex items-center gap-2">
+                                {studentName && (
+                                     <Button variant="outline" size="sm" onClick={clearFilter}>
+                                        <X className="mr-2 h-4 w-4" />
+                                        Limpar filtro
+                                    </Button>
+                                )}
+                                <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button><PlusCircle className="mr-2 h-4 w-4" />Registrar Pagamento</Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-2xl">
+                                        <DialogHeader>
+                                            <DialogTitle>Registrar Novo Pagamento</DialogTitle>
+                                            <DialogDescription>
+                                                Preencha os detalhes para registrar um pagamento e gerar a fatura.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <form id="payment-form" onSubmit={handleSavePayment}>
+                                        <div className="grid gap-4 py-4">
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="student">Aluno</Label>
+                                                    <Select value={newPaymentData.student} onValueChange={(value) => setNewPaymentData({...newPaymentData, student: value})}>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Selecione um aluno" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="João Silva">João Silva</SelectItem>
+                                                            <SelectItem value="Maria Oliveira">Maria Oliveira</SelectItem>
+                                                            <SelectItem value="Carlos Pereira">Carlos Pereira</SelectItem>
+                                                            <SelectItem value="Ana Costa">Ana Costa</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="paymentDate">Data</Label>
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                            <Button
+                                                            variant={"outline"}
+                                                            className={cn("w-full justify-start text-left font-normal", !newPaymentData.date && "text-muted-foreground")}
+                                                            >
+                                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                                            {newPaymentData.date ? format(newPaymentData.date, "dd/MM/yyyy") : <span>Escolha uma data</span>}
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-auto p-0">
+                                                            <Calendar mode="single" selected={newPaymentData.date} onSelect={(date) => setNewPaymentData({...newPaymentData, date})} initialFocus />
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                </div>
                                             </div>
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="paymentDate">Data</Label>
-                                                <Popover>
-                                                    <PopoverTrigger asChild>
-                                                        <Button
-                                                        variant={"outline"}
-                                                        className={cn("w-full justify-start text-left font-normal", !newPaymentData.date && "text-muted-foreground")}
-                                                        >
-                                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                                        {newPaymentData.date ? format(newPaymentData.date, "dd/MM/yyyy") : <span>Escolha uma data</span>}
-                                                        </Button>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent className="w-auto p-0">
-                                                        <Calendar mode="single" selected={newPaymentData.date} onSelect={(date) => setNewPaymentData({...newPaymentData, date})} initialFocus />
-                                                    </PopoverContent>
-                                                </Popover>
-                                            </div>
-                                        </div>
-                                        
-                                        <Separator />
+                                            
+                                            <Separator />
 
-                                        <div>
-                                            <Label className="mb-2 block">Itens da Fatura</Label>
-                                            <div className="space-y-2">
-                                                {newPaymentData.items.map((item, index) => (
-                                                    <div key={item.id} className="flex items-end gap-2">
-                                                        <div className="flex-1">
-                                                            <Label htmlFor={`item-desc-${index}`} className="sr-only">Descrição</Label>
-                                                             <Select onValueChange={(value) => handleProductSelect(index, value)}>
-                                                                <SelectTrigger>
-                                                                    <SelectValue placeholder="Selecione ou digite um item" />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    {availableProducts.map(p => <SelectItem key={p.name} value={p.name}>{p.name}</SelectItem>)}
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                        <div className="w-20">
-                                                            <Label htmlFor={`item-qty-${index}`} className="sr-only">Qtd.</Label>
-                                                            <Input id={`item-qty-${index}`} type="number" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value))} placeholder="Qtd." />
-                                                        </div>
-                                                        <div className="w-28">
-                                                            <Label htmlFor={`item-price-${index}`} className="sr-only">Preço</Label>
-                                                            <Input id={`item-price-${index}`} type="number" step="0.01" value={item.price} onChange={(e) => handleItemChange(index, 'price', parseFloat(e.target.value))} placeholder="Preço" />
-                                                        </div>
-                                                        <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}>
-                                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                                        </Button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <Button type="button" variant="outline" size="sm" className="mt-2" onClick={handleAddItem}>Adicionar Item</Button>
-                                        </div>
-                                        
-                                        <Separator />
-
-                                        <div className="flex justify-end text-right">
                                             <div>
-                                                <p className="text-muted-foreground">Total</p>
-                                                <p className="text-2xl font-bold">R$ {totalAmount.toFixed(2)}</p>
+                                                <Label className="mb-2 block">Itens da Fatura</Label>
+                                                <div className="space-y-2">
+                                                    {newPaymentData.items.map((item, index) => (
+                                                        <div key={item.id} className="flex items-end gap-2">
+                                                            <div className="flex-1">
+                                                                <Label htmlFor={`item-desc-${index}`} className="sr-only">Descrição</Label>
+                                                                <Select onValueChange={(value) => handleProductSelect(index, value)}>
+                                                                    <SelectTrigger>
+                                                                        <SelectValue placeholder="Selecione ou digite um item" />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        {availableProducts.map(p => <SelectItem key={p.name} value={p.name}>{p.name}</SelectItem>)}
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            </div>
+                                                            <div className="w-20">
+                                                                <Label htmlFor={`item-qty-${index}`} className="sr-only">Qtd.</Label>
+                                                                <Input id={`item-qty-${index}`} type="number" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value))} placeholder="Qtd." />
+                                                            </div>
+                                                            <div className="w-28">
+                                                                <Label htmlFor={`item-price-${index}`} className="sr-only">Preço</Label>
+                                                                <Input id={`item-price-${index}`} type="number" step="0.01" value={item.price} onChange={(e) => handleItemChange(index, 'price', parseFloat(e.target.value))} placeholder="Preço" />
+                                                            </div>
+                                                            <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}>
+                                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                                            </Button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <Button type="button" variant="outline" size="sm" className="mt-2" onClick={handleAddItem}>Adicionar Item</Button>
+                                            </div>
+                                            
+                                            <Separator />
+
+                                            <div className="flex justify-end text-right">
+                                                <div>
+                                                    <p className="text-muted-foreground">Total</p>
+                                                    <p className="text-2xl font-bold">R$ {totalAmount.toFixed(2)}</p>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    </form>
-                                    <DialogFooter>
-                                        <Button type="submit" form="payment-form">Salvar Pagamento e Gerar Nota</Button>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
+                                        </form>
+                                        <DialogFooter>
+                                            <Button type="submit" form="payment-form">Salvar Pagamento e Gerar Nota</Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -345,7 +379,7 @@ export default function FinancialPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {payments.map((payment) => (
+                                {filteredPayments.length > 0 ? filteredPayments.map((payment) => (
                                     <TableRow key={payment.id}>
                                         <TableCell className="font-medium">{payment.student}</TableCell>
                                         <TableCell>R$ {payment.amount}</TableCell>
@@ -371,7 +405,13 @@ export default function FinancialPage() {
                                             </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                )) : (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center">
+                                            Nenhum pagamento encontrado{studentName ? ` para ${studentName}` : ''}.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                             </TableBody>
                         </Table>
                     </CardContent>
@@ -424,3 +464,5 @@ export default function FinancialPage() {
     </>
   )
 }
+
+    

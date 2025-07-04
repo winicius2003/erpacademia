@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -208,12 +209,12 @@ export default function MembersPage() {
     setIsDeleteAlertOpen(false);
   };
 
-  const handleViewWorkouts = () => {
+  const handleViewWorkouts = (member: Member) => {
     router.push('/dashboard/workouts');
   };
 
-  const handleViewPayments = () => {
-    router.push('/dashboard/financial');
+  const handleViewPayments = (member: Member) => {
+    router.push(`/dashboard/financial?student=${encodeURIComponent(member.name)}`);
   };
 
   return (
@@ -487,3 +488,5 @@ function MemberTable({
         </Table>
     )
 }
+
+    
