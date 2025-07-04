@@ -3,9 +3,9 @@
 
 import * as React from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { format, isToday, isThisWeek, isThisMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, subDays } from "date-fns"
+import { format, isToday, isThisWeek, isThisMonth, eachDayOfInterval, isSameDay, subDays } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { MoreHorizontal, PlusCircle, Download, Calendar as CalendarIcon, DollarSign, TrendingUp, Users, AlertCircle, Trash2, X, Target } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Download, Calendar as CalendarIcon, DollarSign, TrendingUp, Users, AlertCircle, Trash2, X, Target, Loader2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -66,25 +66,9 @@ import { RevenueChart } from "@/components/revenue-chart"
 import { ProjectedRevenueChart } from "@/components/projected-revenue-chart"
 import { InvoiceDialog } from "@/components/invoice-dialog"
 import { Separator } from "@/components/ui/separator"
-
-const initialPayments = [
-  { id: "P001", student: "João Silva", items: [{id: 1, description: "Plano Anual", quantity: 1, price: 97.00}], amount: "97.00", date: format(new Date(), "yyyy-MM-dd"), status: "Pago" },
-  { id: "P002", student: "Maria Oliveira", items: [{id: 1, description: "Plano Trimestral", quantity: 1, price: 197.00}], amount: "197.00", date: format(subDays(new Date(), 2), "yyyy-MM-dd"), status: "Pago" },
-  { id: "P003", student: "Carlos Pereira", items: [{id: 1, description: "Plano Mensal", quantity: 1, price: 97.00}], amount: "97.00", date: "2024-07-10", status: "Pendente" },
-  { id: "P004", student: "Ana Costa", items: [{id: 1, description: "Plano Anual", quantity: 1, price: 97.00}], amount: "97.00", date: format(subDays(new Date(), 1), "yyyy-MM-dd"), status: "Pago" },
-  { id: "P005", student: "João Silva", items: [{id: 1, description: "Plano Mensal", quantity: 1, price: 97.00}], amount: "97.00", date: "2024-06-01", status: "Pago" },
-]
-
-// Temporarily keeping mock data here until other pages are connected to Firestore
-const initialMembers = [
-    { id: "A001", name: "João Silva", plan: "Anual", status: "Ativo" },
-    { id: "A002", name: "Maria Oliveira", plan: "Trimestral", status: "Ativo" },
-    { id: "A003", name: "Carlos Pereira", plan: "Mensal", status: "Atrasado" },
-    { id: "A004", name: "Ana Costa", plan: "Anual", status: "Ativo" },
-    { id: "A005", name: "Paulo Souza", plan: "Trimestral", status: "Ativo" },
-    { id: "A006", name: "Beatriz Lima", plan: "Mensal", status: "Ativo" },
-    { id: "A007", name: "Lucas Martins", plan: "Anual", status: "Ativo" },
-]
+import { useToast } from "@/hooks/use-toast"
+import { getMembers, type Member } from "@/services/members"
+import { getPayments, addPayment, type Payment } from "@/services/payments"
 
 const planPrices = {
     "Mensal": { price: 97.00, duration: 30 },
@@ -111,15 +95,36 @@ const availableProducts = [
 export default function FinancialPage() {
     const searchParams = useSearchParams()
     const router = useRouter()
+    const { toast } = useToast()
     const studentName = searchParams.get('student')
 
-    const [payments, setPayments] = React.useState(initialPayments)
-    const [filteredPayments, setFilteredPayments] = React.useState(initialPayments)
+    const [payments, setPayments] = React.useState<Payment[]>([])
+    const [members, setMembers] = React.useState<Member[]>([])
+    const [isLoading, setIsLoading] = React.useState(true)
+
+    const [filteredPayments, setFilteredPayments] = React.useState<Payment[]>([])
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false)
     const [isInvoiceOpen, setIsInvoiceOpen] = React.useState(false)
-    const [currentInvoice, setCurrentInvoice] = React.useState(null)
+    const [currentInvoice, setCurrentInvoice] = React.useState<Payment | null>(null)
     const [cashFlowData, setCashFlowData] = React.useState({ daily: {}, weekly: {}, monthly: {} })
     const [projectionChartData, setProjectionChartData] = React.useState([])
+
+    const fetchData = React.useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const [paymentsData, membersData] = await Promise.all([getPayments(), getMembers()]);
+            setPayments(paymentsData);
+            setMembers(membersData);
+        } catch (error) {
+            toast({ title: "Erro ao buscar dados", description: "Não foi possível carregar os dados financeiros.", variant: "destructive" });
+        } finally {
+            setIsLoading(false);
+        }
+    }, [toast]);
+
+    React.useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
 
     React.useEffect(() => {
@@ -131,12 +136,10 @@ export default function FinancialPage() {
     }, [studentName, payments]);
     
     React.useEffect(() => {
-        // --- Calculations ---
-        const activeMembers = initialMembers.filter(m => m.status === 'Ativo')
+        const activeMembers = members.filter(m => m.status === 'Ativo')
         
-        // Projected Revenue
         const projectedDailyRevenue = activeMembers.reduce((acc, member) => {
-            const plan = planPrices[member.plan]
+            const plan = planPrices[member.plan as keyof typeof planPrices]
             if(plan) {
                 return acc + (plan.price / plan.duration)
             }
@@ -146,7 +149,6 @@ export default function FinancialPage() {
         const projectedWeeklyRevenue = projectedDailyRevenue * 7
         const projectedMonthlyRevenue = projectedDailyRevenue * 30
 
-        // Actual Revenue
         const now = new Date()
         const actualDailyRevenue = payments
             .filter(p => isToday(new Date(p.date.replace(/-/g, '/'))))
@@ -166,7 +168,6 @@ export default function FinancialPage() {
             monthly: { actual: actualMonthlyRevenue, projected: projectedMonthlyRevenue }
         })
 
-        // Projection Chart Data (last 7 days)
         const past7Days = eachDayOfInterval({
             start: subDays(now, 6),
             end: now
@@ -186,7 +187,7 @@ export default function FinancialPage() {
         });
         setProjectionChartData(chartData)
 
-    }, [payments])
+    }, [payments, members])
 
     const [newPaymentData, setNewPaymentData] = React.useState({
         student: "",
@@ -194,9 +195,9 @@ export default function FinancialPage() {
         items: [{ id: 1, description: "Plano Mensal", quantity: 1, price: 97.00 }],
     })
 
-    const handleItemChange = (index, field, value) => {
+    const handleItemChange = (index: number, field: string, value: any) => {
         const updatedItems = [...newPaymentData.items]
-        updatedItems[index][field] = value
+        updatedItems[index] = { ...updatedItems[index], [field]: value }
         setNewPaymentData({ ...newPaymentData, items: updatedItems })
     }
 
@@ -205,12 +206,12 @@ export default function FinancialPage() {
         setNewPaymentData({ ...newPaymentData, items: [...newPaymentData.items, newItem] })
     }
 
-    const handleRemoveItem = (index) => {
+    const handleRemoveItem = (index: number) => {
         const updatedItems = newPaymentData.items.filter((_, i) => i !== index)
         setNewPaymentData({ ...newPaymentData, items: updatedItems })
     }
     
-    const handleProductSelect = (index, productName) => {
+    const handleProductSelect = (index: number, productName: string) => {
         const product = availableProducts.find(p => p.name === productName);
         if (product) {
             const updatedItems = [...newPaymentData.items];
@@ -221,25 +222,36 @@ export default function FinancialPage() {
 
     const totalAmount = newPaymentData.items.reduce((sum, item) => sum + (item.quantity * item.price), 0)
 
-    const handleSavePayment = (e: React.FormEvent) => {
+    const handleSavePayment = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newPaymentData.student || newPaymentData.items.length === 0) {
             return;
         }
 
-        const newPayment = {
-            id: `P${String(payments.length + 1).padStart(3, '0')}`,
+        const newPayment: Omit<Payment, 'id'> = {
             student: newPaymentData.student,
             items: newPaymentData.items,
             amount: totalAmount.toFixed(2),
             date: format(newPaymentData.date, "yyyy-MM-dd"),
             status: "Pago",
         }
-        setPayments(prev => [newPayment, ...prev]);
-        setCurrentInvoice(newPayment);
-        setIsPaymentDialogOpen(false);
-        setIsInvoiceOpen(true);
-        setNewPaymentData({ student: "", date: new Date(), items: [{ id: 1, description: "", quantity: 1, price: 0.00 }] });
+
+        setIsLoading(true);
+        try {
+            const newId = await addPayment(newPayment);
+            const savedPayment = { ...newPayment, id: newId };
+
+            setPayments(prev => [savedPayment, ...prev]);
+            setCurrentInvoice(savedPayment);
+            setIsPaymentDialogOpen(false);
+            setIsInvoiceOpen(true);
+            setNewPaymentData({ student: "", date: new Date(), items: [{ id: 1, description: "", quantity: 1, price: 0.00 }] });
+            toast({ title: "Pagamento Registrado", description: "A fatura foi gerada com sucesso." });
+        } catch (error) {
+            toast({ title: "Erro ao salvar pagamento", variant: "destructive" });
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     const clearFilter = () => {
@@ -247,6 +259,14 @@ export default function FinancialPage() {
     };
     
     const defaultTab = studentName ? "payments" : "overview";
+
+    if (isLoading) {
+      return (
+        <div className="flex h-64 w-full items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )
+    }
 
     return (
     <>
@@ -267,7 +287,7 @@ export default function FinancialPage() {
                                 <DollarSign className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">R$ 45.231,89</div>
+                                <div className="text-2xl font-bold">R$ {cashFlowData.monthly.actual?.toFixed(2) || '0.00'}</div>
                                 <p className="text-xs text-muted-foreground">+20.1% em relação ao mês passado</p>
                             </CardContent>
                         </Card>
@@ -287,8 +307,8 @@ export default function FinancialPage() {
                                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">+R$ 2.350,00</div>
-                                <p className="text-xs text-muted-foreground">5 pagamentos recebidos</p>
+                                <div className="text-2xl font-bold">+R$ {cashFlowData.daily.actual?.toFixed(2) || '0.00'}</div>
+                                <p className="text-xs text-muted-foreground">{payments.filter(p => isToday(new Date(p.date.replace(/-/g, '/')))).length} pagamentos recebidos</p>
                             </CardContent>
                         </Card>
                         <Card>
@@ -460,7 +480,7 @@ export default function FinancialPage() {
                                                         list="student-datalist"
                                                     />
                                                     <datalist id="student-datalist">
-                                                        {initialMembers.map((member) => (
+                                                        {members.map((member) => (
                                                             <option key={member.id} value={member.name} />
                                                         ))}
                                                     </datalist>
@@ -478,7 +498,7 @@ export default function FinancialPage() {
                                                             </Button>
                                                         </PopoverTrigger>
                                                         <PopoverContent className="w-auto p-0">
-                                                            <Calendar mode="single" selected={newPaymentData.date} onSelect={(date) => setNewPaymentData({...newPaymentData, date})} initialFocus />
+                                                            <Calendar mode="single" selected={newPaymentData.date} onSelect={(date) => date && setNewPaymentData({...newPaymentData, date})} initialFocus />
                                                         </PopoverContent>
                                                     </Popover>
                                                 </div>
@@ -530,7 +550,7 @@ export default function FinancialPage() {
                                         </div>
                                         </form>
                                         <DialogFooter>
-                                            <Button type="submit" form="payment-form">Salvar Pagamento e Gerar Nota</Button>
+                                            <Button type="submit" form="payment-form" disabled={isLoading}>Salvar Pagamento e Gerar Nota</Button>
                                         </DialogFooter>
                                     </DialogContent>
                                 </Dialog>

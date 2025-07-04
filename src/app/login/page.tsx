@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Lock, User } from "lucide-react"
+import { Lock, User, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/logo"
 import { useToast } from "@/hooks/use-toast"
-import { initialEmployees } from "@/app/dashboard/access-control/page"
+import { getEmployeeByLogin } from "@/services/employees"
 
 const masterAdmin = {
   name: "Administrador Master",
@@ -31,21 +31,19 @@ export default function LoginPage() {
   const { toast } = useToast()
   const [login, setLogin] = React.useState("")
   const [password, setPassword] = React.useState("")
+  const [isLoading, setIsLoading] = React.useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
 
     let userFound = null
 
-    // Check for master admin
     if (login === masterAdmin.login && password === masterAdmin.password) {
       userFound = { name: masterAdmin.name, role: masterAdmin.role }
     } else {
-      // Check for employees
-      const employee = initialEmployees.find(
-        (emp) => emp.login === login && emp.password === password
-      )
-      if (employee) {
+      const employee = await getEmployeeByLogin(login)
+      if (employee && employee.password === password) {
         userFound = { name: employee.name, role: employee.role }
       }
     }
@@ -60,6 +58,7 @@ export default function LoginPage() {
         variant: "destructive",
       })
     }
+    setIsLoading(false)
   }
 
   return (
@@ -85,11 +84,12 @@ export default function LoginPage() {
                 <Input
                   id="login"
                   type="text"
-                  placeholder="seu.login"
+                  placeholder="seu.login ou admin@admin"
                   required
                   className="pl-8"
                   value={login}
                   onChange={(e) => setLogin(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -112,13 +112,15 @@ export default function LoginPage() {
                   className="pl-8"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full font-bold">
+            <Button type="submit" className="w-full font-bold" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Entrar
             </Button>
-            <Button variant="outline" className="w-full" type="button">
+            <Button variant="outline" className="w-full" type="button" disabled={isLoading}>
               Entrar com Google
             </Button>
           </form>
