@@ -276,140 +276,142 @@ export default function MembersPage() {
                   {user.role === 'Professor' ? 'Gerencie os seus alunos.' : 'Gerencie os alunos da sua academia.'}
                 </CardDescription>
               </div>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={handleAddNewClick}><PlusCircle className="mr-2 h-4 w-4" />Adicionar Aluno</Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>{isEditing ? 'Editar Aluno' : 'Adicionar Novo Aluno'}</DialogTitle>
-                    <DialogDescription>
-                      {isEditing ? 'Atualize os dados do aluno.' : 'Preencha a ficha completa do aluno.'}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form id="add-member-form" onSubmit={handleSaveMember}>
-                    <Tabs defaultValue="personal-data">
-                      <TabsList className="grid w-full grid-cols-3">
-                          <TabsTrigger value="personal-data">Dados Pessoais</TabsTrigger>
-                          <TabsTrigger value="address">Endereço</TabsTrigger>
-                          <TabsTrigger value="emergency">Emergência</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="personal-data" className="py-4">
-                          <div className="grid grid-cols-2 gap-4">
+              {user.role !== 'Professor' && (
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={handleAddNewClick}><PlusCircle className="mr-2 h-4 w-4" />Adicionar Aluno</Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>{isEditing ? 'Editar Aluno' : 'Adicionar Novo Aluno'}</DialogTitle>
+                      <DialogDescription>
+                        {isEditing ? 'Atualize os dados do aluno.' : 'Preencha a ficha completa do aluno.'}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form id="add-member-form" onSubmit={handleSaveMember}>
+                      <Tabs defaultValue="personal-data">
+                        <TabsList className="grid w-full grid-cols-3">
+                            <TabsTrigger value="personal-data">Dados Pessoais</TabsTrigger>
+                            <TabsTrigger value="address">Endereço</TabsTrigger>
+                            <TabsTrigger value="emergency">Emergência</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="personal-data" className="py-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="name">Nome Completo</Label>
+                                    <Input id="name" value={memberFormData.name} onChange={(e) => handleInputChange('name', e.target.value)} placeholder="Nome do aluno" />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="email">E-mail</Label>
+                                    <Input id="email" type="email" value={memberFormData.email} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="email@exemplo.com" />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="phone">WhatsApp</Label>
+                                    <Input id="phone" type="tel" value={memberFormData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} placeholder="(99) 99999-9999" />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="dob">Nascimento</Label>
+                                    <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !memberFormData.dob && "text-muted-foreground")}>
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {memberFormData.dob ? format(memberFormData.dob, "dd/MM/yyyy") : <span>Escolha uma data</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar mode="single" selected={memberFormData.dob} onSelect={(d) => handleInputChange('dob', d)} initialFocus />
+                                    </PopoverContent>
+                                    </Popover>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="cpf">CPF</Label>
+                                    <Input id="cpf" value={memberFormData.cpf} onChange={(e) => handleInputChange('cpf', e.target.value)} placeholder="000.000.000-00" />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="rg">RG</Label>
+                                    <Input id="rg" value={memberFormData.rg} onChange={(e) => handleInputChange('rg', e.target.value)} placeholder="00.000.000-0" />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="plan">Plano</Label>
+                                    <Select value={memberFormData.plan} onValueChange={(v) => handleInputChange('plan', v)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Selecione um plano" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Mensal">Mensal</SelectItem>
+                                        <SelectItem value="Trimestral">Trimestral</SelectItem>
+                                        <SelectItem value="Anual">Anual</SelectItem>
+                                    </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="expires">Expira em</Label>
+                                    <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !memberFormData.expires && "text-muted-foreground")}>
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {memberFormData.expires ? format(memberFormData.expires, "dd/MM/yyyy") : <span>Escolha uma data</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar mode="single" selected={memberFormData.expires} onSelect={(d) => handleInputChange('expires', d)} initialFocus />
+                                    </PopoverContent>
+                                    </Popover>
+                                </div>
+                            </div>
+                        </TabsContent>
+                        <TabsContent value="address" className="py-4">
+                            <div className="grid grid-cols-4 gap-4">
+                                <div className="grid gap-2 col-span-1">
+                                    <Label htmlFor="zip">CEP</Label>
+                                    <Input id="zip" value={memberFormData.address.zip} onChange={(e) => handleNestedChange('address', 'zip', e.target.value)} placeholder="00000-000" />
+                                </div>
+                                <div className="grid gap-2 col-span-3">
+                                    <Label htmlFor="street">Rua</Label>
+                                    <Input id="street" value={memberFormData.address.street} onChange={(e) => handleNestedChange('address', 'street', e.target.value)} placeholder="Nome da rua" />
+                                </div>
+                                <div className="grid gap-2 col-span-1">
+                                    <Label htmlFor="number">Número</Label>
+                                    <Input id="number" value={memberFormData.address.number} onChange={(e) => handleNestedChange('address', 'number', e.target.value)} />
+                                </div>
+                                <div className="grid gap-2 col-span-3">
+                                    <Label htmlFor="complement">Complemento</Label>
+                                    <Input id="complement" value={memberFormData.address.complement} onChange={(e) => handleNestedChange('address', 'complement', e.target.value)} placeholder="Apto, bloco, etc." />
+                                </div>
+                                <div className="grid gap-2 col-span-2">
+                                    <Label htmlFor="neighborhood">Bairro</Label>
+                                    <Input id="neighborhood" value={memberFormData.address.neighborhood} onChange={(e) => handleNestedChange('address', 'neighborhood', e.target.value)} />
+                                </div>
+                                <div className="grid gap-2 col-span-1">
+                                    <Label htmlFor="city">Cidade</Label>
+                                    <Input id="city" value={memberFormData.address.city} onChange={(e) => handleNestedChange('address', 'city', e.target.value)} />
+                                </div>
+                                <div className="grid gap-2 col-span-1">
+                                    <Label htmlFor="state">Estado</Label>
+                                    <Input id="state" value={memberFormData.address.state} onChange={(e) => handleNestedChange('address', 'state', e.target.value)} />
+                                </div>
+                            </div>
+                        </TabsContent>
+                        <TabsContent value="emergency" className="py-4">
+                            <div className="grid grid-cols-2 gap-4">
                               <div className="grid gap-2">
-                                  <Label htmlFor="name">Nome Completo</Label>
-                                  <Input id="name" value={memberFormData.name} onChange={(e) => handleInputChange('name', e.target.value)} placeholder="Nome do aluno" />
-                              </div>
-                              <div className="grid gap-2">
-                                  <Label htmlFor="email">E-mail</Label>
-                                  <Input id="email" type="email" value={memberFormData.email} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="email@exemplo.com" />
-                              </div>
-                              <div className="grid gap-2">
-                                  <Label htmlFor="phone">WhatsApp</Label>
-                                  <Input id="phone" type="tel" value={memberFormData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} placeholder="(99) 99999-9999" />
-                              </div>
-                              <div className="grid gap-2">
-                                  <Label htmlFor="dob">Nascimento</Label>
-                                  <Popover>
-                                  <PopoverTrigger asChild>
-                                      <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !memberFormData.dob && "text-muted-foreground")}>
-                                      <CalendarIcon className="mr-2 h-4 w-4" />
-                                      {memberFormData.dob ? format(memberFormData.dob, "dd/MM/yyyy") : <span>Escolha uma data</span>}
-                                      </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0">
-                                      <Calendar mode="single" selected={memberFormData.dob} onSelect={(d) => handleInputChange('dob', d)} initialFocus />
-                                  </PopoverContent>
-                                  </Popover>
-                              </div>
-                              <div className="grid gap-2">
-                                  <Label htmlFor="cpf">CPF</Label>
-                                  <Input id="cpf" value={memberFormData.cpf} onChange={(e) => handleInputChange('cpf', e.target.value)} placeholder="000.000.000-00" />
-                              </div>
-                              <div className="grid gap-2">
-                                  <Label htmlFor="rg">RG</Label>
-                                  <Input id="rg" value={memberFormData.rg} onChange={(e) => handleInputChange('rg', e.target.value)} placeholder="00.000.000-0" />
-                              </div>
-                              <div className="grid gap-2">
-                                  <Label htmlFor="plan">Plano</Label>
-                                  <Select value={memberFormData.plan} onValueChange={(v) => handleInputChange('plan', v)}>
-                                  <SelectTrigger>
-                                      <SelectValue placeholder="Selecione um plano" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                      <SelectItem value="Mensal">Mensal</SelectItem>
-                                      <SelectItem value="Trimestral">Trimestral</SelectItem>
-                                      <SelectItem value="Anual">Anual</SelectItem>
-                                  </SelectContent>
-                                  </Select>
-                              </div>
-                              <div className="grid gap-2">
-                                  <Label htmlFor="expires">Expira em</Label>
-                                  <Popover>
-                                  <PopoverTrigger asChild>
-                                      <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !memberFormData.expires && "text-muted-foreground")}>
-                                      <CalendarIcon className="mr-2 h-4 w-4" />
-                                      {memberFormData.expires ? format(memberFormData.expires, "dd/MM/yyyy") : <span>Escolha uma data</span>}
-                                      </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0">
-                                      <Calendar mode="single" selected={memberFormData.expires} onSelect={(d) => handleInputChange('expires', d)} initialFocus />
-                                  </PopoverContent>
-                                  </Popover>
-                              </div>
-                          </div>
-                      </TabsContent>
-                      <TabsContent value="address" className="py-4">
-                          <div className="grid grid-cols-4 gap-4">
-                              <div className="grid gap-2 col-span-1">
-                                  <Label htmlFor="zip">CEP</Label>
-                                  <Input id="zip" value={memberFormData.address.zip} onChange={(e) => handleNestedChange('address', 'zip', e.target.value)} placeholder="00000-000" />
-                              </div>
-                              <div className="grid gap-2 col-span-3">
-                                  <Label htmlFor="street">Rua</Label>
-                                  <Input id="street" value={memberFormData.address.street} onChange={(e) => handleNestedChange('address', 'street', e.target.value)} placeholder="Nome da rua" />
-                              </div>
-                              <div className="grid gap-2 col-span-1">
-                                  <Label htmlFor="number">Número</Label>
-                                  <Input id="number" value={memberFormData.address.number} onChange={(e) => handleNestedChange('address', 'number', e.target.value)} />
-                              </div>
-                              <div className="grid gap-2 col-span-3">
-                                  <Label htmlFor="complement">Complemento</Label>
-                                  <Input id="complement" value={memberFormData.address.complement} onChange={(e) => handleNestedChange('address', 'complement', e.target.value)} placeholder="Apto, bloco, etc." />
-                              </div>
-                              <div className="grid gap-2 col-span-2">
-                                  <Label htmlFor="neighborhood">Bairro</Label>
-                                  <Input id="neighborhood" value={memberFormData.address.neighborhood} onChange={(e) => handleNestedChange('address', 'neighborhood', e.target.value)} />
-                              </div>
-                              <div className="grid gap-2 col-span-1">
-                                  <Label htmlFor="city">Cidade</Label>
-                                  <Input id="city" value={memberFormData.address.city} onChange={(e) => handleNestedChange('address', 'city', e.target.value)} />
-                              </div>
-                              <div className="grid gap-2 col-span-1">
-                                  <Label htmlFor="state">Estado</Label>
-                                  <Input id="state" value={memberFormData.address.state} onChange={(e) => handleNestedChange('address', 'state', e.target.value)} />
-                              </div>
-                          </div>
-                      </TabsContent>
-                      <TabsContent value="emergency" className="py-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="grid gap-2">
-                                  <Label htmlFor="emergency-name">Nome do Contato</Label>
-                                  <Input id="emergency-name" value={memberFormData.emergencyContact.name} onChange={(e) => handleNestedChange('emergencyContact', 'name', e.target.value)} placeholder="Nome completo" />
-                              </div>
-                              <div className="grid gap-2">
-                                  <Label htmlFor="emergency-phone">Telefone do Contato</Label>
-                                  <Input id="emergency-phone" value={memberFormData.emergencyContact.phone} onChange={(e) => handleNestedChange('emergencyContact', 'phone', e.target.value)} placeholder="(99) 99999-9999" />
-                              </div>
-                          </div>
-                      </TabsContent>
-                    </Tabs>
-                  </form>
-                  <DialogFooter>
-                    <Button type="submit" form="add-member-form">{isEditing ? 'Salvar Alterações' : 'Salvar Aluno'}</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                                    <Label htmlFor="emergency-name">Nome do Contato</Label>
+                                    <Input id="emergency-name" value={memberFormData.emergencyContact.name} onChange={(e) => handleNestedChange('emergencyContact', 'name', e.target.value)} placeholder="Nome completo" />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="emergency-phone">Telefone do Contato</Label>
+                                    <Input id="emergency-phone" value={memberFormData.emergencyContact.phone} onChange={(e) => handleNestedChange('emergencyContact', 'phone', e.target.value)} placeholder="(99) 99999-9999" />
+                                </div>
+                            </div>
+                        </TabsContent>
+                      </Tabs>
+                    </form>
+                    <DialogFooter>
+                      <Button type="submit" form="add-member-form">{isEditing ? 'Salvar Alterações' : 'Salvar Aluno'}</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
           </div>
         </CardHeader>
         <CardContent>
@@ -417,7 +419,9 @@ export default function MembersPage() {
             <TabsList>
               <TabsTrigger value="all">Todos</TabsTrigger>
               <TabsTrigger value="active">Ativos</TabsTrigger>
-              <TabsTrigger value="overdue">Inadimplentes</TabsTrigger>
+              {user.role !== 'Professor' && (
+                <TabsTrigger value="overdue">Inadimplentes</TabsTrigger>
+              )}
             </TabsList>
             <TabsContent value="all">
               <MemberTable 
@@ -439,16 +443,18 @@ export default function MembersPage() {
                 onViewPayments={handleViewPayments}
               />
             </TabsContent>
-            <TabsContent value="overdue">
-              <MemberTable 
-                data={displayMembers.filter(m => m.status === 'Atrasado')}
-                userRole={user.role}
-                onEdit={handleEditClick}
-                onDelete={handleDeleteClick}
-                onViewWorkouts={handleViewWorkouts}
-                onViewPayments={handleViewPayments}
-              />
-            </TabsContent>
+            {user.role !== 'Professor' && (
+              <TabsContent value="overdue">
+                <MemberTable 
+                  data={displayMembers.filter(m => m.status === 'Atrasado')}
+                  userRole={user.role}
+                  onEdit={handleEditClick}
+                  onDelete={handleDeleteClick}
+                  onViewWorkouts={handleViewWorkouts}
+                  onViewPayments={handleViewPayments}
+                />
+              </TabsContent>
+            )}
           </Tabs>
         </CardContent>
       </Card>
