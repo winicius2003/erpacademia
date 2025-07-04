@@ -61,46 +61,76 @@ import {
 } from "@/components/ui/tabs"
 
 const initialMembers = [
-  { id: "A001", name: "João Silva", email: "joao.silva@example.com", phone: "(11) 98765-4321", plan: "Anual", status: "Ativo", expires: "2024-12-31" },
-  { id: "A002", name: "Maria Oliveira", email: "maria.o@example.com", phone: "(21) 91234-5678", plan: "Trimestral", status: "Ativo", expires: "2024-11-30" },
-  { id: "A003", name: "Carlos Pereira", email: "carlos.p@example.com", phone: "(31) 95555-1234", plan: "Mensal", status: "Atrasado", expires: "2024-05-15" },
-  { id: "A004", name: "Ana Costa", email: "ana.costa@example.com", phone: "(41) 98888-4321", plan: "Anual", status: "Ativo", expires: "2025-01-20" },
-  { id: "A005", name: "Paulo Souza", email: "paulo.souza@example.com", phone: "(51) 99999-8765", plan: "Trimestral", status: "Ativo", expires: "2024-10-10" },
+  { id: "A001", name: "João Silva", email: "joao.silva@example.com", phone: "(11) 98765-4321", plan: "Anual", status: "Ativo", expires: "2024-12-31", cpf: "123.456.789-10", rg: "12.345.678-9" },
+  { id: "A002", name: "Maria Oliveira", email: "maria.o@example.com", phone: "(21) 91234-5678", plan: "Trimestral", status: "Ativo", expires: "2024-11-30", cpf: "111.222.333-44", rg: "11.222.333-4" },
+  { id: "A003", name: "Carlos Pereira", email: "carlos.p@example.com", phone: "(31) 95555-1234", plan: "Mensal", status: "Atrasado", expires: "2024-05-15", cpf: "222.333.444-55", rg: "22.333.444-5" },
+  { id: "A004", name: "Ana Costa", email: "ana.costa@example.com", phone: "(41) 98888-4321", plan: "Anual", status: "Ativo", expires: "2025-01-20", cpf: "333.444.555-66", rg: "33.444.555-6" },
+  { id: "A005", name: "Paulo Souza", email: "paulo.souza@example.com", phone: "(51) 99999-8765", plan: "Trimestral", status: "Ativo", expires: "2024-10-10", cpf: "444.555.666-77", rg: "44.555.666-7" },
 ]
+
+const initialNewMemberState = {
+  name: "",
+  email: "",
+  phone: "",
+  dob: undefined as Date | undefined,
+  cpf: "",
+  rg: "",
+  plan: "Mensal",
+  expires: new Date() as Date | undefined,
+  address: {
+    street: "",
+    number: "",
+    complement: "",
+    neighborhood: "",
+    city: "",
+    state: "",
+    zip: "",
+  },
+  emergencyContact: {
+    name: "",
+    phone: "",
+  },
+}
 
 export default function MembersPage() {
   const [members, setMembers] = React.useState(initialMembers)
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+  const [newMemberData, setNewMemberData] = React.useState(initialNewMemberState)
 
-  const [name, setName] = React.useState("")
-  const [email, setEmail] = React.useState("")
-  const [phone, setPhone] = React.useState("")
-  const [dob, setDob] = React.useState<Date | undefined>()
-  const [plan, setPlan] = React.useState("Mensal")
-  const [expires, setExpires] = React.useState<Date | undefined>(new Date())
+  const handleInputChange = (field: keyof typeof newMemberData, value: any) => {
+    setNewMemberData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleNestedChange = (category: 'address' | 'emergencyContact', field: string, value: string) => {
+    setNewMemberData(prev => ({
+      ...prev,
+      [category]: {
+        ...prev[category],
+        [field]: value
+      }
+    }))
+  }
 
   const handleAddMember = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name || !plan || !expires || !email) return
+    if (!newMemberData.name || !newMemberData.plan || !newMemberData.expires || !newMemberData.email) return
 
     const newMember = {
       id: `A${String(members.length + 1).padStart(3, '0')}`,
-      name,
-      email,
-      phone: phone || "",
-      plan,
+      name: newMemberData.name,
+      email: newMemberData.email,
+      phone: newMemberData.phone,
+      cpf: newMemberData.cpf,
+      rg: newMemberData.rg,
+      plan: newMemberData.plan,
       status: "Ativo",
-      expires: format(expires, "yyyy-MM-dd"),
+      expires: format(newMemberData.expires, "yyyy-MM-dd"),
+      //... store other data like address if needed
     }
-    setMembers((prevMembers) => [...prevMembers, newMember])
+    setMembers((prevMembers) => [newMember, ...prevMembers])
 
     // Reset form
-    setName("")
-    setEmail("")
-    setPhone("")
-    setDob(undefined)
-    setPlan("Mensal")
-    setExpires(new Date())
+    setNewMemberData(initialNewMemberState)
     setIsDialogOpen(false)
   }
 
@@ -116,101 +146,130 @@ export default function MembersPage() {
               <DialogTrigger asChild>
                 <Button><PlusCircle className="mr-2 h-4 w-4" />Adicionar Aluno</Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
+              <DialogContent className="sm:max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Adicionar Novo Aluno</DialogTitle>
                   <DialogDescription>
-                    Preencha os detalhes abaixo para adicionar um novo aluno.
+                    Preencha a ficha completa do aluno.
                   </DialogDescription>
                 </DialogHeader>
-                <form id="add-member-form" onSubmit={handleAddMember} className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">
-                      Nome
-                    </Label>
-                    <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="col-span-3" placeholder="Nome completo do aluno" />
-                  </div>
-                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="email" className="text-right">
-                      E-mail
-                    </Label>
-                    <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="col-span-3" placeholder="email@exemplo.com" />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="phone" className="text-right">
-                      WhatsApp
-                    </Label>
-                    <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="col-span-3" placeholder="(99) 99999-9999" />
-                  </div>
-                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="dob" className="text-right">
-                      Nascimento
-                    </Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "col-span-3 justify-start text-left font-normal",
-                            !dob && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {dob ? format(dob, "dd/MM/yyyy") : <span>Escolha uma data</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={dob}
-                          onSelect={setDob}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="plan" className="text-right">
-                      Plano
-                    </Label>
-                    <Select value={plan} onValueChange={setPlan}>
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Selecione um plano" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Mensal">Mensal</SelectItem>
-                        <SelectItem value="Trimestral">Trimestral</SelectItem>
-                        <SelectItem value="Anual">Anual</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="expires" className="text-right">
-                      Expira em
-                    </Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "col-span-3 justify-start text-left font-normal",
-                            !expires && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {expires ? format(expires, "dd/MM/yyyy") : <span>Escolha uma data</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={expires}
-                          onSelect={setExpires}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                <form id="add-member-form" onSubmit={handleAddMember}>
+                   <Tabs defaultValue="personal-data">
+                    <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="personal-data">Dados Pessoais</TabsTrigger>
+                        <TabsTrigger value="address">Endereço</TabsTrigger>
+                        <TabsTrigger value="emergency">Emergência</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="personal-data" className="py-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="name">Nome Completo</Label>
+                                <Input id="name" value={newMemberData.name} onChange={(e) => handleInputChange('name', e.target.value)} placeholder="Nome do aluno" />
+                            </div>
+                             <div className="grid gap-2">
+                                <Label htmlFor="email">E-mail</Label>
+                                <Input id="email" type="email" value={newMemberData.email} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="email@exemplo.com" />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="phone">WhatsApp</Label>
+                                <Input id="phone" type="tel" value={newMemberData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} placeholder="(99) 99999-9999" />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="dob">Nascimento</Label>
+                                <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !newMemberData.dob && "text-muted-foreground")}>
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {newMemberData.dob ? format(newMemberData.dob, "dd/MM/yyyy") : <span>Escolha uma data</span>}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                    <Calendar mode="single" selected={newMemberData.dob} onSelect={(d) => handleInputChange('dob', d)} initialFocus />
+                                </PopoverContent>
+                                </Popover>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="cpf">CPF</Label>
+                                <Input id="cpf" value={newMemberData.cpf} onChange={(e) => handleInputChange('cpf', e.target.value)} placeholder="000.000.000-00" />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="rg">RG</Label>
+                                <Input id="rg" value={newMemberData.rg} onChange={(e) => handleInputChange('rg', e.target.value)} placeholder="00.000.000-0" />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="plan">Plano</Label>
+                                <Select value={newMemberData.plan} onValueChange={(v) => handleInputChange('plan', v)}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecione um plano" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Mensal">Mensal</SelectItem>
+                                    <SelectItem value="Trimestral">Trimestral</SelectItem>
+                                    <SelectItem value="Anual">Anual</SelectItem>
+                                </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="expires">Expira em</Label>
+                                <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !newMemberData.expires && "text-muted-foreground")}>
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {newMemberData.expires ? format(newMemberData.expires, "dd/MM/yyyy") : <span>Escolha uma data</span>}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                    <Calendar mode="single" selected={newMemberData.expires} onSelect={(d) => handleInputChange('expires', d)} initialFocus />
+                                </PopoverContent>
+                                </Popover>
+                            </div>
+                        </div>
+                    </TabsContent>
+                    <TabsContent value="address" className="py-4">
+                        <div className="grid grid-cols-4 gap-4">
+                            <div className="grid gap-2 col-span-1">
+                                <Label htmlFor="zip">CEP</Label>
+                                <Input id="zip" value={newMemberData.address.zip} onChange={(e) => handleNestedChange('address', 'zip', e.target.value)} placeholder="00000-000" />
+                            </div>
+                            <div className="grid gap-2 col-span-3">
+                                <Label htmlFor="street">Rua</Label>
+                                <Input id="street" value={newMemberData.address.street} onChange={(e) => handleNestedChange('address', 'street', e.target.value)} placeholder="Nome da rua" />
+                            </div>
+                             <div className="grid gap-2 col-span-1">
+                                <Label htmlFor="number">Número</Label>
+                                <Input id="number" value={newMemberData.address.number} onChange={(e) => handleNestedChange('address', 'number', e.target.value)} />
+                            </div>
+                             <div className="grid gap-2 col-span-3">
+                                <Label htmlFor="complement">Complemento</Label>
+                                <Input id="complement" value={newMemberData.address.complement} onChange={(e) => handleNestedChange('address', 'complement', e.target.value)} placeholder="Apto, bloco, etc." />
+                            </div>
+                             <div className="grid gap-2 col-span-2">
+                                <Label htmlFor="neighborhood">Bairro</Label>
+                                <Input id="neighborhood" value={newMemberData.address.neighborhood} onChange={(e) => handleNestedChange('address', 'neighborhood', e.target.value)} />
+                            </div>
+                             <div className="grid gap-2 col-span-1">
+                                <Label htmlFor="city">Cidade</Label>
+                                <Input id="city" value={newMemberData.address.city} onChange={(e) => handleNestedChange('address', 'city', e.target.value)} />
+                            </div>
+                             <div className="grid gap-2 col-span-1">
+                                <Label htmlFor="state">Estado</Label>
+                                <Input id="state" value={newMemberData.address.state} onChange={(e) => handleNestedChange('address', 'state', e.target.value)} />
+                            </div>
+                        </div>
+                    </TabsContent>
+                     <TabsContent value="emergency" className="py-4">
+                        <div className="grid grid-cols-2 gap-4">
+                           <div className="grid gap-2">
+                                <Label htmlFor="emergency-name">Nome do Contato</Label>
+                                <Input id="emergency-name" value={newMemberData.emergencyContact.name} onChange={(e) => handleNestedChange('emergencyContact', 'name', e.target.value)} placeholder="Nome completo" />
+                            </div>
+                             <div className="grid gap-2">
+                                <Label htmlFor="emergency-phone">Telefone do Contato</Label>
+                                <Input id="emergency-phone" value={newMemberData.emergencyContact.phone} onChange={(e) => handleNestedChange('emergencyContact', 'phone', e.target.value)} placeholder="(99) 99999-9999" />
+                            </div>
+                        </div>
+                    </TabsContent>
+                   </Tabs>
                 </form>
                 <DialogFooter>
                   <Button type="submit" form="add-member-form">Salvar Aluno</Button>
@@ -241,7 +300,7 @@ export default function MembersPage() {
   )
 }
 
-function MemberTable({ data }: { data: (typeof initialMembers) }) {
+function MemberTable({ data }: { data: typeof initialMembers }) {
     return (
         <Table>
             <TableHeader>
