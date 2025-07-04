@@ -21,7 +21,7 @@ import { initialEmployees } from "@/app/dashboard/access-control/page"
 
 const masterAdmin = {
   name: "Administrador Master",
-  login: "admin",
+  login: "admin@admin",
   password: "uUmope5Z",
   role: "Admin",
 }
