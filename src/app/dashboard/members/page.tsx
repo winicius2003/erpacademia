@@ -71,37 +71,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { useToast } from "@/hooks/use-toast"
+import { getMembers, addMember, updateMember, deleteMember } from "@/services/members"
 
-export const initialMembers = [
-  { id: "A001", name: "João Silva", email: "joao.silva@example.com", phone: "(11) 98765-4321", plan: "Anual", status: "Ativo", expires: "2024-12-31", cpf: "123.456.789-10", rg: "12.345.678-9", professor: "Carlos de Souza", attendanceStatus: "Presente", workoutStatus: "Completo" },
-  { id: "A002", name: "Maria Oliveira", email: "maria.o@example.com", phone: "(21) 91234-5678", plan: "Trimestral", status: "Ativo", expires: "2024-11-30", cpf: "111.222.333-44", rg: "11.222.333-4", professor: "Carlos de Souza", attendanceStatus: "Presente", workoutStatus: "Pendente" },
-  { id: "A003", name: "Carlos Pereira", email: "carlos.p@example.com", phone: "(31) 95555-1234", plan: "Mensal", status: "Atrasado", expires: "2024-05-15", cpf: "222.333.444-55", rg: "22.333.444-5", professor: "Ricardo Alves", attendanceStatus: "Presente", workoutStatus: "Completo" },
-  { id: "A004", name: "Ana Costa", email: "ana.costa@example.com", phone: "(41) 98888-4321", plan: "Anual", status: "Ativo", expires: "2025-01-20", cpf: "333.444.555-66", rg: "33.444.555-6", professor: "Carlos de Souza", attendanceStatus: "Presente", workoutStatus: "Completo" },
-  { id: "A005", name: "Paulo Souza", email: "paulo.souza@example.com", phone: "(51) 99999-8765", plan: "Trimestral", status: "Ativo", expires: "2024-10-10", cpf: "444.555.666-77", rg: "44.555.666-7", professor: "Ricardo Alves", attendanceStatus: "Faltante", workoutStatus: "Completo" },
-  // Alunos do Winicius
-  { id: "A006", name: "Beatriz Lima", email: "beatriz.l@example.com", phone: "(61) 98765-1111", plan: "Mensal", status: "Ativo", expires: "2024-08-30", cpf: "100.000.000-01", rg: "10.000.000-1", professor: "Winicius", attendanceStatus: "Faltante", workoutStatus: "Completo" },
-  { id: "A007", name: "Lucas Martins", email: "lucas.m@example.com", phone: "(61) 98765-2222", plan: "Anual", status: "Ativo", expires: "2025-07-20", cpf: "100.000.000-02", rg: "10.000.000-2", professor: "Winicius", attendanceStatus: "Faltante", workoutStatus: "Completo" },
-  { id: "A008", name: "Julia Almeida", email: "julia.a@example.com", phone: "(61) 98765-3333", plan: "Trimestral", status: "Ativo", expires: "2024-09-15", cpf: "100.000.000-03", rg: "10.000.000-3", professor: "Winicius", attendanceStatus: "Faltante", workoutStatus: "Pendente" },
-  { id: "A009", name: "Guilherme Barros", email: "guilherme.b@example.com", phone: "(61) 98765-4444", plan: "Mensal", status: "Ativo", expires: "2024-08-25", cpf: "100.000.000-04", rg: "10.000.000-4", professor: "Winicius", attendanceStatus: "Faltante", workoutStatus: "Completo" },
-  { id: "A010", name: "Isabela Gomes", email: "isabela.g@example.com", phone: "(61) 98765-5555", plan: "Anual", status: "Ativo", expires: "2025-06-30", cpf: "100.000.000-05", rg: "10.000.000-5", professor: "Winicius", attendanceStatus: "Faltante", workoutStatus: "Completo" },
-  { id: "A011", name: "Mateus Ferreira", email: "mateus.f@example.com", phone: "(61) 98765-6666", plan: "Trimestral", status: "Ativo", expires: "2024-11-10", cpf: "100.000.000-06", rg: "10.000.000-6", professor: "Winicius", attendanceStatus: "Presente", workoutStatus: "Pendente" },
-  { id: "A012", name: "Larissa Ribeiro", email: "larissa.r@example.com", phone: "(61) 98765-7777", plan: "Mensal", status: "Ativo", expires: "2024-08-28", cpf: "100.000.000-07", rg: "10.000.000-7", professor: "Winicius", attendanceStatus: "Presente", workoutStatus: "Pendente" },
-  { id: "A013", name: "Rafael Dias", email: "rafael.d@example.com", phone: "(61) 98765-8888", plan: "Anual", status: "Ativo", expires: "2025-05-22", cpf: "100.000.000-08", rg: "10.000.000-8", professor: "Winicius", attendanceStatus: "Presente", workoutStatus: "Completo" },
-  { id: "A014", name: "Sofia Nogueira", email: "sofia.n@example.com", phone: "(61) 98765-9999", plan: "Trimestral", status: "Ativo", expires: "2024-12-01", cpf: "100.000.000-09", rg: "10.000.000-9", professor: "Winicius", attendanceStatus: "Presente", workoutStatus: "Completo" },
-  { id: "A015", name: "Thiago Mendes", email: "thiago.m@example.com", phone: "(61) 98765-1010", plan: "Mensal", status: "Ativo", expires: "2024-08-19", cpf: "100.000.000-10", rg: "10.000.000-10", professor: "Winicius", attendanceStatus: "Presente", workoutStatus: "Completo" },
-  { id: "A016", name: "Vitoria Rocha", email: "vitoria.r@example.com", phone: "(61) 98765-1212", plan: "Anual", status: "Ativo", expires: "2025-04-14", cpf: "100.000.000-11", rg: "10.000.000-11", professor: "Winicius", attendanceStatus: "Presente", workoutStatus: "Completo" },
-  { id: "A017", name: "Bruno Pinto", email: "bruno.p@example.com", phone: "(61) 98765-1313", plan: "Trimestral", status: "Ativo", expires: "2024-10-25", cpf: "100.000.000-12", rg: "10.000.000-12", professor: "Winicius", attendanceStatus: "Presente", workoutStatus: "Completo" },
-  { id: "A018", name: "Clara Santos", email: "clara.s@example.com", phone: "(61) 98765-1414", plan: "Mensal", status: "Ativo", expires: "2024-08-22", cpf: "100.000.000-13", rg: "10.000.000-13", professor: "Winicius", attendanceStatus: "Presente", workoutStatus: "Completo" },
-  { id: "A019", name: "Daniel Cardoso", email: "daniel.c@example.com", phone: "(61) 98765-1515", plan: "Anual", status: "Ativo", expires: "2025-03-18", cpf: "100.000.000-14", rg: "10.000.000-14", professor: "Winicius", attendanceStatus: "Presente", workoutStatus: "Completo" },
-  { id: "A020", name: "Evelyn Monteiro", email: "evelyn.m@example.com", phone: "(61) 98765-1616", plan: "Trimestral", status: "Ativo", expires: "2024-11-28", cpf: "100.000.000-15", rg: "10.000.000-15", professor: "Winicius", attendanceStatus: "Presente", workoutStatus: "Completo" },
-  { id: "A021", name: "Felipe Ramos", email: "felipe.r@example.com", phone: "(61) 98765-1717", plan: "Mensal", status: "Ativo", expires: "2024-08-31", cpf: "100.000.000-16", rg: "10.000.000-16", professor: "Winicius", attendanceStatus: "Presente", workoutStatus: "Completo" },
-  { id: "A022", name: "Gabriela Azevedo", email: "gabriela.a@example.com", phone: "(61) 98765-1818", plan: "Anual", status: "Ativo", expires: "2025-02-10", cpf: "100.000.000-17", rg: "10.000.000-17", professor: "Winicius", attendanceStatus: "Presente", workoutStatus: "Completo" },
-  { id: "A023", name: "Heitor Cunha", email: "heitor.c@example.com", phone: "(61) 98765-1919", plan: "Trimestral", status: "Ativo", expires: "2024-10-05", cpf: "100.000.000-18", rg: "10.000.000-18", professor: "Winicius", attendanceStatus: "Presente", workoutStatus: "Completo" },
-  { id: "A024", name: "Igor Teixeira", email: "igor.t@example.com", phone: "(61) 98765-2020", plan: "Mensal", status: "Ativo", expires: "2024-08-15", cpf: "100.000.000-19", rg: "10.000.000-19", professor: "Winicius", attendanceStatus: "Presente", workoutStatus: "Completo" },
-  { id: "A025", name: "Yasmin Sousa", email: "yasmin.s@example.com", phone: "(61) 98765-2121", plan: "Anual", status: "Ativo", expires: "2025-01-25", cpf: "100.000.000-20", rg: "10.000.000-20", professor: "Winicius", attendanceStatus: "Presente", workoutStatus: "Completo" },
-]
-
-type Member = typeof initialMembers[0];
+export type Member = {
+  id: string,
+  name: string,
+  email: string,
+  phone: string,
+  plan: string,
+  status: "Ativo" | "Inativo" | "Atrasado",
+  expires: string,
+  cpf: string,
+  rg: string,
+  professor: string,
+  attendanceStatus: "Presente" | "Faltante",
+  workoutStatus: "Completo" | "Pendente"
+};
 
 const initialMemberFormState = {
   id: "",
@@ -132,7 +118,9 @@ type MemberFormData = typeof initialMemberFormState;
 
 export default function MembersPage() {
   const router = useRouter()
-  const [members, setMembers] = React.useState(initialMembers)
+  const { toast } = useToast()
+  const [members, setMembers] = React.useState<Member[]>([])
+  const [isLoading, setIsLoading] = React.useState(true)
   const [filteredMembers, setFilteredMembers] = React.useState<Member[]>([]);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
@@ -141,6 +129,27 @@ export default function MembersPage() {
   const [memberToDelete, setMemberToDelete] = React.useState<Member | null>(null)
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false)
   const [user, setUser] = React.useState<{ name: string; role: string } | null>(null);
+
+  const fetchMembers = React.useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await getMembers();
+      setMembers(data);
+    } catch (error) {
+      toast({
+        title: "Erro ao buscar alunos",
+        description: "Não foi possível carregar a lista de alunos.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
+
+  React.useEffect(() => {
+    fetchMembers();
+  }, [fetchMembers]);
+
 
   React.useEffect(() => {
     const userData = sessionStorage.getItem("fitcore.user");
@@ -206,45 +215,40 @@ export default function MembersPage() {
     setIsDialogOpen(true);
   };
 
-  const handleSaveMember = (e: React.FormEvent) => {
+  const handleSaveMember = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!memberFormData.name || !memberFormData.plan || !memberFormData.expires || !memberFormData.email) return
 
-    if (isEditing) {
-      setMembers(prev => prev.map(m => {
-        if (m.id === memberFormData.id) {
-          return {
-            ...m,
-            name: memberFormData.name,
-            email: memberFormData.email,
-            phone: memberFormData.phone,
-            cpf: memberFormData.cpf,
-            rg: memberFormData.rg,
-            plan: memberFormData.plan,
-            expires: format(memberFormData.expires!, "yyyy-MM-dd"),
-          }
-        }
-        return m
-      }))
-    } else {
-      const newMember: Member = {
-        id: `A${String(members.length + 1).padStart(3, '0')}`,
+    const memberDataToSave = {
         name: memberFormData.name,
         email: memberFormData.email,
         phone: memberFormData.phone,
         cpf: memberFormData.cpf,
         rg: memberFormData.rg,
         plan: memberFormData.plan,
-        status: "Ativo",
-        expires: format(memberFormData.expires, "yyyy-MM-dd"),
-        professor: "Não atribuído", // Default value
-        attendanceStatus: "Presente", // Default value
-        workoutStatus: "Pendente", // Default value
-      }
-      setMembers((prevMembers) => [newMember, ...prevMembers])
+        expires: format(memberFormData.expires!, "yyyy-MM-dd"),
+        status: "Ativo" as const,
+        professor: "Não atribuído",
+        attendanceStatus: "Presente" as const,
+        workoutStatus: "Pendente" as const,
+    };
+
+    setIsLoading(true);
+    try {
+        if (isEditing) {
+            await updateMember(memberFormData.id, memberDataToSave);
+            toast({ title: "Aluno Atualizado", description: "Os dados do aluno foram atualizados com sucesso." });
+        } else {
+            await addMember(memberDataToSave);
+            toast({ title: "Aluno Adicionado", description: "O novo aluno foi cadastrado com sucesso." });
+        }
+        fetchMembers();
+    } catch (error) {
+        toast({ title: "Erro", description: `Não foi possível salvar o aluno.`, variant: "destructive" });
+    } finally {
+        setIsLoading(false);
+        setIsDialogOpen(false);
     }
-    
-    setIsDialogOpen(false)
   }
 
   const handleDeleteClick = (member: Member) => {
@@ -252,11 +256,20 @@ export default function MembersPage() {
     setIsDeleteAlertOpen(true);
   };
   
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!memberToDelete) return;
-    setMembers(members.filter(m => m.id !== memberToDelete.id));
-    setMemberToDelete(null);
-    setIsDeleteAlertOpen(false);
+    setIsLoading(true);
+    try {
+        await deleteMember(memberToDelete.id);
+        toast({ title: "Aluno Excluído", description: "O aluno foi removido do sistema." });
+        fetchMembers();
+    } catch (error) {
+        toast({ title: "Erro ao excluir", description: "Não foi possível remover o aluno.", variant: "destructive" });
+    } finally {
+        setIsLoading(false);
+        setMemberToDelete(null);
+        setIsDeleteAlertOpen(false);
+    }
   };
 
   const handleViewWorkouts = (member: Member) => {
@@ -267,7 +280,7 @@ export default function MembersPage() {
     router.push(`/dashboard/financial?student=${encodeURIComponent(member.name)}`);
   };
 
-  if (!user) {
+  if (!user || isLoading) {
     return (
       <div className="flex h-64 w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

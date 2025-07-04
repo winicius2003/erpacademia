@@ -75,6 +75,7 @@ const initialPayments = [
   { id: "P005", student: "João Silva", items: [{id: 1, description: "Plano Mensal", quantity: 1, price: 97.00}], amount: "97.00", date: "2024-06-01", status: "Pago" },
 ]
 
+// Temporarily keeping mock data here until other pages are connected to Firestore
 const initialMembers = [
     { id: "A001", name: "João Silva", plan: "Anual", status: "Ativo" },
     { id: "A002", name: "Maria Oliveira", plan: "Trimestral", status: "Ativo" },
