@@ -115,13 +115,13 @@ export default function DashboardLayout({
                 <Button variant="secondary" size="icon" className="rounded-full">
                   <Avatar>
                     <AvatarImage src="https://placehold.co/40x40.png" alt="User" data-ai-hint="person face" />
-                    <AvatarFallback>AD</AvatarFallback>
+                    <AvatarFallback>AM</AvatarFallback>
                   </Avatar>
                   <span className="sr-only">Toggle user menu</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Conta de Administrador</DropdownMenuLabel>
+                <DropdownMenuLabel>Conta Master</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <User className="mr-2 h-4 w-4" />

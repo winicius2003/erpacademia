@@ -29,11 +29,11 @@ export default function ProfilePage() {
         <div className="flex items-center gap-4">
           <Avatar className="h-20 w-20">
             <AvatarImage src="https://placehold.co/80x80.png" data-ai-hint="person face" />
-            <AvatarFallback>AD</AvatarFallback>
+            <AvatarFallback>AM</AvatarFallback>
           </Avatar>
           <div className="grid gap-1">
-            <h3 className="text-lg font-bold">Usuário Admin</h3>
-            <p className="text-sm text-muted-foreground">admin@gymflow.com</p>
+            <h3 className="text-lg font-bold">Administrador Master</h3>
+            <p className="text-sm text-muted-foreground">admin@admin</p>
             <Button variant="outline" size="sm" className="mt-2">Enviar Foto</Button>
           </div>
         </div>
@@ -41,15 +41,15 @@ export default function ProfilePage() {
         <div className="grid md:grid-cols-2 gap-6">
           <div className="grid gap-2">
             <Label htmlFor="name">Nome Completo</Label>
-            <Input id="name" defaultValue="Usuário Admin" />
+            <Input id="name" defaultValue="Administrador Master" />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="id">ID do Funcionário</Label>
-            <Input id="id" defaultValue="S-1001" readOnly />
+            <Input id="id" defaultValue="S-0001" readOnly />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="email">E-mail</Label>
-            <Input id="email" type="email" defaultValue="admin@gymflow.com" />
+            <Input id="email" type="email" defaultValue="admin@admin" />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="phone">Telefone</Label>
