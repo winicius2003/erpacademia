@@ -422,6 +422,7 @@ export default function MembersPage() {
             <TabsContent value="all">
               <MemberTable 
                 data={displayMembers} 
+                userRole={user.role}
                 onEdit={handleEditClick}
                 onDelete={handleDeleteClick}
                 onViewWorkouts={handleViewWorkouts}
@@ -431,6 +432,7 @@ export default function MembersPage() {
             <TabsContent value="active">
               <MemberTable 
                 data={displayMembers.filter(m => m.status === 'Ativo')}
+                userRole={user.role}
                 onEdit={handleEditClick}
                 onDelete={handleDeleteClick}
                 onViewWorkouts={handleViewWorkouts}
@@ -440,6 +442,7 @@ export default function MembersPage() {
             <TabsContent value="overdue">
               <MemberTable 
                 data={displayMembers.filter(m => m.status === 'Atrasado')}
+                userRole={user.role}
                 onEdit={handleEditClick}
                 onDelete={handleDeleteClick}
                 onViewWorkouts={handleViewWorkouts}
@@ -475,12 +478,14 @@ export default function MembersPage() {
 
 function MemberTable({ 
   data,
+  userRole,
   onEdit,
   onDelete,
   onViewWorkouts,
   onViewPayments
 }: { 
   data: Member[],
+  userRole: string,
   onEdit: (member: Member) => void,
   onDelete: (member: Member) => void,
   onViewWorkouts: (member: Member) => void,
@@ -527,7 +532,9 @@ function MemberTable({
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuItem onSelect={() => onEdit(member)}>Editar</DropdownMenuItem>
                         <DropdownMenuItem onSelect={() => onViewWorkouts(member)}>Ver Treinos</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => onViewPayments(member)}>Ver Pagamentos</DropdownMenuItem>
+                        {userRole !== 'Professor' && (
+                          <DropdownMenuItem onSelect={() => onViewPayments(member)}>Ver Pagamentos</DropdownMenuItem>
+                        )}
                         <DropdownMenuItem onSelect={() => onDelete(member)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">Excluir</DropdownMenuItem>
                     </DropdownMenuContent>
                     </DropdownMenu>
