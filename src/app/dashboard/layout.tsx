@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import Link from "next/link"
-import Image from "next/image"
 import {
   LayoutDashboard,
   Users,
@@ -14,6 +13,10 @@ import {
   LogOut,
   ChevronDown,
   Globe,
+  Calendar,
+  Wallet,
+  HeartHandshake,
+  AreaChart
 } from "lucide-react"
 import { usePathname } from 'next/navigation'
 
@@ -43,10 +46,14 @@ import { Logo } from "@/components/logo"
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Painel" },
-  { href: "/dashboard/members", icon: Users, label: "Membros" },
+  { href: "/dashboard/members", icon: Users, label: "Alunos" },
   { href: "/dashboard/workouts", icon: Dumbbell, label: "Treinos" },
-  { href: "/dashboard/access-control", icon: ShieldCheck, label: "Controle de Acesso" },
-  { href: "/dashboard/profile", icon: Settings, label: "Perfil" },
+  { href: "/dashboard/schedule", icon: Calendar, label: "Agenda" },
+  { href: "/dashboard/financial", icon: Wallet, label: "Financeiro" },
+  { href: "/dashboard/crm", icon: HeartHandshake, label: "CRM" },
+  { href: "/dashboard/access-control", icon: ShieldCheck, label: "Acesso" },
+  { href: "/dashboard/reports", icon: AreaChart, label: "Relatórios" },
+  { href: "/dashboard/profile", icon: Settings, label: "Configurações" },
 ]
 
 export default function DashboardLayout({
@@ -64,7 +71,7 @@ export default function DashboardLayout({
           <SidebarHeader>
             <div className="flex items-center gap-2">
               <Logo className="w-6 h-6 text-sidebar-primary" />
-              <span className="font-bold text-lg font-headline">GymFlow</span>
+              <span className="font-bold text-lg font-headline">FitCore</span>
             </div>
           </SidebarHeader>
           <SidebarContent>
@@ -73,7 +80,7 @@ export default function DashboardLayout({
                 <SidebarMenuItem key={item.href}>
                   <Link href={item.href} legacyBehavior passHref>
                     <SidebarMenuButton
-                      isActive={pathname.startsWith(item.href)}
+                      isActive={item.href === '/dashboard' ? pathname === item.href : pathname.startsWith(item.href)}
                       tooltip={item.label}
                     >
                       <item.icon />
@@ -89,15 +96,15 @@ export default function DashboardLayout({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="justify-start gap-2 w-full px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                   <Globe className="h-4 w-4" />
-                  <span className="truncate">Academia Principal</span>
+                  <span className="truncate">Unidade Principal</span>
                   <ChevronDown className="ml-auto h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel>Trocar Academia</DropdownMenuLabel>
+                <DropdownMenuLabel>Trocar Unidade</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Downtown Fitness</DropdownMenuItem>
-                <DropdownMenuItem>Uptown Strength</DropdownMenuItem>
+                <DropdownMenuItem>Unidade Centro</DropdownMenuItem>
+                <DropdownMenuItem>Unidade Bairro</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarFooter>

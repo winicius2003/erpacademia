@@ -44,7 +44,7 @@ export default function LoginPage() {
           <div className="flex justify-center items-center mb-4">
             <Logo className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-headline text-center">Bem-vindo ao GymFlow</CardTitle>
+          <CardTitle className="text-2xl font-headline text-center">Bem-vindo ao FitCore</CardTitle>
           <CardDescription className="text-center">
             Digite seu e-mail abaixo para fazer login em sua conta
           </CardDescription>

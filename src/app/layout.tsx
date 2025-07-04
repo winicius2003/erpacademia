@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'GymFlow',
-  description: 'A solução completa para gerenciamento de academias.',
+  title: 'FitCore',
+  description: 'FitCore – o núcleo da gestão da sua academia.',
 };
 
 export default function RootLayout({

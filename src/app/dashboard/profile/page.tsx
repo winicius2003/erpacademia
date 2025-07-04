@@ -14,15 +14,15 @@ import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-export default function ProfilePage() {
+export default function SettingsPage() {
   const [date, setDate] = React.useState<Date>()
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">Perfil</CardTitle>
+        <CardTitle className="font-headline">Meu Perfil</CardTitle>
         <CardDescription>
-          Este é o seu perfil pessoal. Você pode editar suas informações aqui.
+          Gerencie suas informações pessoais e configurações da conta.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
@@ -87,10 +87,11 @@ export default function ProfilePage() {
                 <SelectValue placeholder="Selecione um cargo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Administrador</SelectItem>
-                <SelectItem value="staff">Funcionário</SelectItem>
-                <SelectItem value="trainer">Treinador</SelectItem>
-                <SelectItem value="financial">Financeiro</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="gestor">Gestor</SelectItem>
+                <SelectItem value="professor">Professor</SelectItem>
+                <SelectItem value="recepcao">Recepção</SelectItem>
+                <SelectItem value="aluno">Aluno</SelectItem>
               </SelectContent>
             </Select>
           </div>

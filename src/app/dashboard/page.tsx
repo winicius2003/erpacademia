@@ -1,4 +1,4 @@
-import { ArrowUpRight, Users, UserX, CalendarCheck } from "lucide-react"
+import { Users, UserMinus, TrendingUp, BadgePercent } from "lucide-react"
 
 import {
   Card,
@@ -11,10 +11,10 @@ import { MonthlyGrowthChart } from "@/components/monthly-growth-chart"
 import { DailyPresenceChart } from "@/components/daily-presence-chart"
 
 const stats = [
-  { title: "Membros Ativos", value: "1,204", change: "+12.5%", Icon: Users },
-  { title: "Contas Atrasadas", value: "87", change: "+5.1%", Icon: UserX },
-  { title: "Acessos Hoje", value: "238", change: "-2.3%", Icon: CalendarCheck },
-  { title: "Novos no Mês", value: "45", change: "+20.1%", Icon: ArrowUpRight },
+  { title: "Alunos Ativos", value: "1,204", change: "+12.5%", Icon: Users },
+  { title: "Alunos Inativos", value: "87", change: "+5.1%", Icon: UserMinus },
+  { title: "Receita Mensal", value: "R$ 45.231,89", change: "+20.1%", Icon: TrendingUp },
+  { title: "Taxa de Retenção", value: "92%", change: "+2%", Icon: BadgePercent },
 ]
 
 export default function Dashboard() {
@@ -29,7 +29,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">{stat.change} do último mês</p>
+              <p className="text-xs text-muted-foreground">{stat.change} em relação ao último mês</p>
             </CardContent>
           </Card>
         ))}
@@ -37,8 +37,8 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Crescimento Mensal</CardTitle>
-            <CardDescription>Registros de novos membros nos últimos 6 meses.</CardDescription>
+            <CardTitle className="font-headline">Novos Alunos (Mês)</CardTitle>
+            <CardDescription>Registros de novos alunos nos últimos 6 meses.</CardDescription>
           </CardHeader>
           <CardContent>
             <MonthlyGrowthChart />
@@ -46,7 +46,7 @@ export default function Dashboard() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Presença Diária</CardTitle>
+            <CardTitle className="font-headline">Check-ins (Semana)</CardTitle>
             <CardDescription>Número de check-ins nos últimos 7 dias.</CardDescription>
           </CardHeader>
           <CardContent>
