@@ -14,15 +14,16 @@ export type Employee = {
     status: "Ativo" | "Inativo";
     salary: number;
     workHours: string; // Ex: "08:00 - 17:00"
+    accessPin?: string;
 };
 
 // --- In-Memory Database ---
 let employees: Employee[] = [
-    { id: '1', name: 'Carla Silva', email: 'carla.silva@fitcore.com', login: 'carla', password: '123', role: 'Gestor', status: 'Ativo', salary: 5000, workHours: '09:00 - 18:00' },
-    { id: '2', name: 'Marcos Rocha', email: 'marcos.rocha@fitcore.com', login: 'marcos', password: '123', role: 'Professor', status: 'Ativo', salary: 3500, workHours: '06:00 - 15:00' },
-    { id: '3', name: 'Juliana Alves', email: 'juliana.alves@fitcore.com', login: 'juliana', password: '123', role: 'Recepção', status: 'Ativo', salary: 1800, workHours: '13:00 - 22:00' },
-    { id: '4', name: 'Fernando Costa', email: 'fernando.costa@fitcore.com', login: 'fernando', password: '123', role: 'Professor', status: 'Inativo', salary: 3500, workHours: '15:00 - 23:00' },
-    { id: '5', name: 'Beatriz Lima', email: 'beatriz.lima@fitcore.com', login: 'bia', password: '123', role: 'Estagiário', status: 'Ativo', salary: 900, workHours: '18:00 - 22:00' },
+    { id: '1', name: 'Carla Silva', email: 'carla.silva@fitcore.com', login: 'carla', password: '123', role: 'Gestor', status: 'Ativo', salary: 5000, workHours: '09:00 - 18:00', accessPin: '9901' },
+    { id: '2', name: 'Marcos Rocha', email: 'marcos.rocha@fitcore.com', login: 'marcos', password: '123', role: 'Professor', status: 'Ativo', salary: 3500, workHours: '06:00 - 15:00', accessPin: '9902' },
+    { id: '3', name: 'Juliana Alves', email: 'juliana.alves@fitcore.com', login: 'juliana', password: '123', role: 'Recepção', status: 'Ativo', salary: 1800, workHours: '13:00 - 22:00', accessPin: '9903' },
+    { id: '4', name: 'Fernando Costa', email: 'fernando.costa@fitcore.com', login: 'fernando', password: '123', role: 'Professor', status: 'Inativo', salary: 3500, workHours: '15:00 - 23:00', accessPin: '' },
+    { id: '5', name: 'Beatriz Lima', email: 'beatriz.lima@fitcore.com', login: 'bia', password: '123', role: 'Estagiário', status: 'Ativo', salary: 900, workHours: '18:00 - 22:00', accessPin: '9905' },
 ];
 let nextId = employees.length + 1;
 // -------------------------

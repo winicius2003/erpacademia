@@ -75,6 +75,7 @@ const initialEmployeeFormState = {
   role: "Professor" as Role,
   salary: 0,
   workHours: "",
+  accessPin: "",
 }
 
 type EmployeeFormData = typeof initialEmployeeFormState
@@ -160,6 +161,7 @@ export default function AccessControlPage() {
       role: employee.role,
       salary: employee.salary,
       workHours: employee.workHours,
+      accessPin: employee.accessPin || '',
     });
     setIsDialogOpen(true);
   };
@@ -177,6 +179,7 @@ export default function AccessControlPage() {
         status: "Ativo" as const,
         salary: Number(employeeFormData.salary) || 0,
         workHours: employeeFormData.workHours,
+        accessPin: employeeFormData.accessPin,
     }
     
     setIsLoading(true);
@@ -366,6 +369,26 @@ export default function AccessControlPage() {
             </div>
              <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
+                    <Label htmlFor="accessPin">PIN de Acesso (Catraca)</Label>
+                    <Input id="accessPin" value={employeeFormData.accessPin} onChange={(e) => handleInputChange('accessPin', e.target.value)} placeholder="4 a 6 dígitos" />
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="role">Função</Label>
+                    <Select value={employeeFormData.role} onValueChange={(v: Role) => handleInputChange('role', v)}>
+                        <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma função" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        <SelectItem value="Gestor">Gestor</SelectItem>
+                        <SelectItem value="Professor">Professor</SelectItem>
+                        <SelectItem value="Recepção">Recepção</SelectItem>
+                        <SelectItem value="Estagiário">Estagiário</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+             <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
                     <Label htmlFor="workHours">Horário de Trabalho</Label>
                     <Input id="workHours" value={employeeFormData.workHours} onChange={(e) => handleInputChange('workHours', e.target.value)} placeholder="Ex: 08:00 - 17:00" />
                 </div>
@@ -373,20 +396,6 @@ export default function AccessControlPage() {
                     <Label htmlFor="salary">Salário (R$)</Label>
                     <Input id="salary" type="number" value={employeeFormData.salary} onChange={(e) => handleInputChange('salary', e.target.value)} placeholder="Ex: 1500.00" />
                 </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="role">Função</Label>
-              <Select value={employeeFormData.role} onValueChange={(v: Role) => handleInputChange('role', v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma função" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Gestor">Gestor</SelectItem>
-                  <SelectItem value="Professor">Professor</SelectItem>
-                  <SelectItem value="Recepção">Recepção</SelectItem>
-                  <SelectItem value="Estagiário">Estagiário</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
         </form>

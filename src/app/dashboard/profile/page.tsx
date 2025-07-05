@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Loader2, Trash2, PlusCircle } from "lucide-react"
+import { Loader2, Trash2, PlusCircle, Fingerprint, Network } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
+import { Switch } from "@/components/ui/switch"
 
 type Unit = {
   name: string;
@@ -189,6 +190,59 @@ export default function SettingsPage() {
             <Button variant="outline" onClick={addUnit}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Unidade
             </Button>
+        </div>
+
+        <Separator />
+
+        {/* Hardware Integration Section */}
+        <div className="space-y-4">
+            <h3 className="text-base font-semibold">Integração de Hardware</h3>
+            <CardDescription>
+                Configure a comunicação com sua catraca e leitor biométrico. As senhas e digitais são cadastradas na ficha de cada aluno/funcionário.
+            </CardDescription>
+            <Card className="p-4 bg-muted/50">
+                <div className="grid md:grid-cols-2 gap-6">
+                    <div className="grid gap-2">
+                        <Label htmlFor="turnstile-ip" className="flex items-center gap-2"><Network className="h-4 w-4" /> IP da Catraca</Label>
+                        <Input id="turnstile-ip" placeholder="192.168.1.100" />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="turnstile-port">Porta</Label>
+                        <Input id="turnstile-port" placeholder="8000" type="number" />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="turnstile-password">Senha de Comunicação</Label>
+                        <Input id="turnstile-password" type="password" placeholder="••••••••" />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="turnstile-model">Modelo da Catraca</Label>
+                        <Select>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecione um modelo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="controlid-idaccess">Control iD iDAccess</SelectItem>
+                                <SelectItem value="topdata-inner">TopData Inner</SelectItem>
+                                <SelectItem value="henry-orion">Henry Orion</SelectItem>
+                                <SelectItem value="outros">Outro (config. manual)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+                <Separator className="my-6" />
+                <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                         <Switch id="biometrics-enabled" defaultChecked />
+                         <Label htmlFor="biometrics-enabled" className="flex items-center gap-2">
+                            <Fingerprint className="h-4 w-4" />
+                            Leitor Biométrico Ativado
+                         </Label>
+                    </div>
+                    <CardFooter className="p-0 pt-2">
+                        <Button variant="outline">Testar Conexão</Button>
+                    </CardFooter>
+                </div>
+            </Card>
         </div>
 
 

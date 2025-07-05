@@ -3,7 +3,7 @@
 
 import * as React from "react"
 import { format } from "date-fns"
-import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Loader2, Search } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Loader2, Search, Fingerprint } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { cn } from "@/lib/utils"
@@ -91,6 +91,8 @@ export type Member = {
   workoutStatus: "Completo" | "Pendente",
   goal: string,
   notes: string,
+  accessPin?: string,
+  fingerprintRegistered?: boolean,
 };
 
 const initialMemberFormState = {
@@ -118,6 +120,7 @@ const initialMemberFormState = {
   },
   goal: "",
   notes: "",
+  accessPin: "",
 }
 
 type MemberFormData = typeof initialMemberFormState;
@@ -223,6 +226,7 @@ export default function MembersPage() {
       expires: expiresDate,
       goal: member.goal || "",
       notes: member.notes || "",
+      accessPin: member.accessPin || "",
     });
     setIsDialogOpen(true);
   };
@@ -245,6 +249,8 @@ export default function MembersPage() {
         workoutStatus: "Pendente" as const,
         goal: memberFormData.goal,
         notes: memberFormData.notes,
+        accessPin: memberFormData.accessPin,
+        fingerprintRegistered: false, // This would be updated by the biometric device integration
     };
 
     setIsLoading(true);
@@ -331,7 +337,7 @@ export default function MembersPage() {
                         <PlusCircle className="mr-2 h-4 w-4" />Adicionar Aluno
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-2xl">
+                    <DialogContent className="sm:max-w-3xl">
                       <DialogHeader>
                         <DialogTitle>{isEditing ? 'Editar Aluno' : 'Adicionar Novo Aluno'}</DialogTitle>
                         <DialogDescription>
@@ -340,8 +346,9 @@ export default function MembersPage() {
                       </DialogHeader>
                       <form id="add-member-form" onSubmit={handleSaveMember}>
                         <Tabs defaultValue="personal-data">
-                          <TabsList className="grid w-full grid-cols-3">
+                          <TabsList className="grid w-full grid-cols-4">
                               <TabsTrigger value="personal-data">Dados Pessoais</TabsTrigger>
+                              <TabsTrigger value="access">Acesso</TabsTrigger>
                               <TabsTrigger value="address">Endereço</TabsTrigger>
                               <TabsTrigger value="emergency">Emergência</TabsTrigger>
                           </TabsList>
@@ -418,6 +425,28 @@ export default function MembersPage() {
                                     <Textarea id="notes" value={memberFormData.notes} onChange={(e) => handleInputChange('notes', e.target.value)} placeholder="Lesões pré-existentes, medicamentos, etc." />
                                 </div>
                           </TabsContent>
+                           <TabsContent value="access" className="py-4">
+                                <div className="space-y-2 mb-4">
+                                    <h3 className="font-medium">Controle de Acesso Físico</h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        Configure a senha PIN e a biometria para acesso via catraca.
+                                    </p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="access-pin">Senha de Acesso (PIN)</Label>
+                                        <Input id="access-pin" type="text" value={memberFormData.accessPin} onChange={(e) => handleInputChange('accessPin', e.target.value)} placeholder="4 a 6 dígitos numéricos" />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label>Biometria</Label>
+                                        <div className="flex items-center gap-4 h-10">
+                                            <Button type="button" variant="outline">
+                                                <Fingerprint className="mr-2 h-4 w-4" /> Cadastrar Digital
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </TabsContent>
                           <TabsContent value="address" className="py-4">
                               <div className="grid grid-cols-4 gap-4">
                                   <div className="grid gap-2 col-span-1">
