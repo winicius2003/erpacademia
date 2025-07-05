@@ -250,10 +250,10 @@ export default function DashboardLayout({
                 </DropdownMenuContent>
               </DropdownMenu>
             </header>
-            <main className="flex-1 p-4 sm:p-6 bg-background">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
               <SubscriptionAlertBanner />
               {children}
-            </main>
+            </div>
           </SidebarInset>
         </div>
       </SidebarProvider>
