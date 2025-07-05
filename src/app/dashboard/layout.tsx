@@ -146,7 +146,10 @@ export default function DashboardLayout({
     return permissions.includes(item.label)
   }) : []
 
-  const activeItem = navItems.find(item => pathname.startsWith(item.href))
+  const activeItem = navItems
+    .slice()
+    .sort((a, b) => b.href.length - a.href.length)
+    .find((item) => pathname.startsWith(item.href));
 
   if (!user || uiStatus === 'loading') {
     return (

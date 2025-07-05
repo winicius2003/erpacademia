@@ -1,7 +1,17 @@
 "use client"
 
 import * as React from "react"
-import { FileDown, UserCheck, UserX, ReceiptText, ClipboardCheck } from "lucide-react"
+import { 
+    UserCheck, 
+    UserX, 
+    ReceiptText, 
+    ClipboardCheck,
+    CakeSlice,
+    FileClock,
+    Tags,
+    Spline,
+    Printer
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -52,7 +62,7 @@ export default function ReportsPage() {
               Exportar Alunos Inativos
             </Button>
              <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateReport("Aniversariantes do Mês")}>
-              <FileDown className="mr-2 h-4 w-4" />
+              <CakeSlice className="mr-2 h-4 w-4" />
               Exportar Aniversariantes
             </Button>
           </CardContent>
@@ -69,11 +79,11 @@ export default function ReportsPage() {
               Exportar Receita Mensal
             </Button>
             <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateReport("Relatório de Inadimplência")}>
-              <FileDown className="mr-2 h-4 w-4" />
+              <FileClock className="mr-2 h-4 w-4" />
               Exportar Inadimplentes
             </Button>
              <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateReport("Planos Mais Vendidos")}>
-              <FileDown className="mr-2 h-4 w-4" />
+              <Tags className="mr-2 h-4 w-4" />
               Exportar Planos Vendidos
             </Button>
           </CardContent>
@@ -90,7 +100,7 @@ export default function ReportsPage() {
               Exportar Evolução Corporal
             </Button>
              <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateReport("Comparativo de Avaliações")}>
-              <FileDown className="mr-2 h-4 w-4" />
+              <Spline className="mr-2 h-4 w-4" />
               Exportar Comparativo
             </Button>
           </CardContent>
@@ -103,15 +113,15 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateDocument("Declaração de Matrícula")}>
-              <FileDown className="mr-2 h-4 w-4" />
+              <Printer className="mr-2 h-4 w-4" />
               Emitir Declaração de Matrícula
             </Button>
             <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateDocument("Contrato de Prestação de Serviços")}>
-              <FileDown className="mr-2 h-4 w-4" />
+              <Printer className="mr-2 h-4 w-4" />
               Emitir Contrato Padrão
             </Button>
              <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateDocument("Recibo de Pagamento")}>
-              <FileDown className="mr-2 h-4 w-4" />
+              <Printer className="mr-2 h-4 w-4" />
               Emitir Recibo Avulso
             </Button>
           </CardContent>
