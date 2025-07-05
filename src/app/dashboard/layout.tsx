@@ -164,7 +164,7 @@ export default function DashboardLayout({
   return (
     <SubscriptionContext.Provider value={subscriptionContextValue}>
       <SidebarProvider>
-        <div className="flex min-h-screen">
+        <div className="flex flex-1">
           <Sidebar>
             <SidebarHeader>
               <div className="flex items-center gap-2">
