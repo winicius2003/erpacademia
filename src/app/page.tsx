@@ -304,7 +304,7 @@ export default function LandingPage() {
             </motion.div>
             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }} className="flex gap-4">
               <Link href="/signup"><Button size="lg">{t.hero.cta}</Button></Link>
-              <Button size="lg" variant="outline">{t.hero.ctaSecondary}</Button>
+              <Link href="/demo"><Button size="lg" variant="outline">{t.hero.ctaSecondary}</Button></Link>
             </motion.div>
           </div>
         </section>
