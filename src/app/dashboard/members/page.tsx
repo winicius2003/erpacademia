@@ -71,6 +71,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { getMembers, addMember, updateMember, deleteMember } from "@/services/members"
 import { useSubscription } from "@/lib/subscription-context"
@@ -87,7 +88,9 @@ export type Member = {
   rg: string,
   professor: string,
   attendanceStatus: "Presente" | "Faltante",
-  workoutStatus: "Completo" | "Pendente"
+  workoutStatus: "Completo" | "Pendente",
+  goal: string,
+  notes: string,
 };
 
 const initialMemberFormState = {
@@ -113,6 +116,8 @@ const initialMemberFormState = {
     name: "",
     phone: "",
   },
+  goal: "",
+  notes: "",
 }
 
 type MemberFormData = typeof initialMemberFormState;
@@ -216,6 +221,8 @@ export default function MembersPage() {
       rg: member.rg,
       plan: member.plan,
       expires: expiresDate,
+      goal: member.goal || "",
+      notes: member.notes || "",
     });
     setIsDialogOpen(true);
   };
@@ -236,6 +243,8 @@ export default function MembersPage() {
         professor: "Não atribuído",
         attendanceStatus: "Presente" as const,
         workoutStatus: "Pendente" as const,
+        goal: memberFormData.goal,
+        notes: memberFormData.notes,
     };
 
     setIsLoading(true);
@@ -400,6 +409,14 @@ export default function MembersPage() {
                                       </Popover>
                                   </div>
                               </div>
+                                <div className="grid gap-2 mt-4">
+                                    <Label htmlFor="goal">Objetivo Principal</Label>
+                                    <Input id="goal" value={memberFormData.goal} onChange={(e) => handleInputChange('goal', e.target.value)} placeholder="Ex: Hipertrofia, Perder 10kg" />
+                                </div>
+                                <div className="grid gap-2 mt-4">
+                                    <Label htmlFor="notes">Observações / Anamnese</Label>
+                                    <Textarea id="notes" value={memberFormData.notes} onChange={(e) => handleInputChange('notes', e.target.value)} placeholder="Lesões pré-existentes, medicamentos, etc." />
+                                </div>
                           </TabsContent>
                           <TabsContent value="address" className="py-4">
                               <div className="grid grid-cols-4 gap-4">
