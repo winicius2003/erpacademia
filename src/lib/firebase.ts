@@ -14,6 +14,17 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+// Validate Firebase config to prevent "client is offline" errors.
+// This error typically happens when the configuration is incomplete, especially the projectId.
+const requiredConfigKeys: (keyof typeof firebaseConfig)[] = ['apiKey', 'authDomain', 'projectId'];
+const missingConfigKeys = requiredConfigKeys.filter(key => !firebaseConfig[key]);
+
+if (missingConfigKeys.length > 0) {
+    const errorMessage = `Missing Firebase configuration. Please check your .env file for the following keys: ${missingConfigKeys.map(key => `NEXT_PUBLIC_FIREBASE_${key.toUpperCase()}`).join(', ')}. After updating, you may need to restart the development server.`;
+    throw new Error(errorMessage);
+}
+
+
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
