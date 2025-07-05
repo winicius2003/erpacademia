@@ -124,7 +124,14 @@ export default function SettingsPage() {
                     <Label htmlFor="company-phone">Telefone Comercial</Label>
                     <Input id="company-phone" type="tel" placeholder="(11) 5555-5555" defaultValue="(11) 5555-5555"/>
                 </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="company-units">Número de Unidades</Label>
+                    <Input id="company-units" type="number" defaultValue="1"/>
+                </div>
             </div>
+             <CardDescription className="pt-2">
+                O plano de assinatura é baseado no número total de alunos somando todas as unidades vinculadas a um mesmo CNPJ.
+            </CardDescription>
         </div>
 
       </CardContent>

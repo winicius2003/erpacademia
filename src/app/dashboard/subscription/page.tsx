@@ -164,7 +164,9 @@ export default function SubscriptionPage() {
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Trocar de Plano</DialogTitle>
-                        <DialogDescription>Escolha o plano que melhor se adapta às suas necessidades.</DialogDescription>
+                        <DialogDescription>
+                            Escolha o plano que melhor se adapta às suas necessidades. O limite de alunos é o total somando todas as suas unidades.
+                        </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-3 py-4">
                         {plans.map(p => (

@@ -73,7 +73,7 @@ const translations = {
     },
     pricing: {
       title: "Escolha o plano ideal para você",
-      subtitle: "Preços transparentes que crescem com o seu negócio. Sem surpresas.",
+      subtitle: "Preços transparentes que crescem com o seu negócio. O limite de alunos é a soma de todas as suas unidades. Sem surpresas.",
       plans: [
         {
           name: "Iniciante",
@@ -182,7 +182,7 @@ const translations = {
     },
     pricing: {
       title: "Choose the perfect plan for you",
-      subtitle: "Transparent pricing that grows with your business. No surprises.",
+      subtitle: "Transparent pricing that grows with your business. The student limit is the total across all your units. No surprises.",
       plans: [
         {
           name: "Starter",
