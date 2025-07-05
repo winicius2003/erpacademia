@@ -114,15 +114,15 @@ export default function ReportsPage() {
           <CardContent className="space-y-3">
             <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateDocument("Declaração de Matrícula")}>
               <Printer className="mr-2 h-4 w-4" />
-              Emitir Declaração de Matrícula
+              Declaração de Matrícula
             </Button>
-            <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateDocument("Contrato de Prestação de Serviços")}>
+            <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateDocument("Contrato Padrão")}>
               <Printer className="mr-2 h-4 w-4" />
-              Emitir Contrato Padrão
+              Contrato Padrão
             </Button>
-             <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateDocument("Recibo de Pagamento")}>
+             <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateDocument("Recibo Avulso")}>
               <Printer className="mr-2 h-4 w-4" />
-              Emitir Recibo Avulso
+              Recibo Avulso
             </Button>
           </CardContent>
         </Card>
