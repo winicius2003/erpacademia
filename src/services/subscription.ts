@@ -4,7 +4,7 @@ import { db } from '@/lib/firebase';
 import { doc, getDoc, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { addDays } from 'date-fns';
 
-export type SubscriptionPlan = "Premium" | "Free";
+export type SubscriptionPlan = "Premium" | "Free" | "Iniciante" | "Profissional" | "Business";
 export type SubscriptionStatus = "active" | "overdue" | "blocked";
 
 export type Subscription = {

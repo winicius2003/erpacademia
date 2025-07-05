@@ -38,6 +38,9 @@ export async function createCheckoutSession(plan: string, customerEmail?: string
         quantity: 1,
       },
     ],
+    metadata: {
+        plan: plan,
+    },
     // If you have the customer's email, you can pre-fill it
     customer_email: customerEmail,
     success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
