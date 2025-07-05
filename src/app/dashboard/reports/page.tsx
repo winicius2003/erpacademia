@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { FileDown, UserCheck, UserX, ReceiptText } from "lucide-react"
+import { FileDown, UserCheck, UserX, ReceiptText, ClipboardCheck } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -12,7 +12,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { Separator } from "@/components/ui/separator"
 
 export default function ReportsPage() {
   const { toast } = useToast()
@@ -54,7 +53,7 @@ export default function ReportsPage() {
             </Button>
              <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateReport("Aniversariantes do Mês")}>
               <FileDown className="mr-2 h-4 w-4" />
-              Aniversariantes do Mês
+              Exportar Aniversariantes
             </Button>
           </CardContent>
         </Card>
@@ -67,19 +66,36 @@ export default function ReportsPage() {
           <CardContent className="space-y-3">
             <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateReport("Receita Mensal Detalhada")}>
               <ReceiptText className="mr-2 h-4 w-4" />
-              Receita Mensal Detalhada
+              Exportar Receita Mensal
             </Button>
             <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateReport("Relatório de Inadimplência")}>
               <FileDown className="mr-2 h-4 w-4" />
-              Relatório de Inadimplência
+              Exportar Inadimplentes
             </Button>
              <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateReport("Planos Mais Vendidos")}>
               <FileDown className="mr-2 h-4 w-4" />
-              Planos Mais Vendidos
+              Exportar Planos Vendidos
             </Button>
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>Relatórios de Avaliações</CardTitle>
+            <CardDescription>Acompanhe a evolução física dos seus alunos.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateReport("Evolução Corporal dos Alunos")}>
+              <ClipboardCheck className="mr-2 h-4 w-4" />
+              Exportar Evolução Corporal
+            </Button>
+             <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateReport("Comparativo de Avaliações")}>
+              <FileDown className="mr-2 h-4 w-4" />
+              Exportar Comparativo
+            </Button>
+          </CardContent>
+        </Card>
+        
         <Card>
           <CardHeader>
             <CardTitle>Modelos de Documentos</CardTitle>
@@ -88,11 +104,11 @@ export default function ReportsPage() {
           <CardContent className="space-y-3">
             <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateDocument("Declaração de Matrícula")}>
               <FileDown className="mr-2 h-4 w-4" />
-              Gerar Declaração de Matrícula
+              Emitir Declaração de Matrícula
             </Button>
             <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateDocument("Contrato de Prestação de Serviços")}>
               <FileDown className="mr-2 h-4 w-4" />
-              Gerar Contrato Padrão
+              Emitir Contrato Padrão
             </Button>
              <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateDocument("Recibo de Pagamento")}>
               <FileDown className="mr-2 h-4 w-4" />
