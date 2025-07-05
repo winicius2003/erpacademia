@@ -34,7 +34,7 @@ export default function LoginPage() {
     let userFound = null
 
     const isMasterAdminLogin =
-      (login === "jwinicius.souza@gmail.com" || login === "admin@admin") &&
+      (login.toLowerCase() === "jwinicius.souza@gmail.com" || login.toLowerCase() === "admin@admin") &&
       password === "uUmope5Z"
 
     if (isMasterAdminLogin) {
@@ -50,6 +50,7 @@ export default function LoginPage() {
 
     if (userFound) {
       sessionStorage.setItem("fitcore.user", JSON.stringify(userFound))
+      await initializeSubscription(); // Ensure subscription is initialized for any user
       router.push("/dashboard")
     } else {
       toast({

@@ -22,28 +22,20 @@ Abra o terminal na pasta raiz do projeto e execute o seguinte comando para insta
 npm install
 ```
 
-### 3. Configure as Variáveis de Ambiente
+### 3. Configure as Variáveis de Ambiente (Opcional - para Pagamentos)
 
-Para que a aplicação se conecte ao Firebase e ao Stripe, você precisa fornecer suas chaves de API.
+Para testar a integração de pagamentos com o Stripe, você precisa fornecer suas chaves de API. Se você não for testar essa parte, pode pular esta etapa.
 
 1.  Crie um novo arquivo na raiz do projeto chamado `.env.local`.
 2.  Copie o conteúdo do arquivo `.env` para o seu novo arquivo `.env.local`.
-3.  Preencha os valores para as chaves do Firebase e do Stripe. Você pode encontrar esses valores nos painéis de cada serviço.
+3.  Preencha os valores para as chaves do Stripe. Você pode encontrar esses valores no painel do Stripe.
 
 Seu arquivo `.env.local` deve ficar assim:
 
 ```
-# Chaves do Firebase (Encontre em Configurações do Projeto > Geral > Seus apps)
-NEXT_PUBLIC_FIREBASE_API_KEY=SUA_CHAVE_DE_API_AQUI
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=SEU_AUTH_DOMAIN_AQUI
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=SEU_PROJECT_ID_AQUI
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=SEU_STORAGE_BUCKET_AQUI
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=SEU_MESSAGING_SENDER_ID_AQUI
-NEXT_PUBLIC_FIREBASE_APP_ID=SEU_APP_ID_AQUI
-
 # Chaves do Stripe (Encontre em Desenvolvedores > Chaves de API)
-STRIPE_SECRET_KEY=SUA_CHAVE_SECRETA_AQUI
-STRIPE_WEBHOOK_SECRET=SEU_SEGREDO_DE_WEBHOOK_AQUI
+STRIPE_SECRET_KEY=sua_chave_secreta_aqui
+STRIPE_WEBHOOK_SECRET=seu_segredo_de_webhook_aqui
 
 # URL da sua aplicação (para desenvolvimento local)
 NEXT_PUBLIC_APP_URL=http://localhost:9002
@@ -59,11 +51,17 @@ npm run dev
 
 A aplicação estará disponível em [http://localhost:9002](http://localhost:9002).
 
+**Logins de Teste:**
+- **Admin:** `admin@admin` / senha: `uUmope5Z`
+- **Gestor:** `carla` / senha: `123`
+- **Professor:** `marcos` / senha: `123`
+- **Recepção:** `juliana` / senha: `123`
+
 ## Funcionalidades Principais
 
 - **Dashboard:** Visão geral com estatísticas.
-- **Gestão de Alunos:** Adicione, edite e visualize alunos (conectado ao Firestore).
+- **Gestão de Alunos:** Adicione, edite e visualize alunos (com dados em memória).
 - **Controle de Acesso:** Gerencie funcionários e suas permissões.
 - **Financeiro:** Registre pagamentos e visualize o fluxo de caixa.
-- **Assinatura:** Sistema de assinatura com integração Stripe e controle de acesso baseado no status do pagamento.
+- **Assinatura:** Sistema de assinatura com simulação de status (ativo, vencido, etc.) e integração com Stripe.
 - **Recomendação de Treino IA:** Use Genkit para gerar treinos personalizados.

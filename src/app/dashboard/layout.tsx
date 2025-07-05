@@ -94,7 +94,7 @@ export default function DashboardLayout({
 
       if (subData) {
         const now = new Date();
-        const expires = subData.expiresAt.toDate();
+        const expires = subData.expiresAt;
         const diff = differenceInDays(expires, now);
         setDaysRemaining(diff);
 
@@ -155,7 +155,7 @@ export default function DashboardLayout({
 
   const subscriptionContextValue = {
     status: uiStatus,
-    expiresAt: subscription ? subscription.expiresAt.toDate() : null,
+    expiresAt: subscription ? subscription.expiresAt : null,
     plan: subscription ? subscription.plan : "N/A",
     daysRemaining,
     refreshSubscription: fetchSubscription,

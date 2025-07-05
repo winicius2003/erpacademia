@@ -1,7 +1,6 @@
 'use server';
 
-import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, DocumentData, QueryDocumentSnapshot, where, query } from 'firebase/firestore';
+import { format } from 'date-fns';
 
 export type Role = "Admin" | "Gestor" | "Professor" | "Recepção";
 
@@ -15,71 +14,43 @@ export type Employee = {
     status: "Ativo" | "Inativo";
 };
 
-const employeesCollection = collection(db, 'employees');
-
-const fromFirestore = (snapshot: QueryDocumentSnapshot<DocumentData>): Employee => {
-    const data = snapshot.data();
-    return {
-        id: snapshot.id,
-        name: data.name,
-        email: data.email,
-        login: data.login,
-        password: data.password,
-        role: data.role as Role,
-        status: data.status,
-    };
-};
+// --- In-Memory Database ---
+let employees: Employee[] = [
+    { id: '1', name: 'Carla Silva', email: 'carla.silva@fitcore.com', login: 'carla', password: '123', role: 'Gestor', status: 'Ativo' },
+    { id: '2', name: 'Marcos Rocha', email: 'marcos.rocha@fitcore.com', login: 'marcos', password: '123', role: 'Professor', status: 'Ativo' },
+    { id: '3', name: 'Juliana Alves', email: 'juliana.alves@fitcore.com', login: 'juliana', password: '123', role: 'Recepção', status: 'Ativo' },
+    { id: '4', name: 'Fernando Costa', email: 'fernando.costa@fitcore.com', login: 'fernando', password: '123', role: 'Professor', status: 'Inativo' },
+];
+let nextId = employees.length + 1;
+// -------------------------
 
 export async function getEmployees(): Promise<Employee[]> {
-    try {
-        const snapshot = await getDocs(employeesCollection);
-        return snapshot.docs.map(fromFirestore);
-    } catch (error) {
-        console.error("Error fetching employees:", error);
-        return [];
-    }
+    return Promise.resolve(employees);
 }
 
 export async function getEmployeeByLogin(login: string): Promise<Employee | null> {
-    try {
-        const q = query(employeesCollection, where("login", "==", login));
-        const snapshot = await getDocs(q);
-        if (snapshot.empty) {
-            return null;
-        }
-        return fromFirestore(snapshot.docs[0]);
-    } catch (error) {
-        console.error("Error fetching employee by login:", error);
-        return null;
-    }
+    const employee = employees.find(e => e.login.toLowerCase() === login.toLowerCase());
+    return Promise.resolve(employee || null);
 }
 
 export async function addEmployee(employeeData: Omit<Employee, 'id'>): Promise<string> {
-    try {
-        const docRef = await addDoc(employeesCollection, employeeData);
-        return docRef.id;
-    } catch (error) {
-        console.error("Error adding employee:", error);
-        throw new Error("Failed to add employee");
-    }
+    const newId = (nextId++).toString();
+    const newEmployee: Employee = {
+        id: newId,
+        ...employeeData,
+    };
+    employees.push(newEmployee);
+    return Promise.resolve(newId);
 }
 
 export async function updateEmployee(id: string, employeeData: Partial<Omit<Employee, 'id'>>): Promise<void> {
-    try {
-        const employeeDoc = doc(db, 'employees', id);
-        await updateDoc(employeeDoc, employeeData);
-    } catch (error) {
-        console.error("Error updating employee:", error);
-        throw new Error("Failed to update employee");
-    }
+    employees = employees.map(emp => 
+        emp.id === id ? { ...emp, ...employeeData } : emp
+    );
+    return Promise.resolve();
 }
 
 export async function deleteEmployee(id: string): Promise<void> {
-    try {
-        const employeeDoc = doc(db, 'employees', id);
-        await deleteDoc(employeeDoc);
-    } catch (error) {
-        console.error("Error deleting employee:", error);
-        throw new Error("Failed to delete employee");
-    }
+    employees = employees.filter(emp => emp.id !== id);
+    return Promise.resolve();
 }

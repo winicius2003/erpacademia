@@ -1,7 +1,6 @@
 'use server';
 
-import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, DocumentData, QueryDocumentSnapshot, query, where } from 'firebase/firestore';
+import { format } from 'date-fns';
 
 export type PaymentItem = {
     id: number;
@@ -19,47 +18,31 @@ export type Payment = {
     status: "Pago" | "Pendente" | "Vencida";
 };
 
-const paymentsCollection = collection(db, 'payments');
-
-const fromFirestore = (snapshot: QueryDocumentSnapshot<DocumentData>): Payment => {
-    const data = snapshot.data();
-    return {
-        id: snapshot.id,
-        student: data.student,
-        items: data.items,
-        amount: data.amount,
-        date: data.date,
-        status: data.status,
-    };
-};
+// --- In-Memory Database ---
+let payments: Payment[] = [
+    { id: 'p1', student: 'João da Silva', items: [{ id: 1, description: 'Plano Anual', quantity: 1, price: 997.00 }], amount: '997.00', date: '2023-08-15', status: 'Pago' },
+    { id: 'p2', student: 'Maria Oliveira', items: [{ id: 1, description: 'Plano Mensal', quantity: 1, price: 97.00 }], amount: '97.00', date: '2024-07-05', status: 'Pago' },
+    { id: 'p3', student: 'Carlos Pereira', items: [{ id: 1, description: 'Plano Trimestral', quantity: 1, price: 277.00 }], amount: '277.00', date: '2024-05-10', status: 'Pago' },
+    { id: 'p4', student: 'Ana Costa', items: [{ id: 1, description: 'Avaliação Física', quantity: 1, price: 150.00 }], amount: '150.00', date: '2024-06-20', status: 'Pago' },
+];
+let nextId = payments.length + 1;
+// -------------------------
 
 export async function getPayments(): Promise<Payment[]> {
-    try {
-        const snapshot = await getDocs(paymentsCollection);
-        return snapshot.docs.map(fromFirestore);
-    } catch (error) {
-        console.error("Error fetching payments:", error);
-        return [];
-    }
+    return Promise.resolve(payments);
 }
 
 export async function getPaymentsByStudent(studentName: string): Promise<Payment[]> {
-    try {
-        const q = query(paymentsCollection, where("student", "==", studentName));
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(fromFirestore);
-    } catch (error) {
-        console.error(`Error fetching payments for student ${studentName}:`, error);
-        return [];
-    }
+    const studentPayments = payments.filter(p => p.student === studentName);
+    return Promise.resolve(studentPayments);
 }
 
 export async function addPayment(paymentData: Omit<Payment, 'id'>): Promise<string> {
-    try {
-        const docRef = await addDoc(paymentsCollection, paymentData);
-        return docRef.id;
-    } catch (error) {
-        console.error("Error adding payment:", error);
-        throw new Error("Failed to add payment");
-    }
+    const newId = `p${nextId++}`;
+    const newPayment: Payment = {
+        id: newId,
+        ...paymentData,
+    };
+    payments.unshift(newPayment); // Add to the beginning of the list
+    return Promise.resolve(newId);
 }

@@ -1,7 +1,5 @@
 'use server';
 
-import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { addDays } from 'date-fns';
 
 export type SubscriptionPlan = "Premium" | "Free" | "Iniciante" | "Profissional" | "Business";
@@ -11,51 +9,37 @@ export type Subscription = {
     id: string;
     plan: SubscriptionPlan;
     status: SubscriptionStatus;
-    expiresAt: Timestamp;
+    expiresAt: Date;
 };
 
-const subscriptionRef = doc(db, 'gym', 'main_subscription');
+// --- In-Memory Database for Subscription ---
+let subscription: Subscription | null = null;
 
-export async function getSubscription(): Promise<Subscription | null> {
-    try {
-        const docSnap = await getDoc(subscriptionRef);
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            return {
-                id: docSnap.id,
-                plan: data.plan,
-                status: data.status,
-                expiresAt: data.expiresAt,
-            };
-        }
-        return null;
-    } catch (error) {
-        console.error("Error fetching subscription:", error);
-        throw new Error("Failed to fetch subscription data.");
+function initializeInMemorySubscription() {
+    if (!subscription) {
+        subscription = {
+            id: 'main_subscription',
+            plan: 'Premium',
+            status: 'active',
+            expiresAt: addDays(new Date(), 30),
+        };
     }
 }
+// -----------------------------------------
 
-export async function updateSubscription(data: Partial<Omit<Subscription, 'id' | 'expiresAt'> & { expiresAt?: Date }>): Promise<void> {
-    try {
-        const updateData: { [key: string]: any } = { ...data };
-        if (data.expiresAt) {
-            updateData.expiresAt = Timestamp.fromDate(data.expiresAt);
-        }
-        await updateDoc(subscriptionRef, updateData);
-    } catch (error) {
-        console.error("Error updating subscription:", error);
-        throw new Error("Failed to update subscription.");
+export async function getSubscription(): Promise<Subscription | null> {
+    initializeInMemorySubscription();
+    return Promise.resolve(subscription);
+}
+
+export async function updateSubscription(data: Partial<Omit<Subscription, 'id'>>): Promise<void> {
+    if (subscription) {
+        subscription = { ...subscription, ...data };
     }
+    return Promise.resolve();
 }
 
 export async function initializeSubscription(): Promise<void> {
-    const docSnap = await getDoc(subscriptionRef);
-    if (!docSnap.exists()) {
-        const initialData = {
-            plan: 'Premium' as SubscriptionPlan,
-            status: 'active' as SubscriptionStatus,
-            expiresAt: Timestamp.fromDate(addDays(new Date(), 30)),
-        };
-        await setDoc(subscriptionRef, initialData);
-    }
+    initializeInMemorySubscription();
+    return Promise.resolve();
 }

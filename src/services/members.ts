@@ -1,66 +1,47 @@
 'use server';
 
-import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
-import type { Member } from '@/app/dashboard/members/page';
+import { format, addMonths } from 'date-fns';
+import type { Member as MemberType } from '@/app/dashboard/members/page';
 
-const membersCollection = collection(db, 'members');
+// The full Member type is defined in the page, we can reuse it
+export type Member = MemberType;
 
-// Helper function to convert Firestore doc to Member
-const fromFirestore = (snapshot: QueryDocumentSnapshot<DocumentData>): Member => {
-    const data = snapshot.data();
-    return {
-        id: snapshot.id,
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        plan: data.plan,
-        status: data.status,
-        expires: data.expires,
-        cpf: data.cpf,
-        rg: data.rg,
-        professor: data.professor,
-        attendanceStatus: data.attendanceStatus,
-        workoutStatus: data.workoutStatus,
-    };
-};
+
+// --- In-Memory Database ---
+let members: Member[] = [
+  { id: '1', name: 'João da Silva', email: 'joao.silva@example.com', phone: '(11) 98765-4321', plan: 'Anual', status: 'Ativo', expires: format(addMonths(new Date(), 10), 'yyyy-MM-dd'), cpf: "111.222.333-44", rg: "12.345.678-9", professor: 'Marcos Rocha', attendanceStatus: 'Presente', workoutStatus: 'Completo' },
+  { id: '2', name: 'Maria Oliveira', email: 'maria.oliveira@example.com', phone: '(21) 91234-5678', plan: 'Mensal', status: 'Ativo', expires: format(addMonths(new Date(), 1), 'yyyy-MM-dd'), cpf: "222.333.444-55", rg: "23.456.789-0", professor: 'Fernando Costa', attendanceStatus: 'Faltante', workoutStatus: 'Pendente' },
+  { id: '3', name: 'Carlos Pereira', email: 'carlos.pereira@example.com', phone: '(31) 95555-4444', plan: 'Trimestral', status: 'Atrasado', expires: format(addMonths(new Date(), -1), 'yyyy-MM-dd'), cpf: "333.444.555-66", rg: "34.567.890-1", professor: 'Marcos Rocha', attendanceStatus: 'Presente', workoutStatus: 'Completo' },
+  { id: '4', name: 'Ana Costa', email: 'ana.costa@example.com', phone: '(41) 98888-7777', plan: 'Anual', status: 'Inativo', expires: format(addMonths(new Date(), -2), 'yyyy-MM-dd'), cpf: "444.555.666-77", rg: "45.678.901-2", professor: 'Não atribuído', attendanceStatus: 'Faltante', workoutStatus: 'Pendente' },
+  { id: '5', name: 'Bruno Santos', email: 'bruno.santos@example.com', phone: '(51) 97777-6666', plan: 'Mensal', status: 'Ativo', expires: format(addMonths(new Date(), 1), 'yyyy-MM-dd'), cpf: "555.666.777-88", rg: "56.789.012-3", professor: 'Fernando Costa', attendanceStatus: 'Presente', workoutStatus: 'Pendente' },
+];
+let nextId = members.length + 1;
+// -------------------------
 
 export async function getMembers(): Promise<Member[]> {
-    try {
-        const snapshot = await getDocs(membersCollection);
-        return snapshot.docs.map(fromFirestore);
-    } catch (error) {
-        console.error("Error fetching members:", error);
-        return [];
-    }
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return Promise.resolve(members);
 }
 
 export async function addMember(memberData: Omit<Member, 'id'>): Promise<string> {
-    try {
-        const docRef = await addDoc(membersCollection, memberData);
-        return docRef.id;
-    } catch (error) {
-        console.error("Error adding member:", error);
-        throw new Error("Failed to add member");
-    }
+    const newId = (nextId++).toString();
+    const newMember: Member = {
+        id: newId,
+        ...memberData,
+    };
+    members.push(newMember);
+    return Promise.resolve(newId);
 }
 
 export async function updateMember(id: string, memberData: Partial<Omit<Member, 'id'>>): Promise<void> {
-    try {
-        const memberDoc = doc(db, 'members', id);
-        await updateDoc(memberDoc, memberData);
-    } catch (error) {
-        console.error("Error updating member:", error);
-        throw new Error("Failed to update member");
-    }
+    members = members.map(mem => 
+        mem.id === id ? { ...mem, ...memberData } as Member : mem
+    );
+    return Promise.resolve();
 }
 
 export async function deleteMember(id: string): Promise<void> {
-    try {
-        const memberDoc = doc(db, 'members', id);
-        await deleteDoc(memberDoc);
-    } catch (error) {
-        console.error("Error deleting member:", error);
-        throw new Error("Failed to delete member");
-    }
+    members = members.filter(mem => mem.id !== id);
+    return Promise.resolve();
 }
