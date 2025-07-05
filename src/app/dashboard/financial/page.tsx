@@ -70,6 +70,8 @@ import { useToast } from "@/hooks/use-toast"
 import { getMembers, type Member } from "@/services/members"
 import { getPayments, addPayment, type Payment } from "@/services/payments"
 import { useSubscription } from "@/lib/subscription-context"
+import { getPlans } from "@/services/plans"
+import { getProducts } from "@/services/products"
 
 const planPrices = {
     "Mensal": { price: 97.00, duration: 30 },
@@ -84,15 +86,6 @@ const invoices = [
     { id: "F004", student: "Ana Costa", amount: "97.00", dueDate: "2025-01-20", status: "Pendente" },
 ]
 
-const availableProducts = [
-  { name: "Plano Mensal", price: 97.00 },
-  { name: "Plano Trimestral", price: 277.00 },
-  { name: "Plano Anual", price: 997.00 },
-  { name: "Avaliação Física", price: 150.00 },
-  { name: "Garrafa de Água", price: 25.00 },
-  { name: "Toalha FitCore", price: 35.00 },
-]
-
 export default function FinancialPage() {
     const searchParams = useSearchParams()
     const router = useRouter()
@@ -104,6 +97,7 @@ export default function FinancialPage() {
     const [payments, setPayments] = React.useState<Payment[]>([])
     const [members, setMembers] = React.useState<Member[]>([])
     const [isLoading, setIsLoading] = React.useState(true)
+    const [availableProducts, setAvailableProducts] = React.useState<{ name: string, price: number }[]>([]);
 
     const [filteredPayments, setFilteredPayments] = React.useState<Payment[]>([])
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false)
@@ -117,9 +111,20 @@ export default function FinancialPage() {
     const fetchData = React.useCallback(async () => {
         setIsLoading(true);
         try {
-            const [paymentsData, membersData] = await Promise.all([getPayments(), getMembers()]);
+            const [paymentsData, membersData, plansData, productsData] = await Promise.all([
+                getPayments(),
+                getMembers(),
+                getPlans(),
+                getProducts()
+            ]);
             setPayments(paymentsData);
             setMembers(membersData);
+
+            const planItems = plansData.map(p => ({ name: p.name, price: p.price }));
+            const productItems = productsData.map(p => ({ name: p.name, price: p.price }));
+            const serviceItems = [{ name: "Avaliação Física", price: 150.00 }];
+
+            setAvailableProducts([...planItems, ...serviceItems, ...productItems]);
         } catch (error) {
             toast({ title: "Erro ao buscar dados", description: "Não foi possível carregar os dados financeiros.", variant: "destructive" });
         } finally {
@@ -197,7 +202,7 @@ export default function FinancialPage() {
     const [newPaymentData, setNewPaymentData] = React.useState({
         studentId: "",
         date: new Date(),
-        items: [{ id: 1, description: "Plano Mensal", quantity: 1, price: 97.00 }],
+        items: [{ id: 1, description: "", quantity: 1, price: 0.00 }],
     })
 
     const handleItemChange = (index: number, field: string, value: any) => {

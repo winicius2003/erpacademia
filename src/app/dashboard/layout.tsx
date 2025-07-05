@@ -21,6 +21,7 @@ import {
   Gem,
   HeartPulse,
   Tags,
+  ShoppingBasket,
 } from "lucide-react"
 import { usePathname, useRouter } from 'next/navigation'
 import { differenceInDays } from 'date-fns'
@@ -65,15 +66,16 @@ const navItems = [
   { href: "/dashboard/access-control", icon: UsersRound, label: "Funcionários" },
   { href: "/dashboard/reports", icon: AreaChart, label: "Relatórios" },
   { href: "/dashboard/plans", icon: Tags, label: "Planos" },
+  { href: "/dashboard/products", icon: ShoppingBasket, label: "Produtos" },
   { href: "/dashboard/profile", icon: Settings, label: "Configurações" },
   { href: "/dashboard/subscription", icon: Gem, label: "Assinatura" },
 ]
 
 const navPermissions: Record<Role, string[]> = {
-  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro", "CRM", "Funcionários", "Relatórios", "Planos", "Assinatura", "Configurações"],
-  Gestor: ["Painel", "Alunos", "Avaliações", "Agenda", "Financeiro", "CRM", "Relatórios", "Planos", "Assinatura"],
+  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro", "CRM", "Funcionários", "Relatórios", "Planos", "Produtos", "Assinatura", "Configurações"],
+  Gestor: ["Painel", "Alunos", "Avaliações", "Agenda", "Financeiro", "CRM", "Relatórios", "Planos", "Produtos", "Assinatura"],
   Professor: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda"],
-  Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Funcionários"],
+  Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Funcionários", "Produtos"],
   Estagiário: ["Alunos", "Agenda"],
 }
 
