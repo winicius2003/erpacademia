@@ -87,6 +87,7 @@ export default function DashboardLayout({
   const [subscription, setSubscription] = React.useState<Subscription | null>(null);
   const [uiStatus, setUiStatus] = React.useState<SubscriptionUiStatus>('loading');
   const [daysRemaining, setDaysRemaining] = React.useState<number | null>(null);
+  const [currentUnit, setCurrentUnit] = React.useState("Unidade Principal");
 
 
   const fetchSubscription = React.useCallback(async () => {
@@ -203,15 +204,15 @@ export default function DashboardLayout({
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="justify-start gap-2 w-full px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                     <Globe className="h-4 w-4" />
-                    <span className="truncate">Unidade Principal</span>
+                    <span className="truncate">{currentUnit}</span>
                     <ChevronDown className="ml-auto h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel>Trocar Unidade</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>Unidade Centro</DropdownMenuItem>
-                  <DropdownMenuItem>Unidade Bairro</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setCurrentUnit("Unidade Principal")}>Unidade Principal</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setCurrentUnit("Unidade Centro")}>Unidade Centro</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </SidebarFooter>

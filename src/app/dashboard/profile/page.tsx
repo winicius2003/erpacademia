@@ -1,25 +1,56 @@
 "use client"
 
 import * as React from "react"
-import { format } from "date-fns"
-import { Calendar as CalendarIcon, Loader2 } from "lucide-react"
+import { Loader2, Trash2, PlusCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
+import { useToast } from "@/hooks/use-toast"
+
+type Unit = {
+  name: string;
+  address: string;
+}
 
 export default function SettingsPage() {
-  const [date, setDate] = React.useState<Date>()
   const [user, setUser] = React.useState<{ name: string; role: string } | null>(null)
   const router = useRouter()
+  const { toast } = useToast()
+
+  const [units, setUnits] = React.useState<Unit[]>([
+    { name: "Unidade Principal", address: "Rua Fictícia, 123 - Bairro Imaginário, Cidade/UF, CEP 12345-678" },
+    { name: "Unidade Centro", address: "Av. Central, 456 - Centro, Cidade/UF, CEP 12345-000" },
+  ])
+
+  const handleUnitChange = (index: number, field: keyof Unit, value: string) => {
+    const newUnits = [...units];
+    newUnits[index][field] = value;
+    setUnits(newUnits);
+  }
+
+  const addUnit = () => {
+    setUnits([...units, { name: "", address: "" }]);
+  }
+
+  const removeUnit = (index: number) => {
+    if (units.length <= 1) {
+      toast({
+        title: "Ação não permitida",
+        description: "Você deve manter pelo menos uma unidade.",
+        variant: "destructive"
+      });
+      return;
+    }
+    const newUnits = units.filter((_, i) => i !== index);
+    setUnits(newUnits);
+  }
+
 
   React.useEffect(() => {
     const userData = sessionStorage.getItem("fitcore.user")
@@ -116,23 +147,50 @@ export default function SettingsPage() {
                     <Label htmlFor="company-id">CNPJ / CPF</Label>
                     <Input id="company-id" placeholder="00.000.000/0001-00" defaultValue="00.000.000/0001-00"/>
                 </div>
-                <div className="grid gap-2 md:col-span-2">
-                    <Label htmlFor="company-address">Endereço Completo</Label>
-                    <Input id="company-address" placeholder="Rua, Número, Bairro, Cidade/UF, CEP" defaultValue="Rua Fictícia, 123 - Bairro Imaginário, Cidade/UF, CEP 12345-678"/>
-                </div>
                  <div className="grid gap-2">
                     <Label htmlFor="company-phone">Telefone Comercial</Label>
                     <Input id="company-phone" type="tel" placeholder="(11) 5555-5555" defaultValue="(11) 5555-5555"/>
                 </div>
-                <div className="grid gap-2">
-                    <Label htmlFor="company-units">Número de Unidades</Label>
-                    <Input id="company-units" type="number" defaultValue="1"/>
-                </div>
             </div>
-             <CardDescription className="pt-2">
-                O plano de assinatura é baseado no número total de alunos somando todas as unidades vinculadas a um mesmo CNPJ.
-            </CardDescription>
         </div>
+
+        <Separator />
+
+        {/* Units Management Section */}
+        <div className="space-y-4">
+            <Label className="text-base font-semibold">Gerenciamento de Unidades</Label>
+             <CardDescription>
+                Adicione e gerencie os endereços de suas filiais. Estas unidades aparecerão no seletor de unidades.
+                O plano de assinatura é baseado no número total de alunos somando todas as unidades.
+            </CardDescription>
+            <div className="space-y-4">
+                {units.map((unit, index) => (
+                    <Card key={index} className="p-4 bg-muted/50">
+                        <div className="grid gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                                <div className="grid gap-2">
+                                    <Label htmlFor={`unit-name-${index}`}>Nome da Unidade</Label>
+                                    <Input id={`unit-name-${index}`} value={unit.name} onChange={(e) => handleUnitChange(index, 'name', e.target.value)} placeholder="Ex: Unidade Centro"/>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor={`unit-address-${index}`}>Endereço</Label>
+                                    <Input id={`unit-address-${index}`} value={unit.address} onChange={(e) => handleUnitChange(index, 'address', e.target.value)} placeholder="Rua, Número, Bairro, etc."/>
+                                </div>
+                            </div>
+                            <div className="flex justify-end">
+                                <Button variant="ghost" size="sm" onClick={() => removeUnit(index)} className="text-destructive hover:text-destructive">
+                                    <Trash2 className="mr-2 h-4 w-4" /> Remover Unidade
+                                </Button>
+                            </div>
+                        </div>
+                    </Card>
+                ))}
+            </div>
+            <Button variant="outline" onClick={addUnit}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Unidade
+            </Button>
+        </div>
+
 
       </CardContent>
       <CardFooter className="border-t px-6 py-4">
