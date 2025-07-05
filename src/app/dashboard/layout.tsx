@@ -19,7 +19,7 @@ import {
   UsersRound,
   Loader2,
   ShieldCheck,
-  ClipboardHeart,
+  HeartPulse,
 } from "lucide-react"
 import { usePathname, useRouter } from 'next/navigation'
 import { differenceInDays } from 'date-fns'
@@ -57,7 +57,7 @@ const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Painel" },
   { href: "/dashboard/members", icon: Users, label: "Alunos" },
   { href: "/dashboard/workouts", icon: Dumbbell, label: "Treinos" },
-  { href: "/dashboard/assessments", icon: ClipboardHeart, label: "Avaliações" },
+  { href: "/dashboard/assessments", icon: HeartPulse, label: "Avaliações" },
   { href: "/dashboard/schedule", icon: Calendar, label: "Agenda" },
   { href: "/dashboard/financial", icon: Wallet, label: "Financeiro" },
   { href: "/dashboard/crm", icon: HeartHandshake, label: "CRM" },
