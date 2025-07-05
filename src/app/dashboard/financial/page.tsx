@@ -100,6 +100,7 @@ export default function FinancialPage() {
     const [availableProducts, setAvailableProducts] = React.useState<{ name: string, price: number }[]>([]);
 
     const [filteredPayments, setFilteredPayments] = React.useState<Payment[]>([])
+    const [dailyPayments, setDailyPayments] = React.useState<Payment[]>([])
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false)
     const [isInvoiceOpen, setIsInvoiceOpen] = React.useState(false)
     const [currentInvoice, setCurrentInvoice] = React.useState<Payment | null>(null)
@@ -160,9 +161,13 @@ export default function FinancialPage() {
         const projectedMonthlyRevenue = projectedDailyRevenue * 30
 
         const now = new Date()
-        const actualDailyRevenue = payments
+
+        const todayPayments = payments
             .filter(p => isToday(new Date(p.date.replace(/-/g, '/'))))
-            .reduce((acc, p) => acc + parseFloat(p.amount), 0)
+            .sort((a, b) => b.time.localeCompare(a.time));
+        setDailyPayments(todayPayments);
+        
+        const actualDailyRevenue = todayPayments.reduce((acc, p) => acc + parseFloat(p.amount), 0)
         
         const actualWeeklyRevenue = payments
             .filter(p => isThisWeek(new Date(p.date.replace(/-/g, '/')), { weekStartsOn: 1 }))
@@ -246,6 +251,7 @@ export default function FinancialPage() {
             items: newPaymentData.items,
             amount: totalAmount.toFixed(2),
             date: format(newPaymentData.date, "yyyy-MM-dd"),
+            time: format(new Date(), "HH:mm"),
             status: "Pago",
         }
 
@@ -372,7 +378,7 @@ export default function FinancialPage() {
                                 <TabsTrigger value="weekly">Semanal</TabsTrigger>
                                 <TabsTrigger value="monthly">Mensal</TabsTrigger>
                             </TabsList>
-                            <TabsContent value="daily" className="mt-4">
+                            <TabsContent value="daily" className="mt-4 space-y-4">
                                 <div className="grid gap-4 md:grid-cols-2">
                                     <Card>
                                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -395,6 +401,44 @@ export default function FinancialPage() {
                                         </CardContent>
                                     </Card>
                                 </div>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Vendas do Dia</CardTitle>
+                                        <CardDescription>
+                                            Lista detalhada de todas as vendas registradas hoje.
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="w-[100px]">Hora</TableHead>
+                                                    <TableHead>Aluno</TableHead>
+                                                    <TableHead>Itens</TableHead>
+                                                    <TableHead className="text-right">Valor</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {dailyPayments.length > 0 ? dailyPayments.map(payment => (
+                                                    <TableRow key={payment.id}>
+                                                        <TableCell>{payment.time}</TableCell>
+                                                        <TableCell className="font-medium">{payment.student}</TableCell>
+                                                        <TableCell className="text-muted-foreground">
+                                                            {payment.items.map(item => `${item.quantity}x ${item.description}`).join(', ')}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">R$ {payment.amount}</TableCell>
+                                                    </TableRow>
+                                                )) : (
+                                                    <TableRow>
+                                                        <TableCell colSpan={4} className="h-24 text-center">
+                                                            Nenhuma venda registrada hoje.
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )}
+                                            </TableBody>
+                                        </Table>
+                                    </CardContent>
+                                </Card>
                             </TabsContent>
                             <TabsContent value="weekly" className="mt-4">
                                 <div className="grid gap-4 md:grid-cols-2">
