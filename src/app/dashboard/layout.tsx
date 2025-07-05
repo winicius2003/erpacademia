@@ -61,8 +61,8 @@ const navItems = [
   { href: "/dashboard/crm", icon: HeartHandshake, label: "CRM" },
   { href: "/dashboard/access-control", icon: UsersRound, label: "Funcionários" },
   { href: "/dashboard/reports", icon: AreaChart, label: "Relatórios" },
-  { href: "/dashboard/subscription", icon: ShieldCheck, label: "Assinatura" },
   { href: "/dashboard/profile", icon: Settings, label: "Configurações" },
+  { href: "/dashboard/subscription", icon: ShieldCheck, label: "Assinatura" },
 ]
 
 const navPermissions: Record<Role, string[]> = {
@@ -169,7 +169,10 @@ export default function DashboardLayout({
             <SidebarHeader>
               <div className="flex items-center gap-2">
                 <Logo className="w-6 h-6 text-sidebar-primary" />
-                <span className="font-bold text-lg font-headline">FitCore</span>
+                <div className="flex flex-col">
+                    <span className="font-bold text-lg font-headline leading-none">FitCore</span>
+                    <span className="text-xs text-sidebar-foreground/70 leading-none">Academia Exemplo</span>
+                </div>
               </div>
             </SidebarHeader>
             <SidebarContent>

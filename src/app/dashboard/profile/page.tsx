@@ -3,6 +3,7 @@
 import * as React from "react"
 import { format } from "date-fns"
 import { Calendar as CalendarIcon, Loader2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -13,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useRouter } from "next/navigation"
+import { Separator } from "@/components/ui/separator"
 
 export default function SettingsPage() {
   const [date, setDate] = React.useState<Date>()
@@ -40,80 +41,90 @@ export default function SettingsPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">Meu Perfil</CardTitle>
+        <CardTitle className="font-headline">Configurações</CardTitle>
         <CardDescription>
-          Gerencie suas informações pessoais e configurações da conta.
+          Gerencie suas informações pessoais e os dados da sua empresa.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
-        <div className="flex items-center gap-4">
-          <Avatar className="h-20 w-20">
-            <AvatarImage src="https://placehold.co/80x80.png" data-ai-hint="person face" />
-            <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
-          </Avatar>
-          <div className="grid gap-1">
-            <h3 className="text-lg font-bold">{user.name}</h3>
-            <p className="text-sm text-muted-foreground">{user.name.toLowerCase().replace(" ", ".")}@fitcore.com</p>
-            <Button variant="outline" size="sm" className="mt-2">Enviar Foto</Button>
-          </div>
+        {/* User Profile Section */}
+        <div className="space-y-4">
+            <Label className="text-base font-semibold">Seu Perfil</Label>
+            <div className="flex items-center gap-4">
+                <Avatar className="h-20 w-20">
+                    <AvatarImage src="https://placehold.co/80x80.png" data-ai-hint="person face" />
+                    <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div className="grid gap-1">
+                    <h3 className="text-lg font-bold">{user.name}</h3>
+                    <p className="text-sm text-muted-foreground">{user.name.toLowerCase().replace(" ", ".")}@fitcore.com</p>
+                    <Button variant="outline" size="sm" className="mt-2">Enviar Foto</Button>
+                </div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid gap-2">
+                    <Label htmlFor="name">Nome Completo</Label>
+                    <Input id="name" defaultValue={user.name} />
+                </div>
+                 <div className="grid gap-2">
+                    <Label htmlFor="email">E-mail</Label>
+                    <Input id="email" type="email" defaultValue={`${user.name.toLowerCase().replace(" ", ".")}@fitcore.com`} />
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="phone">Telefone Pessoal</Label>
+                    <Input id="phone" type="tel" defaultValue="+55 (11) 99999-9999" />
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="role">Cargo</Label>
+                    <Select value={user.role.toLowerCase()} disabled>
+                        <SelectTrigger>
+                        <SelectValue placeholder="Selecione um cargo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="gestor">Gestor</SelectItem>
+                        <SelectItem value="professor">Professor</SelectItem>
+                        <SelectItem value="recepção">Recepção</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="grid gap-2">
-            <Label htmlFor="name">Nome Completo</Label>
-            <Input id="name" defaultValue={user.name} />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="id">ID do Funcionário</Label>
-            <Input id="id" defaultValue="S-0001" readOnly />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="email">E-mail</Label>
-            <Input id="email" type="email" defaultValue={`${user.name.toLowerCase().replace(" ", ".")}@fitcore.com`} />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="phone">Telefone</Label>
-            <Input id="phone" type="tel" defaultValue="+55 (11) 99999-9999" />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="dob">Data de Nascimento</Label>
-             <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Escolha uma data</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="role">Cargo</Label>
-             <Select value={user.role.toLowerCase()} disabled>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um cargo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="gestor">Gestor</SelectItem>
-                <SelectItem value="professor">Professor</SelectItem>
-                <SelectItem value="recepção">Recepção</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <Separator />
+
+        {/* Company Details Section */}
+        <div className="space-y-4">
+            <Label className="text-base font-semibold">Dados da Empresa</Label>
+            <div className="flex items-center gap-4">
+                 <Avatar className="h-20 w-20 rounded-md">
+                    <AvatarImage src="https://placehold.co/80x80.png" data-ai-hint="logo building" />
+                    <AvatarFallback>Logo</AvatarFallback>
+                </Avatar>
+                 <div className="grid gap-1">
+                    <h3 className="text-lg font-bold">Logo da Empresa</h3>
+                    <p className="text-sm text-muted-foreground">Esta logo aparecerá nas faturas.</p>
+                    <Button variant="outline" size="sm" className="mt-2">Enviar Nova Logo</Button>
+                </div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid gap-2">
+                    <Label htmlFor="company-name">Nome da Empresa</Label>
+                    <Input id="company-name" placeholder="Sua Academia" defaultValue="Academia Exemplo" />
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="company-id">CNPJ / CPF</Label>
+                    <Input id="company-id" placeholder="00.000.000/0001-00" defaultValue="00.000.000/0001-00"/>
+                </div>
+                <div className="grid gap-2 md:col-span-2">
+                    <Label htmlFor="company-address">Endereço Completo</Label>
+                    <Input id="company-address" placeholder="Rua, Número, Bairro, Cidade/UF, CEP" defaultValue="Rua Fictícia, 123 - Bairro Imaginário, Cidade/UF, CEP 12345-678"/>
+                </div>
+                 <div className="grid gap-2">
+                    <Label htmlFor="company-phone">Telefone Comercial</Label>
+                    <Input id="company-phone" type="tel" placeholder="(11) 5555-5555" defaultValue="(11) 5555-5555"/>
+                </div>
+            </div>
         </div>
 
       </CardContent>

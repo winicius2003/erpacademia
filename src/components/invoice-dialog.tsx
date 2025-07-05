@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Logo } from "@/components/logo"
+import Image from "next/image"
 
 export function InvoiceDialog({ isOpen, onOpenChange, invoiceData }) {
   const printableRef = React.useRef(null)
@@ -40,21 +41,21 @@ export function InvoiceDialog({ isOpen, onOpenChange, invoiceData }) {
       <DialogContent className="max-w-2xl">
         <div ref={printableRef} className="printable-invoice">
           <DialogHeader className="mb-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Logo className="w-8 h-8 text-primary" />
-                  <h1 className="text-2xl font-headline">FitCore</h1>
+             <div className="flex justify-between items-start">
+                <div className="flex items-center gap-4">
+                    <Image src="https://placehold.co/80x80.png" alt="Logo da Empresa" className="w-16 h-16 rounded-md object-cover" width={80} height={80} data-ai-hint="logo building" />
+                    <div>
+                        <h1 className="text-xl font-bold font-headline">Academia Exemplo</h1>
+                        <p className="text-xs text-muted-foreground">Rua Fictícia, 123 - Bairro Imaginário</p>
+                        <p className="text-xs text-muted-foreground">Cidade/UF - CEP 12345-678</p>
+                        <p className="text-xs text-muted-foreground">CNPJ: 00.000.000/0001-00</p>
+                    </div>
                 </div>
-                <p className="text-sm text-muted-foreground">Rua da Academia, 123</p>
-                <p className="text-sm text-muted-foreground">Centro, Cidade-Estado, 12345-678</p>
-                <p className="text-sm text-muted-foreground">contato@fitcore.com</p>
-              </div>
-              <div className="text-right">
-                <DialogTitle className="text-2xl font-bold mb-1">FATURA</DialogTitle>
-                <p className="text-sm text-muted-foreground">#{invoiceData.id}</p>
-                <p className="text-sm text-muted-foreground">Data: {format(new Date(invoiceData.date), "dd/MM/yyyy")}</p>
-              </div>
+                <div className="text-right">
+                    <DialogTitle className="text-2xl font-bold mb-1">FATURA</DialogTitle>
+                    <p className="text-sm text-muted-foreground">#{invoiceData.id}</p>
+                    <p className="text-sm text-muted-foreground">Data: {format(new Date(invoiceData.date.replace(/-/g, '/')), "dd/MM/yyyy")}</p>
+                </div>
             </div>
           </DialogHeader>
           
