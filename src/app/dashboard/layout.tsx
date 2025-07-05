@@ -18,7 +18,7 @@ import {
   AreaChart,
   UsersRound,
   Loader2,
-  ShieldCheck,
+  Gem,
   HeartPulse,
 } from "lucide-react"
 import { usePathname, useRouter } from 'next/navigation'
@@ -64,12 +64,12 @@ const navItems = [
   { href: "/dashboard/access-control", icon: UsersRound, label: "Funcionários" },
   { href: "/dashboard/reports", icon: AreaChart, label: "Relatórios" },
   { href: "/dashboard/profile", icon: Settings, label: "Configurações" },
-  { href: "/dashboard/subscription", icon: ShieldCheck, label: "Assinatura" },
+  { href: "/dashboard/subscription", icon: Gem, label: "Planos" },
 ]
 
 const navPermissions: Record<Role, string[]> = {
-  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro", "CRM", "Funcionários", "Relatórios", "Assinatura", "Configurações"],
-  Gestor: ["Painel", "Alunos", "Avaliações", "Agenda", "Financeiro", "CRM", "Relatórios", "Assinatura"],
+  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro", "CRM", "Funcionários", "Relatórios", "Planos", "Configurações"],
+  Gestor: ["Painel", "Alunos", "Avaliações", "Agenda", "Financeiro", "CRM", "Relatórios", "Planos"],
   Professor: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda"],
   Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Funcionários"],
   Estagiário: ["Alunos", "Agenda"],
