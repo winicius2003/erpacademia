@@ -31,21 +31,26 @@ export function getFirebaseConfig() {
     // It tells you exactly which keys are missing from your .env file.
     // The build process (publishing) will fail if these keys are not present.
     const errorMessage = `
-      -------------------------------------------------------------------------
-      ERROR: MISSING FIREBASE CONFIGURATION
-      -------------------------------------------------------------------------
-      The application cannot connect to Firebase because some required
-      environment variables are missing. This will prevent the project from
-      being published successfully.
-
-      Please check your .env file at the root of your project and ensure
-      the following keys have values from your Firebase project settings:
+      =========================================================================
+      
+      [CONFIGURAÇÃO INCOMPLETA] ERRO AO PUBLICAR:
+      
+      A publicação falhou porque as chaves de API do Firebase estão faltando.
+      O processo de publicação precisa delas para conectar ao banco de dados.
+      
+      COMO RESOLVER:
+      1. Vá para as configurações do seu projeto na plataforma de hospedagem.
+      2. Procure por "Environment Variables" ou "Secrets".
+      3. Adicione as seguintes chaves que estão faltando:
       
       ${missingConfigKeys.map(key => `  - NEXT_PUBLIC_FIREBASE_${toSnakeCase(key)}`).join('\n')}
-
-      After adding the keys, you may need to restart the development server.
-      If you are publishing, ensure these variables are set in your build environment.
-      -------------------------------------------------------------------------
+      
+      Você pode encontrar os valores corretos no painel do seu projeto Firebase,
+      em "Configurações do Projeto" > "Geral".
+      
+      Após adicionar as variáveis, tente publicar novamente.
+      
+      =========================================================================
     `;
     throw new Error(errorMessage);
   }
