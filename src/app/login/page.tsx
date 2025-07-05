@@ -38,13 +38,13 @@ export default function LoginPage() {
       password === "uUmope5Z"
 
     if (isMasterAdminLogin) {
-      userFound = { name: "Administrador Master", role: "Admin" }
+      userFound = { name: "Administrador Master", role: "Admin", email: login }
       // On first master login, ensure subscription exists
       await initializeSubscription()
     } else {
       const employee = await getEmployeeByLogin(login)
       if (employee && employee.password === password) {
-        userFound = { name: employee.name, role: employee.role }
+        userFound = { name: employee.name, role: employee.role, email: employee.email }
       }
     }
 

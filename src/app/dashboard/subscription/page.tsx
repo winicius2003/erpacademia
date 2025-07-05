@@ -4,6 +4,7 @@ import * as React from "react"
 import { addDays } from "date-fns"
 import { format } from "date-fns/format"
 import { ptBR } from "date-fns/locale"
+import { useSearchParams, useRouter } from "next/navigation"
 import { BadgeCheck, Calendar, ChevronsRight, Loader2, Play, ShieldAlert, ShieldX } from "lucide-react"
 
 import { useSubscription } from "@/lib/subscription-context"
@@ -12,6 +13,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { updateSubscription } from "@/services/subscription"
+import { createCheckoutSession } from "@/services/stripe"
+import { cn } from "@/lib/utils"
+
 
 const statusInfo = {
   active: {
@@ -47,9 +51,42 @@ const statusInfo = {
 }
 
 export default function SubscriptionPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const { status, expiresAt, plan, refreshSubscription } = useSubscription()
   const { toast } = useToast()
+  
   const [isSimulating, setIsSimulating] = React.useState(false)
+  const [isRedirecting, setIsRedirecting] = React.useState(false)
+  const [userEmail, setUserEmail] = React.useState<string | undefined>(undefined);
+
+  React.useEffect(() => {
+    const userData = sessionStorage.getItem("fitcore.user");
+    if (userData) {
+        const user = JSON.parse(userData);
+        setUserEmail(user.email);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (searchParams.get("success")) {
+      toast({
+        title: "Pagamento Concluído!",
+        description: "Sua assinatura foi ativada. Obrigado!",
+      });
+      refreshSubscription();
+      router.replace('/dashboard/subscription', { scroll: false });
+    }
+
+    if (searchParams.get("canceled")) {
+      toast({
+        title: "Pagamento Cancelado",
+        description: "Você pode tentar novamente a qualquer momento.",
+        variant: "destructive",
+      });
+      router.replace('/dashboard/subscription', { scroll: false });
+    }
+  }, [searchParams, toast, refreshSubscription, router]);
 
   const currentStatusInfo = statusInfo[status]
 
@@ -73,6 +110,22 @@ export default function SubscriptionPage() {
       setIsSimulating(false)
     }
   }
+
+  const handlePayment = async () => {
+    setIsRedirecting(true);
+    try {
+        const url = await createCheckoutSession(plan, userEmail);
+        window.location.href = url;
+    } catch (error) {
+        console.error("Failed to create checkout session:", error);
+        toast({
+            title: "Erro ao iniciar pagamento",
+            description: "Não foi possível conectar ao Stripe. Tente novamente.",
+            variant: "destructive",
+        });
+        setIsRedirecting(false);
+    }
+  };
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -109,8 +162,9 @@ export default function SubscriptionPage() {
           </div>
         </CardContent>
         <CardFooter>
-            <Button size="lg" className="w-full">
-                <BadgeCheck className="mr-2"/> Realizar Pagamento
+            <Button size="lg" className="w-full" onClick={handlePayment} disabled={isRedirecting || isSimulating}>
+                {isRedirecting ? <Loader2 className="mr-2 animate-spin" /> : <BadgeCheck className="mr-2" />}
+                {isRedirecting ? 'Redirecionando...' : 'Realizar Pagamento'}
             </Button>
         </CardFooter>
       </Card>
