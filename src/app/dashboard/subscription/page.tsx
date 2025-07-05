@@ -10,6 +10,14 @@ import { BadgeCheck, Calendar, ChevronsRight, Loader2, Play, ShieldAlert, Shield
 import { useSubscription } from "@/lib/subscription-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { updateSubscription } from "@/services/subscription"
@@ -50,6 +58,12 @@ const statusInfo = {
   }
 }
 
+const plans = [
+    { name: "Iniciante", price: "R$ 97/mês", students: "Até 50 alunos", id: "Iniciante" },
+    { name: "Profissional", price: "R$ 197/mês", students: "Até 200 alunos", id: "Profissional" },
+    { name: "Business", price: "R$ 397/mês", students: "Até 500 alunos", id: "Business" },
+];
+
 export default function SubscriptionPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -58,6 +72,7 @@ export default function SubscriptionPage() {
   
   const [isSimulating, setIsSimulating] = React.useState(false)
   const [isRedirecting, setIsRedirecting] = React.useState(false)
+  const [isPlanDialogOpen, setIsPlanDialogOpen] = React.useState(false)
   const [userEmail, setUserEmail] = React.useState<string | undefined>(undefined);
 
   React.useEffect(() => {
@@ -111,16 +126,16 @@ export default function SubscriptionPage() {
     }
   }
 
-  const handlePayment = async () => {
+  const handlePayment = async (planToPay: string) => {
     setIsRedirecting(true);
     try {
-        const url = await createCheckoutSession(plan, userEmail);
+        const url = await createCheckoutSession(planToPay, userEmail);
         window.location.href = url;
     } catch (error) {
         console.error("Failed to create checkout session:", error);
         toast({
             title: "Erro ao iniciar pagamento",
-            description: "Não foi possível conectar ao Stripe. Tente novamente.",
+            description: "Verifique se as chaves de API do Stripe e os IDs de preço estão configurados corretamente.",
             variant: "destructive",
         });
         setIsRedirecting(false);
@@ -142,7 +157,39 @@ export default function SubscriptionPage() {
               <p className="text-sm text-muted-foreground">Plano Atual</p>
               <p className="text-2xl font-bold">{plan}</p>
             </div>
-            <Button>Trocar de Plano</Button>
+            <Dialog open={isPlanDialogOpen} onOpenChange={setIsPlanDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button>Trocar de Plano</Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Trocar de Plano</DialogTitle>
+                        <DialogDescription>Escolha o plano que melhor se adapta às suas necessidades.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-3 py-4">
+                        {plans.map(p => (
+                            <Card key={p.id} className={cn(p.id === plan && "border-primary")}>
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-lg">{p.name}</CardTitle>
+                                    <CardDescription>{p.students}</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-xl font-bold">{p.price}</p>
+                                </CardContent>
+                                <CardFooter>
+                                    <Button 
+                                        className="w-full" 
+                                        onClick={() => handlePayment(p.id)} 
+                                        disabled={isRedirecting || p.id === plan}
+                                    >
+                                        { p.id === plan ? "Plano Atual" : (isRedirecting ? 'Aguarde...' : `Assinar plano ${p.name}`) }
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        ))}
+                    </div>
+                </DialogContent>
+            </Dialog>
           </div>
           
           <div className="space-y-2">
@@ -162,9 +209,9 @@ export default function SubscriptionPage() {
           </div>
         </CardContent>
         <CardFooter>
-            <Button size="lg" className="w-full" onClick={handlePayment} disabled={isRedirecting || isSimulating}>
+            <Button size="lg" className="w-full" onClick={() => handlePayment(plan)} disabled={isRedirecting || isSimulating}>
                 {isRedirecting ? <Loader2 className="mr-2 animate-spin" /> : <BadgeCheck className="mr-2" />}
-                {isRedirecting ? 'Redirecionando...' : 'Realizar Pagamento'}
+                {isRedirecting ? 'Redirecionando...' : 'Renovar Assinatura Atual'}
             </Button>
         </CardFooter>
       </Card>
