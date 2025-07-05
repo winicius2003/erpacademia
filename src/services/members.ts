@@ -24,6 +24,12 @@ export async function getMembers(): Promise<Member[]> {
     return Promise.resolve(members);
 }
 
+export async function getMemberById(id: string): Promise<Member | null> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const member = members.find(m => m.id === id);
+    return Promise.resolve(member || null);
+}
+
 export async function addMember(memberData: Omit<Member, 'id'>): Promise<string> {
     const newId = (nextId++).toString();
     const newMember: Member = {

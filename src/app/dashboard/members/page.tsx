@@ -286,12 +286,12 @@ export default function MembersPage() {
     }
   };
 
-  const handleViewWorkouts = (member: Member) => {
-    router.push('/dashboard/workouts');
+  const handleViewProfile = (member: Member) => {
+    router.push(`/dashboard/members/${member.id}`);
   };
 
   const handleViewPayments = (member: Member) => {
-    router.push(`/dashboard/financial?student=${encodeURIComponent(member.name)}`);
+    router.push(`/dashboard/financial?studentId=${member.id}&studentName=${encodeURIComponent(member.name)}`);
   };
 
   if (!user || isLoading) {
@@ -488,7 +488,7 @@ export default function MembersPage() {
                 userRole={user.role}
                 onEdit={handleEditClick}
                 onDelete={handleDeleteClick}
-                onViewWorkouts={handleViewWorkouts}
+                onViewProfile={handleViewProfile}
                 onViewPayments={handleViewPayments}
               />
             </TabsContent>
@@ -498,7 +498,7 @@ export default function MembersPage() {
                 userRole={user.role}
                 onEdit={handleEditClick}
                 onDelete={handleDeleteClick}
-                onViewWorkouts={handleViewWorkouts}
+                onViewProfile={handleViewProfile}
                 onViewPayments={handleViewPayments}
               />
             </TabsContent>
@@ -509,7 +509,7 @@ export default function MembersPage() {
                   userRole={user.role}
                   onEdit={handleEditClick}
                   onDelete={handleDeleteClick}
-                  onViewWorkouts={handleViewWorkouts}
+                  onViewProfile={handleViewProfile}
                   onViewPayments={handleViewPayments}
                 />
               </TabsContent>
@@ -546,14 +546,14 @@ function MemberTable({
   userRole,
   onEdit,
   onDelete,
-  onViewWorkouts,
+  onViewProfile,
   onViewPayments
 }: { 
   data: Member[],
   userRole: string,
   onEdit: (member: Member) => void,
   onDelete: (member: Member) => void,
-  onViewWorkouts: (member: Member) => void,
+  onViewProfile: (member: Member) => void,
   onViewPayments: (member: Member) => void
 }) {
     return (
@@ -595,8 +595,8 @@ function MemberTable({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <DropdownMenuItem onSelect={() => onEdit(member)}>Editar</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => onViewWorkouts(member)}>Ver Treinos</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => onViewProfile(member)}>Ver Ficha</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => onEdit(member)}>Editar Cadastro</DropdownMenuItem>
                         {userRole !== 'Professor' && (
                           <DropdownMenuItem onSelect={() => onViewPayments(member)}>Ver Pagamentos</DropdownMenuItem>
                         )}

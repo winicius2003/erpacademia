@@ -98,7 +98,8 @@ export default function FinancialPage() {
     const router = useRouter()
     const { toast } = useToast()
     const { status: subscriptionStatus } = useSubscription()
-    const studentName = searchParams.get('student')
+    const studentId = searchParams.get('studentId')
+    const studentName = searchParams.get('studentName')
 
     const [payments, setPayments] = React.useState<Payment[]>([])
     const [members, setMembers] = React.useState<Member[]>([])
@@ -132,12 +133,12 @@ export default function FinancialPage() {
 
 
     React.useEffect(() => {
-        if (studentName) {
-            setFilteredPayments(payments.filter(p => p.student === studentName));
+        if (studentId) {
+            setFilteredPayments(payments.filter(p => p.studentId === studentId));
         } else {
             setFilteredPayments(payments);
         }
-    }, [studentName, payments]);
+    }, [studentId, payments]);
     
     React.useEffect(() => {
         const activeMembers = members.filter(m => m.status === 'Ativo')
@@ -194,7 +195,7 @@ export default function FinancialPage() {
     }, [payments, members])
 
     const [newPaymentData, setNewPaymentData] = React.useState({
-        student: "",
+        studentId: "",
         date: new Date(),
         items: [{ id: 1, description: "Plano Mensal", quantity: 1, price: 97.00 }],
     })
@@ -228,12 +229,15 @@ export default function FinancialPage() {
 
     const handleSavePayment = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newPaymentData.student || newPaymentData.items.length === 0) {
+        const selectedMember = members.find(m => m.id === newPaymentData.studentId);
+        if (!selectedMember || newPaymentData.items.length === 0) {
+            toast({ title: "Dados incompletos", description: "Selecione um aluno e adicione pelo menos um item.", variant: "destructive" });
             return;
         }
 
         const newPayment: Omit<Payment, 'id'> = {
-            student: newPaymentData.student,
+            studentId: newPaymentData.studentId,
+            student: selectedMember.name,
             items: newPaymentData.items,
             amount: totalAmount.toFixed(2),
             date: format(newPaymentData.date, "yyyy-MM-dd"),
@@ -249,7 +253,7 @@ export default function FinancialPage() {
             setCurrentInvoice(savedPayment);
             setIsPaymentDialogOpen(false);
             setIsInvoiceOpen(true);
-            setNewPaymentData({ student: "", date: new Date(), items: [{ id: 1, description: "", quantity: 1, price: 0.00 }] });
+            setNewPaymentData({ studentId: "", date: new Date(), items: [{ id: 1, description: "", quantity: 1, price: 0.00 }] });
             toast({ title: "Pagamento Registrado", description: "A fatura foi gerada com sucesso." });
         } catch (error) {
             toast({ title: "Erro ao salvar pagamento", variant: "destructive" });
@@ -478,18 +482,16 @@ export default function FinancialPage() {
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="grid gap-2">
                                                     <Label htmlFor="student">Aluno</Label>
-                                                    <Input
-                                                        id="student"
-                                                        value={newPaymentData.student}
-                                                        onChange={(e) => setNewPaymentData({ ...newPaymentData, student: e.target.value })}
-                                                        placeholder="Digite ou selecione um aluno"
-                                                        list="student-datalist"
-                                                    />
-                                                    <datalist id="student-datalist">
-                                                        {members.map((member) => (
-                                                            <option key={member.id} value={member.name} />
-                                                        ))}
-                                                    </datalist>
+                                                    <Select value={newPaymentData.studentId} onValueChange={(value) => setNewPaymentData({ ...newPaymentData, studentId: value })}>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Selecione um aluno" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {members.map((member) => (
+                                                                <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
                                                 </div>
                                                 <div className="grid gap-2">
                                                     <Label htmlFor="paymentDate">Data</Label>

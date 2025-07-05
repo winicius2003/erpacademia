@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { z } from "zod"
 import { PlusCircle, Printer, Loader2, Calendar as CalendarIcon, Ruler, Weight, User, MoreVertical, Edit, Trash2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -24,6 +25,7 @@ import { useToast } from "@/hooks/use-toast"
 import { getMembers, type Member } from "@/services/members"
 import { getAssessments, addAssessment, type Assessment } from "@/services/assessments"
 import { cn } from "@/lib/utils"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 const measuresSchema = z.object({
   weight: z.coerce.number().positive("Inválido"),
@@ -50,6 +52,7 @@ type AssessmentFormValues = z.infer<typeof assessmentSchema>;
 
 export default function AssessmentsPage() {
   const { toast } = useToast()
+  const router = useRouter()
   const [assessments, setAssessments] = React.useState<Assessment[]>([])
   const [members, setMembers] = React.useState<Member[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
@@ -109,6 +112,10 @@ export default function AssessmentsPage() {
   const handlePrint = () => {
     window.print();
   };
+  
+  const handleViewProfile = (studentId: string) => {
+    router.push(`/dashboard/members/${studentId}`);
+  };
 
   return (
     <>
@@ -153,7 +160,21 @@ export default function AssessmentsPage() {
                         <TableCell className="text-center">{item.measures.bodyFat.toFixed(1)}</TableCell>
                         <TableCell className="text-center">{item.measures.muscleMass.toFixed(1)}</TableCell>
                         <TableCell className="text-right">
-                            <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onSelect={() => handleViewProfile(item.studentId)}>
+                                Ver Ficha do Aluno
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                Editar Avaliação
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))}

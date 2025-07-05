@@ -49,13 +49,27 @@ let assessments: Assessment[] = [
             chest: 90, waist: 72, hips: 98, rightArm: 28, leftArm: 28, rightThigh: 55, leftThigh: 55
         },
         notes: 'Foco em emagrecimento e definição.'
+    },
+    { 
+        id: 'a3', 
+        studentId: '1',
+        studentName: 'João da Silva',
+        date: '2024-07-15',
+        measures: {
+            weight: 88, height: 180, bodyFat: 14.1, muscleMass: 72.0, bmi: 27.2,
+            chest: 105, waist: 84, hips: 101, rightArm: 36, leftArm: 35.5, rightThigh: 62, leftThigh: 61.5
+        },
+        notes: 'Ótima evolução de hipertrofia. Ajustar cardio.'
     }
 ];
 let nextId = assessments.length + 1;
 // -------------------------
 
-export async function getAssessments(): Promise<Assessment[]> {
+export async function getAssessments(studentId?: string): Promise<Assessment[]> {
     await new Promise(resolve => setTimeout(resolve, 500));
+    if (studentId) {
+        return Promise.resolve(assessments.filter(a => a.studentId === studentId));
+    }
     return Promise.resolve(JSON.parse(JSON.stringify(assessments)));
 }
 
