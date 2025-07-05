@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Eye, MoreHorizontal, PlusCircle, Trash2, Loader2 } from "lucide-react"
+import { Eye, MoreHorizontal, PlusCircle, Trash2, Loader2, WalletCards } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -33,6 +33,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import {
   Dialog,
@@ -62,6 +63,7 @@ export const rolePermissions: Record<Role, string[]> = {
   Gestor: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Relatórios"],
   Professor: ["Painel", "Alunos", "Treinos", "Agenda"],
   Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Funcionários"],
+  Estagiário: ["Alunos", "Agenda"],
 }
 
 const initialEmployeeFormState = {
@@ -71,6 +73,8 @@ const initialEmployeeFormState = {
   login: "",
   password: "",
   role: "Professor" as Role,
+  salary: 0,
+  workHours: "",
 }
 
 type EmployeeFormData = typeof initialEmployeeFormState
@@ -83,8 +87,13 @@ export default function AccessControlPage() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [isEditing, setIsEditing] = React.useState(false)
   const [employeeFormData, setEmployeeFormData] = React.useState<EmployeeFormData>(initialEmployeeFormState)
+  
   const [employeeToDelete, setEmployeeToDelete] = React.useState<Employee | null>(null)
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false)
+
+  const [employeeToPay, setEmployeeToPay] = React.useState<Employee | null>(null);
+  const [isPaySalaryAlertOpen, setIsPaySalaryAlertOpen] = React.useState(false);
+
 
   const fetchEmployees = React.useCallback(async () => {
     setIsLoading(true);
@@ -149,6 +158,8 @@ export default function AccessControlPage() {
       login: employee.login,
       password: employee.password,
       role: employee.role,
+      salary: employee.salary,
+      workHours: employee.workHours,
     });
     setIsDialogOpen(true);
   };
@@ -164,6 +175,8 @@ export default function AccessControlPage() {
         password: employeeFormData.password,
         role: employeeFormData.role,
         status: "Ativo" as const,
+        salary: Number(employeeFormData.salary) || 0,
+        workHours: employeeFormData.workHours,
     }
     
     setIsLoading(true);
@@ -205,6 +218,23 @@ export default function AccessControlPage() {
     }
   };
 
+  const handlePaySalaryClick = (employee: Employee) => {
+    setEmployeeToPay(employee);
+    setIsPaySalaryAlertOpen(true);
+  };
+
+  const handleConfirmPaySalary = async () => {
+    if (!employeeToPay) return;
+    // Here you would typically call a service to register the payment
+    // For now, we'll just show a toast notification.
+    toast({
+      title: "Pagamento Registrado",
+      description: `O pagamento de salário para ${employeeToPay.name} foi registrado.`,
+    });
+    setIsPaySalaryAlertOpen(false);
+    setEmployeeToPay(null);
+  };
+
 
   return (
     <>
@@ -232,8 +262,9 @@ export default function AccessControlPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Funcionário</TableHead>
-                <TableHead className="hidden md:table-cell">E-mail</TableHead>
                 <TableHead>Função</TableHead>
+                <TableHead className="hidden md:table-cell">Horário</TableHead>
+                <TableHead className="hidden lg:table-cell">Salário</TableHead>
                 <TableHead className="hidden md:table-cell">Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -241,22 +272,29 @@ export default function AccessControlPage() {
             <TableBody>
               {employees.map(employee => (
                 <TableRow key={employee.id}>
-                  <TableCell className="font-medium">{employee.name}</TableCell>
-                  <TableCell className="hidden md:table-cell">{employee.email}</TableCell>
+                  <TableCell>
+                    <div className="font-medium">{employee.name}</div>
+                    <div className="text-sm text-muted-foreground md:hidden">{employee.email}</div>
+                  </TableCell>
                   <TableCell>
                     <Select
                       defaultValue={employee.role}
                       onValueChange={(value: Role) => handleRoleChange(employee.id, value)}
                     >
-                      <SelectTrigger className="w-[180px]">
+                      <SelectTrigger className="w-full min-w-[140px]">
                         <SelectValue placeholder="Selecione uma função" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Gestor">Gestor</SelectItem>
                         <SelectItem value="Professor">Professor</SelectItem>
                         <SelectItem value="Recepção">Recepção</SelectItem>
+                        <SelectItem value="Estagiário">Estagiário</SelectItem>
                       </SelectContent>
                     </Select>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">{employee.workHours}</TableCell>
+                  <TableCell className="hidden lg:table-cell">
+                    {employee.salary.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
                     <Badge variant={employee.status === "Ativo" ? "secondary" : "destructive"}>
@@ -279,6 +317,11 @@ export default function AccessControlPage() {
                         <DropdownMenuItem onSelect={() => handleSimulateView(employee.role as Role)}>
                           <Eye className="mr-2 h-4 w-4" /> Simular Visão
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => handlePaySalaryClick(employee)}>
+                          <WalletCards className="mr-2 h-4 w-4" /> Pagar Salário
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onSelect={() => handleDeleteClick(employee)} className="text-destructive focus:text-destructive">
                           <Trash2 className="mr-2 h-4 w-4" /> Excluir
                         </DropdownMenuItem>
@@ -294,7 +337,7 @@ export default function AccessControlPage() {
     </Card>
 
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Editar Funcionário" : "Adicionar Novo Funcionário"}</DialogTitle>
           <DialogDescription>
@@ -321,6 +364,16 @@ export default function AccessControlPage() {
                 <Input id="password" type="password" value={employeeFormData.password} onChange={(e) => handleInputChange('password', e.target.value)} placeholder="••••••••" />
               </div>
             </div>
+             <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                    <Label htmlFor="workHours">Horário de Trabalho</Label>
+                    <Input id="workHours" value={employeeFormData.workHours} onChange={(e) => handleInputChange('workHours', e.target.value)} placeholder="Ex: 08:00 - 17:00" />
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="salary">Salário (R$)</Label>
+                    <Input id="salary" type="number" value={employeeFormData.salary} onChange={(e) => handleInputChange('salary', e.target.value)} placeholder="Ex: 1500.00" />
+                </div>
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="role">Função</Label>
               <Select value={employeeFormData.role} onValueChange={(v: Role) => handleInputChange('role', v)}>
@@ -331,6 +384,7 @@ export default function AccessControlPage() {
                   <SelectItem value="Gestor">Gestor</SelectItem>
                   <SelectItem value="Professor">Professor</SelectItem>
                   <SelectItem value="Recepção">Recepção</SelectItem>
+                  <SelectItem value="Estagiário">Estagiário</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -358,6 +412,26 @@ export default function AccessControlPage() {
               disabled={isLoading}
             >
               Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isPaySalaryAlertOpen} onOpenChange={setIsPaySalaryAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Pagamento de Salário</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você confirma o registro do pagamento de salário no valor de <span className="font-bold">{employeeToPay?.salary.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span> para o funcionário <span className="font-bold">{employeeToPay?.name}</span>?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmPaySalary}
+              disabled={isLoading}
+            >
+              Confirmar Pagamento
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
