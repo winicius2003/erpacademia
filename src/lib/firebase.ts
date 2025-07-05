@@ -20,7 +20,8 @@ const requiredConfigKeys: (keyof typeof firebaseConfig)[] = ['apiKey', 'authDoma
 const missingConfigKeys = requiredConfigKeys.filter(key => !firebaseConfig[key]);
 
 if (missingConfigKeys.length > 0) {
-    const errorMessage = `Missing Firebase configuration. Please check your .env file for the following keys: ${missingConfigKeys.map(key => `NEXT_PUBLIC_FIREBASE_${key.toUpperCase()}`).join(', ')}. After updating, you may need to restart the development server.`;
+    const toSnakeCase = (str: string) => str.replace(/[A-Z]/g, letter => `_${letter}`).toUpperCase();
+    const errorMessage = `Missing Firebase configuration. Please check your .env file for the following keys: ${missingConfigKeys.map(key => `NEXT_PUBLIC_FIREBASE_${toSnakeCase(key)}`).join(', ')}. After updating, you may need to restart the development server.`;
     throw new Error(errorMessage);
 }
 
