@@ -65,6 +65,9 @@ import { useToast } from "@/hooks/use-toast"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { getNotificationsForAcademy, type Notification as NotificationType } from "@/services/notifications"
+import { formatDistanceToNow } from "date-fns"
+import { ptBR } from "date-fns/locale"
 
 
 const navItems = [
@@ -294,21 +297,42 @@ export default function DashboardLayout({
 }
 
 function Notifications() {
-    const notifications = [
-        { title: "Pagamento recebido", description: "João da Silva pagou a mensalidade.", time: "Agora" },
-        { title: "Novo aluno cadastrado", description: "Mariana Costa acaba de se inscrever no plano Anual.", time: "5 min atrás" },
-        { title: "Assinatura a vencer", description: "Sua assinatura FitCore expira em 3 dias.", time: "1 hora atrás" },
-        { title: "Atualização do Sistema", description: "O sistema será atualizado hoje às 23h.", time: "3 horas atrás" },
-    ]
+    const [notifications, setNotifications] = React.useState<NotificationType[]>([]);
+    const [isLoading, setIsLoading] = React.useState(true);
+    const [unreadCount, setUnreadCount] = React.useState(0);
+
+    // Hardcoding academyId for demo purposes. In a real app, this would come from the user's session.
+    const ACADEMY_ID = 'gym-1'; 
+
+    const fetchNotifications = React.useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const data = await getNotificationsForAcademy(ACADEMY_ID);
+            setNotifications(data);
+            setUnreadCount(data.filter(n => !n.isRead).length);
+        } catch (error) {
+            console.error("Failed to fetch notifications", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    React.useEffect(() => {
+        fetchNotifications();
+    }, [fetchNotifications]);
+
+
     return (
         <Sheet>
             <SheetTrigger asChild>
                  <Button variant="outline" size="icon" className="relative">
                     <Bell className="h-4 w-4" />
-                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-                    </span>
+                    {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                        </span>
+                    )}
                     <span className="sr-only">Abrir notificações</span>
                 </Button>
             </SheetTrigger>
@@ -317,18 +341,30 @@ function Notifications() {
                     <SheetTitle>Notificações</SheetTitle>
                 </SheetHeader>
                 <div className="mt-4 space-y-4">
-                    {notifications.map((item, index) => (
-                         <div key={index} className="flex items-start gap-3">
+                    {isLoading ? (
+                        <div className="flex justify-center items-center h-full">
+                           <Loader2 className="h-6 w-6 animate-spin" />
+                        </div>
+                    ) : notifications.length > 0 ? (
+                        notifications.map((item) => (
+                         <div key={item.id} className="flex items-start gap-3">
                             <div className="bg-primary/10 text-primary p-2 rounded-full">
-                                <Users className="h-5 w-5" />
+                                <MessageSquare className="h-5 w-5" />
                             </div>
                             <div className="flex-1">
                                 <p className="font-semibold">{item.title}</p>
                                 <p className="text-sm text-muted-foreground">{item.description}</p>
-                                <p className="text-xs text-muted-foreground/70 mt-1">{item.time}</p>
+                                <p className="text-xs text-muted-foreground/70 mt-1">
+                                   {formatDistanceToNow(item.createdAt, { addSuffix: true, locale: ptBR })}
+                                </p>
                             </div>
                          </div>
-                    ))}
+                        ))
+                    ) : (
+                        <div className="text-center text-muted-foreground py-10">
+                            <p>Nenhuma notificação nova.</p>
+                        </div>
+                    )}
                 </div>
             </SheetContent>
         </Sheet>
@@ -422,5 +458,3 @@ function HelpCenter() {
         </Dialog>
     )
 }
-
-    
