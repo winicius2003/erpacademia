@@ -31,6 +31,14 @@ export default function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
 
+    // Superadmin check
+    if (login.toLowerCase() === "superadmin@fitcore.com" && password === "superadminpass") {
+      sessionStorage.setItem("fitcore.user", JSON.stringify({ id: "superadmin", name: "Super Admin", role: "Superadmin", email: login }));
+      router.push("/superadmin/dashboard");
+      setIsLoading(false);
+      return;
+    }
+
     let userFound = null
 
     const isMasterAdminLogin =
