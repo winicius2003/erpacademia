@@ -2,7 +2,7 @@
 
 import { addDays } from 'date-fns';
 
-export type SubscriptionPlan = "Premium" | "Free" | "Iniciante" | "Profissional" | "Business";
+export type SubscriptionPlan = "Free" | "Iniciante" | "Profissional" | "Business" | "Enterprise" | "Enterprise+";
 export type SubscriptionStatus = "active" | "overdue" | "blocked";
 
 export type Subscription = {
@@ -19,7 +19,7 @@ function initializeInMemorySubscription() {
     if (!subscription) {
         subscription = {
             id: 'main_subscription',
-            plan: 'Premium',
+            plan: 'Business',
             status: 'active',
             expiresAt: addDays(new Date(), 30),
         };

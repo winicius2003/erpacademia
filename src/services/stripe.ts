@@ -18,8 +18,7 @@ const priceIds: Record<string, string> = {
   "Profissional": "price_1PfAABD1m8VoOYGMt008S4K3",
   "Business": "price_1PfABcD1m8VoOYGMy9rO2Vl5",
   "Enterprise": "price_1PfACGD1m8VoOYGM4xK3n8gE",
-  // This was the old default, can be removed if no longer needed.
-  "Premium": "price_1PeVfPD1m8VoOYGM3sZzguu5", 
+  "Enterprise+": "price_1PfADJD1m8VoOYGMvK08w0A2", // Added new price ID for Enterprise+
 };
 
 

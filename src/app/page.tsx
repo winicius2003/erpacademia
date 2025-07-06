@@ -12,6 +12,8 @@ import {
   Globe,
   Dumbbell,
   HeartHandshake,
+  Calendar,
+  BarChart,
 } from "lucide-react"
 import { motion } from "framer-motion"
 
@@ -69,6 +71,16 @@ const translations = {
           title: "Gestão Multi-Unidades",
           description: "Gerencie múltiplas filiais a partir de uma única plataforma, com um plano de assinatura unificado.",
         },
+        {
+            icon: Calendar,
+            title: "Agenda de Aulas Coletivas",
+            description: "Crie e gerencie um calendário de aulas em grupo, como Fit Dance, Muay Thai e Yoga."
+        },
+        {
+            icon: BarChart,
+            title: "Relatórios e Dashboards",
+            description: "Tenha uma visão clara do seu negócio com dashboards analíticos de alunos, finanças e retenção."
+        }
       ],
     },
     pricing: {
@@ -80,7 +92,7 @@ const translations = {
           price: "R$ 97",
           period: "/mês",
           students: "Até 50 alunos",
-          features: ["Gestão de Alunos 360°", "Planos e Produtos", "Avaliações Físicas", "Financeiro (sem recorrência)"],
+          features: ["Gestão de Alunos 360°", "Planos e Produtos", "Avaliações Físicas", "Até 3 funcionários"],
           cta: "Escolher Plano",
         },
         {
@@ -90,9 +102,10 @@ const translations = {
           students: "51–200 alunos",
           features: [
             "Tudo do Iniciante",
-            "Cobrança Recorrente",
+            "Cobrança Recorrente (Stripe)",
             "Controle de Acesso (Catraca)",
             "CRM e Funil de Vendas",
+            "Até 3 funcionários",
           ],
           cta: "Escolher Plano",
           popular: true,
@@ -106,7 +119,7 @@ const translations = {
             "Tudo do Profissional",
             "Gestão Multi-Unidades",
             "Relatórios Avançados",
-            "Suporte na Implantação",
+            "Até 5 funcionários",
           ],
           cta: "Escolher Plano",
         },
@@ -118,24 +131,25 @@ const translations = {
           features: [
             "Tudo do Business",
             "Gestão de Funcionários",
-            "API para integrações",
-            "Suporte Prioritário",
+            "Suporte na Implantação",
+            "Até 10 funcionários",
           ],
           cta: "Escolher Plano",
         },
         {
             name: "Enterprise+",
-            price: "Customizado",
-            period: "",
+            price: "R$ 1399",
+            period: "/mês",
             students: "Acima de 1000 alunos",
+            description: "+ R$ 1,39 por aluno extra",
             features: [
               "Tudo do Enterprise",
-              "Infraestrutura Dedicada",
-              "SLA de Atendimento",
-              "Gerente de Conta",
+              "Suporte Prioritário",
+              "Onboarding Assistido",
+              "Até 20 funcionários",
             ],
-            cta: "Fale Conosco",
-            isCustom: true,
+            cta: "Escolher Plano",
+            isCustom: false,
         },
       ],
     },
@@ -195,6 +209,16 @@ const translations = {
             title: "Multi-Branch Management",
             description: "Manage multiple branches from a single platform with a unified subscription plan.",
         },
+        {
+            icon: Calendar,
+            title: "Group Class Schedule",
+            description: "Create and manage a calendar for group classes like Fit Dance, Muay Thai, and Yoga."
+        },
+        {
+            icon: BarChart,
+            title: "Reports & Dashboards",
+            description: "Get a clear view of your business with analytical dashboards for members, finances, and retention."
+        }
       ],
     },
     pricing: {
@@ -206,7 +230,7 @@ const translations = {
           price: "$20",
           period: "/month",
           students: "Up to 50 members",
-          features: ["360° Member Management", "Plans & Products", "Physical Assessments", "Financials (no recurring)"],
+          features: ["360° Member Management", "Plans & Products", "Physical Assessments", "Up to 3 staff accounts"],
           cta: "Choose Plan",
         },
         {
@@ -216,9 +240,10 @@ const translations = {
           students: "51–200 members",
           features: [
             "Everything in Starter",
-            "Recurring Billing",
+            "Recurring Billing (Stripe)",
             "Access Control (Turnstile)",
             "CRM & Sales Funnel",
+            "Up to 3 staff accounts"
           ],
           cta: "Choose Plan",
           popular: true,
@@ -232,7 +257,7 @@ const translations = {
             "Everything in Professional",
             "Multi-Branch Management",
             "Advanced Reports",
-            "Onboarding Support",
+            "Up to 5 staff accounts"
           ],
           cta: "Choose Plan",
         },
@@ -244,24 +269,25 @@ const translations = {
           features: [
             "Everything in Business",
             "Employee Management",
-            "API for integrations",
-            "Priority Support",
+            "Onboarding Support",
+            "Up to 10 staff accounts"
           ],
           cta: "Choose Plan",
         },
         {
             name: "Enterprise+",
-            price: "Custom",
-            period: "",
+            price: "$279",
+            period: "/month",
             students: "1000+ members",
+            description: "+ $0.28 per extra member",
             features: [
               "Everything in Enterprise",
-              "Dedicated Infrastructure",
-              "SLA Support",
-              "Account Manager",
+              "Priority Support",
+              "Assisted Onboarding",
+              "Up to 20 staff accounts"
             ],
-            cta: "Contact Us",
-            isCustom: true,
+            cta: "Choose Plan",
+            isCustom: false,
         },
       ],
     },
@@ -364,7 +390,7 @@ export default function LandingPage() {
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl font-headline">{t.pricing.title}</h2>
             <p className="text-muted-foreground md:text-lg">{t.pricing.subtitle}</p>
           </div>
-          <div className="mx-auto mt-12 grid max-w-7xl gap-8 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="mx-auto mt-12 grid max-w-7xl gap-8 sm:grid-cols-2 lg:grid-cols-5 items-stretch">
             {t.pricing.plans.map((plan) => (
               <Card key={plan.name} className={`flex flex-col ${plan.popular ? "border-primary ring-2 ring-primary" : ""}`}>
                 {plan.popular && (
@@ -377,13 +403,14 @@ export default function LandingPage() {
                     <span className="text-4xl font-extrabold">{plan.price}</span>
                     <span className="text-muted-foreground">{plan.period}</span>
                   </div>
+                   {plan.description && <CardDescription className="text-primary font-medium">{plan.description}</CardDescription>}
                 </CardHeader>
                 <CardContent className="flex-1">
                   <ul className="space-y-3">
                     {plan.features.map((feature) => (
                       <li key={feature} className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span className="text-muted-foreground">{feature}</span>
+                        <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+                        <span className="text-muted-foreground text-sm">{feature}</span>
                       </li>
                     ))}
                   </ul>
