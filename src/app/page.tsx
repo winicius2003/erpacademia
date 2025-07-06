@@ -4,7 +4,6 @@ import * as React from "react"
 import Link from "next/link"
 import {
   Users,
-  Dumbbell,
   Wallet,
   HeartPulse,
   Fingerprint,
@@ -43,11 +42,6 @@ const translations = {
           icon: Users,
           title: "Gestão de Alunos 360°",
           description: "Ficha completa com histórico de pagamentos, treinos, avaliações físicas, metas e observações.",
-        },
-        {
-          icon: Dumbbell,
-          title: "IA para Personalizar Treinos",
-          description: "Crie planos de treino únicos com nossa IA, baseados nos objetivos e histórico de cada aluno.",
         },
         {
           icon: Wallet,
@@ -93,7 +87,6 @@ const translations = {
             "Cobrança Recorrente",
             "Controle de Acesso (Catraca)",
             "CRM e Funil de Vendas",
-            "Recomendação de Treino IA",
           ],
           cta: "Escolher Plano",
           popular: true,
@@ -157,11 +150,6 @@ const translations = {
           description: "Complete profile with payment history, workouts, physical assessments, goals, and notes.",
         },
         {
-          icon: Dumbbell,
-          title: "AI-Powered Workout Plans",
-          description: "Create unique training plans with our AI, based on each student's goals and history.",
-        },
-        {
           icon: Wallet,
           title: "Financials & Point of Sale",
           description: "Control cash flow, recurring payments, plans, and product sales, all integrated.",
@@ -205,7 +193,6 @@ const translations = {
             "Recurring Billing",
             "Access Control (Turnstile)",
             "CRM & Sales Funnel",
-            "AI Workout Recommendations",
           ],
           cta: "Choose Plan",
           popular: true,

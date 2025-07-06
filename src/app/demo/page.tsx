@@ -4,13 +4,11 @@ import Link from "next/link"
 import Image from "next/image"
 import {
   Users,
-  Dumbbell,
   Wallet,
   HeartPulse,
   Fingerprint,
   Network,
   ArrowLeft,
-  Sparkles,
   BarChart,
   HeartHandshake,
 } from "lucide-react"
@@ -27,11 +25,6 @@ const features = [
       icon: Users,
       title: "Gestão Completa de Alunos",
       description: "Ficha detalhada, acompanhamento de progresso, pagamentos e histórico em um só lugar.",
-    },
-    {
-      icon: Sparkles,
-      title: "Criação de Treinos com IA",
-      description: "Gere treinos personalizados e eficazes com base nas metas e histórico de cada aluno.",
     },
     {
       icon: Wallet,
