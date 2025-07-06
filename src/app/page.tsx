@@ -9,10 +9,9 @@ import {
   Fingerprint,
   Network,
   Check,
-  ChevronRight,
   Globe,
   Dumbbell,
-  AreaChart,
+  HeartHandshake,
 } from "lucide-react"
 import { motion } from "framer-motion"
 
@@ -46,24 +45,24 @@ const translations = {
           description: "Ficha completa com histórico de pagamentos, treinos, avaliações físicas, metas e observações.",
         },
         {
+          icon: Wallet,
+          title: "Financeiro e PDV Completo",
+          description: "Controle fluxo de caixa, planos, produtos e pagamentos com integração Stripe e fechamento de caixa por funcionário.",
+        },
+        {
+          icon: Fingerprint,
+          title: "Controle de Acesso e Biometria",
+          description: "Integre com catracas por PIN e biometria, com bloqueio automático de inadimplentes.",
+        },
+        {
           icon: Dumbbell,
           title: "Criação de Planos de Treino",
           description: "Crie modelos de treino para diferentes níveis e objetivos e atribua aos seus alunos com facilidade.",
         },
         {
-          icon: Wallet,
-          title: "Financeiro e Ponto de Venda",
-          description: "Controle fluxo de caixa, planos, produtos e pagamentos recorrentes com integração ao Stripe.",
-        },
-        {
-          icon: HeartPulse,
-          title: "Avaliações Físicas Detalhadas",
-          description: "Registre e acompanhe a evolução corporal com medidas, perímetros e fichas para impressão.",
-        },
-        {
-          icon: Fingerprint,
-          title: "Controle de Acesso Integrado",
-          description: "Integre com catracas por PIN e biometria, com bloqueio automático de inadimplentes.",
+          icon: HeartHandshake,
+          title: "CRM e Funil de Vendas",
+          description: "Capture e gerencie leads, transformando interessados em novos alunos matriculados.",
         },
         {
           icon: Network,
@@ -124,6 +123,20 @@ const translations = {
           ],
           cta: "Escolher Plano",
         },
+        {
+            name: "Enterprise+",
+            price: "Customizado",
+            period: "",
+            students: "Acima de 1000 alunos",
+            features: [
+              "Tudo do Enterprise",
+              "Infraestrutura Dedicada",
+              "SLA de Atendimento",
+              "Gerente de Conta",
+            ],
+            cta: "Fale Conosco",
+            isCustom: true,
+        },
       ],
     },
     footer: {
@@ -153,9 +166,19 @@ const translations = {
       subtitle: "Simplify your operation with powerful and easy-to-use tools.",
       items: [
         {
-          icon: Users,
-          title: "360° Member Management",
-          description: "Complete profile with payment history, workouts, physical assessments, goals, and notes.",
+            icon: Users,
+            title: "360° Member Management",
+            description: "Complete profile with payment history, workouts, physical assessments, goals, and notes.",
+        },
+        {
+            icon: Wallet,
+            title: "Complete Financials & POS",
+            description: "Control cash flow, plans, products, and payments with Stripe integration and cashier closing reports.",
+        },
+        {
+            icon: Fingerprint,
+            title: "Access Control & Biometrics",
+            description: "Integrate with turnstiles via PIN and biometrics, with automatic blocking for overdue members.",
         },
         {
             icon: Dumbbell,
@@ -163,24 +186,14 @@ const translations = {
             description: "Create workout templates for different levels and goals and easily assign them to your members.",
         },
         {
-          icon: Wallet,
-          title: "Financials & Point of Sale",
-          description: "Control cash flow, plans, products, and recurring payments with Stripe integration.",
+            icon: HeartHandshake,
+            title: "CRM & Sales Funnel",
+            description: "Capture and manage leads, turning interested prospects into new enrolled members.",
         },
         {
-          icon: HeartPulse,
-          title: "Detailed Physical Assessments",
-          description: "Record and track body evolution with measurements, perimeters, and printable sheets.",
-        },
-        {
-          icon: Fingerprint,
-          title: "Integrated Access Control",
-          description: "Integrate with turnstiles via PIN and biometrics, with automatic blocking for overdue members.",
-        },
-        {
-          icon: Network,
-          title: "Multi-Branch Management",
-          description: "Manage multiple branches from a single platform with a unified subscription plan.",
+            icon: Network,
+            title: "Multi-Branch Management",
+            description: "Manage multiple branches from a single platform with a unified subscription plan.",
         },
       ],
     },
@@ -235,6 +248,20 @@ const translations = {
             "Priority Support",
           ],
           cta: "Choose Plan",
+        },
+        {
+            name: "Enterprise+",
+            price: "Custom",
+            period: "",
+            students: "1000+ members",
+            features: [
+              "Everything in Enterprise",
+              "Dedicated Infrastructure",
+              "SLA Support",
+              "Account Manager",
+            ],
+            cta: "Contact Us",
+            isCustom: true,
         },
       ],
     },
@@ -337,7 +364,7 @@ export default function LandingPage() {
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl font-headline">{t.pricing.title}</h2>
             <p className="text-muted-foreground md:text-lg">{t.pricing.subtitle}</p>
           </div>
-          <div className="mx-auto mt-12 grid max-w-6xl gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mx-auto mt-12 grid max-w-7xl gap-8 sm:grid-cols-2 lg:grid-cols-5">
             {t.pricing.plans.map((plan) => (
               <Card key={plan.name} className={`flex flex-col ${plan.popular ? "border-primary ring-2 ring-primary" : ""}`}>
                 {plan.popular && (
@@ -362,9 +389,13 @@ export default function LandingPage() {
                   </ul>
                 </CardContent>
                 <CardFooter>
-                  <Link href={`/signup?plan=${plan.name}`} className="w-full">
-                    <Button className="w-full">{plan.cta}</Button>
-                  </Link>
+                    {plan.isCustom ? (
+                        <Button className="w-full" variant="outline">{plan.cta}</Button>
+                    ) : (
+                        <Link href={`/signup?plan=${plan.name}`} className="w-full">
+                            <Button className="w-full">{plan.cta}</Button>
+                        </Link>
+                    )}
                 </CardFooter>
               </Card>
             ))}
