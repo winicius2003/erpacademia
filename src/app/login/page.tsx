@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Lock, User, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -22,10 +22,22 @@ import { initializeSubscription } from "@/services/subscription"
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const [login, setLogin] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [isLoading, setIsLoading] = React.useState(false)
+
+  React.useEffect(() => {
+    if (searchParams.get("signup") === "success") {
+      toast({
+        title: "Pagamento Concluído com Sucesso!",
+        description: "Sua academia foi criada. Em breve você receberá um e-mail com sua senha de acesso.",
+      });
+      // Optional: remove query param from URL
+      router.replace('/login', { scroll: false }); 
+    }
+  }, [searchParams, toast, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

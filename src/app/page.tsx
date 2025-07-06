@@ -362,7 +362,9 @@ export default function LandingPage() {
                   </ul>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full">{plan.cta}</Button>
+                  <Link href={`/signup?plan=${plan.name}`} className="w-full">
+                    <Button className="w-full">{plan.cta}</Button>
+                  </Link>
                 </CardFooter>
               </Card>
             ))}

@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Mail, Lock, User, Building } from "lucide-react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { Mail, User, Building, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -17,18 +17,45 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/logo"
 import { useToast } from "@/hooks/use-toast"
+import { createSignupCheckoutSession } from "@/services/stripe"
 
 export default function SignupPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
+  
+  const [isLoading, setIsLoading] = React.useState(false)
+  const [formData, setFormData] = React.useState({
+    gymName: "",
+    adminName: "",
+    adminEmail: "",
+  })
+  
+  const selectedPlan = searchParams.get("plan") || "Iniciante"
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target
+    setFormData(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    toast({
-      title: "Cadastro realizado com sucesso!",
-      description: "Você será redirecionado para o login.",
-    })
-    setTimeout(() => router.push("/login"), 2000)
+    setIsLoading(true)
+    
+    try {
+      const { gymName, adminName, adminEmail } = formData
+      const checkoutUrl = await createSignupCheckoutSession(selectedPlan, gymName, adminName, adminEmail);
+      // Redirect to Stripe checkout
+      window.location.href = checkoutUrl;
+    } catch (error) {
+      console.error("Stripe checkout error:", error)
+      toast({
+        title: "Erro ao iniciar pagamento",
+        description: "Não foi possível redirecionar para o pagamento. Tente novamente.",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -42,41 +69,34 @@ export default function SignupPage() {
           </div>
           <CardTitle className="text-2xl font-headline text-center">Crie sua conta FitCore</CardTitle>
           <CardDescription className="text-center">
-            Comece a gerenciar sua academia de forma inteligente.
+            Você está assinando o plano <span className="font-bold text-primary">{selectedPlan}</span>. Preencha seus dados para continuar.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="gym-name">Nome da Academia</Label>
+              <Label htmlFor="gymName">Nome da Academia</Label>
               <div className="relative">
                 <Building className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input id="gym-name" placeholder="Sua Academia" required className="pl-8" />
+                <Input id="gymName" placeholder="Sua Academia" required className="pl-8" value={formData.gymName} onChange={handleInputChange} />
               </div>
             </div>
              <div className="grid gap-2">
-              <Label htmlFor="full-name">Seu Nome</Label>
+              <Label htmlFor="adminName">Seu Nome</Label>
               <div className="relative">
                 <User className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input id="full-name" placeholder="Nome Completo" required className="pl-8" />
+                <Input id="adminName" placeholder="Nome Completo do Admin" required className="pl-8" value={formData.adminName} onChange={handleInputChange} />
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="adminEmail">Seu E-mail</Label>
               <div className="relative">
                 <Mail className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input id="email" type="email" placeholder="seu@email.com" required className="pl-8" />
+                <Input id="adminEmail" type="email" placeholder="seu@email.com" required className="pl-8" value={formData.adminEmail} onChange={handleInputChange} />
               </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Senha</Label>
-              <div className="relative">
-                <Lock className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input id="password" type="password" required className="pl-8" />
-              </div>
-            </div>
-            <Button type="submit" className="w-full font-bold">
-              Criar Conta
+            <Button type="submit" className="w-full font-bold" disabled={isLoading}>
+              {isLoading ? <Loader2 className="mr-2 animate-spin" /> : "Ir para Pagamento"}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
