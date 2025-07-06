@@ -17,6 +17,7 @@ const priceIds: Record<string, string> = {
   // Product Profissional: prod_ScZBWwtINHYUvN
   "Profissional": "price_REPLACE_WITH_YOUR_PROFISSIONAL_PRICE_ID",
   "Business": "price_REPLACE_WITH_YOUR_BUSINESS_PRICE_ID",
+  "Enterprise": "price_REPLACE_WITH_YOUR_ENTERPRISE_PRICE_ID",
   // This was the old default, can be removed if no longer needed.
   "Premium": "price_1PeVfPD1m8VoOYGM3sZzguu5", 
 };

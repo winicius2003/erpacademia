@@ -5,7 +5,7 @@ import * as React from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { format, isToday, isThisWeek, isThisMonth, eachDayOfInterval, isSameDay, subDays } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { MoreHorizontal, PlusCircle, Download, Calendar as CalendarIcon, DollarSign, TrendingUp, Users, AlertCircle, Trash2, X, Target, Loader2 } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Download, Calendar as CalendarIcon, DollarSign, TrendingUp, Users, AlertCircle, Trash2, X, Target, Loader2, UsersRound } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -72,6 +72,7 @@ import { getPayments, addPayment, type Payment } from "@/services/payments"
 import { useSubscription } from "@/lib/subscription-context"
 import { getPlans } from "@/services/plans"
 import { getProducts } from "@/services/products"
+import type { Role } from "@/services/employees"
 
 const planPrices = {
     "Mensal": { price: 97.00, duration: 30 },
@@ -94,11 +95,12 @@ export default function FinancialPage() {
     const studentId = searchParams.get('studentId')
     const studentName = searchParams.get('studentName')
 
+    const [user, setUser] = React.useState<{ id: string, name: string, role: Role } | null>(null);
     const [payments, setPayments] = React.useState<Payment[]>([])
     const [members, setMembers] = React.useState<Member[]>([])
     const [isLoading, setIsLoading] = React.useState(true)
     const [availableProducts, setAvailableProducts] = React.useState<{ name: string, price: number }[]>([]);
-
+    
     const [filteredPayments, setFilteredPayments] = React.useState<Payment[]>([])
     const [dailyPayments, setDailyPayments] = React.useState<Payment[]>([])
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false)
@@ -106,6 +108,7 @@ export default function FinancialPage() {
     const [currentInvoice, setCurrentInvoice] = React.useState<Payment | null>(null)
     const [cashFlowData, setCashFlowData] = React.useState({ daily: {}, weekly: {}, monthly: {} })
     const [projectionChartData, setProjectionChartData] = React.useState([])
+    const [cashierSummary, setCashierSummary] = React.useState<{ name: string, total: number, count: number }[]>([]);
 
     const isSalesBlocked = subscriptionStatus === 'overdue' || subscriptionStatus === 'blocked';
 
@@ -134,6 +137,10 @@ export default function FinancialPage() {
     }, [toast]);
 
     React.useEffect(() => {
+        const userData = sessionStorage.getItem("fitcore.user");
+        if (userData) {
+            setUser(JSON.parse(userData));
+        }
         fetchData();
     }, [fetchData]);
 
@@ -202,7 +209,27 @@ export default function FinancialPage() {
         });
         setProjectionChartData(chartData)
 
-    }, [payments, members])
+        // Calculate cashier summary
+        if (user && (user.role === 'Admin' || user.role === 'Gestor')) {
+            const summary = todayPayments.reduce((acc, payment) => {
+                const { registeredByName, amount } = payment;
+                if (!acc[registeredByName]) {
+                    acc[registeredByName] = { total: 0, count: 0 };
+                }
+                acc[registeredByName].total += parseFloat(amount);
+                acc[registeredByName].count += 1;
+                return acc;
+            }, {} as Record<string, { total: number; count: number }>);
+    
+            const summaryArray = Object.entries(summary).map(([name, data]) => ({
+                name,
+                ...data,
+            })).sort((a,b) => b.total - a.total);
+    
+            setCashierSummary(summaryArray);
+        }
+
+    }, [payments, members, user])
 
     const [newPaymentData, setNewPaymentData] = React.useState({
         studentId: "",
@@ -240,7 +267,7 @@ export default function FinancialPage() {
     const handleSavePayment = async (e: React.FormEvent) => {
         e.preventDefault();
         const selectedMember = members.find(m => m.id === newPaymentData.studentId);
-        if (!selectedMember || newPaymentData.items.length === 0) {
+        if (!selectedMember || newPaymentData.items.length === 0 || !user) {
             toast({ title: "Dados incompletos", description: "Selecione um aluno e adicione pelo menos um item.", variant: "destructive" });
             return;
         }
@@ -253,6 +280,8 @@ export default function FinancialPage() {
             date: format(newPaymentData.date, "yyyy-MM-dd"),
             time: format(new Date(), "HH:mm"),
             status: "Pago",
+            registeredById: user.id,
+            registeredByName: user.name,
         }
 
         setIsLoading(true);
@@ -279,7 +308,7 @@ export default function FinancialPage() {
     
     const defaultTab = studentName ? "payments" : "overview";
 
-    if (isLoading) {
+    if (isLoading && !user) {
       return (
         <div className="flex h-64 w-full items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -291,9 +320,12 @@ export default function FinancialPage() {
     <>
         <InvoiceDialog isOpen={isInvoiceOpen} onOpenChange={setIsInvoiceOpen} invoiceData={currentInvoice} />
         <Tabs defaultValue={defaultTab}>
-            <TabsList className="grid w-full grid-cols-4 max-w-lg">
+            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-5 max-w-xl">
                 <TabsTrigger value="overview">Visão Geral</TabsTrigger>
                 <TabsTrigger value="cashflow">Fluxo de Caixa</TabsTrigger>
+                {user && (user.role === "Admin" || user.role === "Gestor") && (
+                    <TabsTrigger value="cashier_closing">Fechamento de Caixa</TabsTrigger>
+                )}
                 <TabsTrigger value="payments">Pagamentos</TabsTrigger>
                 <TabsTrigger value="invoices">Faturas</TabsTrigger>
             </TabsList>
@@ -492,6 +524,38 @@ export default function FinancialPage() {
                     </CardContent>
                 </Card>
             </TabsContent>
+             {user && (user.role === 'Admin' || user.role === 'Gestor') && (
+                <TabsContent value="cashier_closing">
+                    <Card className="mt-4">
+                        <CardHeader>
+                            <CardTitle className="font-headline">Fechamento de Caixa Diário</CardTitle>
+                            <CardDescription>Resumo de vendas por funcionário registradas hoje.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead><UsersRound className="inline-block mr-2" /> Funcionário</TableHead>
+                                        <TableHead className="text-center">Vendas Realizadas</TableHead>
+                                        <TableHead className="text-right">Total Arrecadado (R$)</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {cashierSummary.length > 0 ? cashierSummary.map(item => (
+                                        <TableRow key={item.name}>
+                                            <TableCell className="font-medium">{item.name}</TableCell>
+                                            <TableCell className="text-center">{item.count}</TableCell>
+                                            <TableCell className="text-right">{item.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
+                                        </TableRow>
+                                    )) : (
+                                        <TableRow><TableCell colSpan={3} className="h-24 text-center">Nenhuma venda registrada hoje.</TableCell></TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+             )}
             <TabsContent value="payments">
                 <Card className="mt-4">
                     <CardHeader>

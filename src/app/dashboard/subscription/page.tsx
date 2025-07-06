@@ -62,6 +62,7 @@ const plans = [
     { name: "Iniciante", price: "R$ 97/mês", students: "Até 50 alunos", id: "Iniciante" },
     { name: "Profissional", price: "R$ 197/mês", students: "Até 200 alunos", id: "Profissional" },
     { name: "Business", price: "R$ 397/mês", students: "Até 500 alunos", id: "Business" },
+    { name: "Enterprise", price: "R$ 697/mês", students: "Até 1000 alunos", id: "Enterprise" },
 ];
 
 export default function SubscriptionPage() {

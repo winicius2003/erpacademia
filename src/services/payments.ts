@@ -18,15 +18,17 @@ export type Payment = {
     date: string; // "yyyy-MM-dd"
     time: string; // "HH:mm"
     status: "Pago" | "Pendente" | "Vencida";
+    registeredById: string;
+    registeredByName: string;
 };
 
 // --- In-Memory Database ---
 let payments: Payment[] = [
-    { id: 'p1', studentId: '1', student: 'João da Silva', items: [{ id: 1, description: 'Plano Anual', quantity: 1, price: 997.00 }], amount: '997.00', date: '2023-08-15', time: '09:30', status: 'Pago' },
-    { id: 'p2', studentId: '2', student: 'Maria Oliveira', items: [{ id: 1, description: 'Plano Mensal', quantity: 1, price: 97.00 }], amount: '97.00', date: '2024-07-05', time: '14:15', status: 'Pago' },
-    { id: 'p3', studentId: '3', student: 'Carlos Pereira', items: [{ id: 1, description: 'Plano Trimestral', quantity: 1, price: 277.00 }], amount: '277.00', date: '2024-05-10', time: '11:00', status: 'Pago' },
-    { id: 'p4', studentId: '4', student: 'Ana Costa', items: [{ id: 1, description: 'Avaliação Física', quantity: 1, price: 150.00 }], amount: '150.00', date: '2024-06-20', time: '16:45', status: 'Pago' },
-    { id: 'p5', studentId: '1', student: 'João da Silva', items: [{ id: 1, description: 'Garrafa de Água', quantity: 2, price: 25.00 }], amount: '50.00', date: '2024-07-18', time: '10:05', status: 'Pago' },
+    { id: 'p1', studentId: '1', student: 'João da Silva', items: [{ id: 1, description: 'Plano Anual', quantity: 1, price: 997.00 }], amount: '997.00', date: '2023-08-15', time: '09:30', status: 'Pago', registeredById: '3', registeredByName: 'Juliana Alves' },
+    { id: 'p2', studentId: '2', student: 'Maria Oliveira', items: [{ id: 1, description: 'Plano Mensal', quantity: 1, price: 97.00 }], amount: '97.00', date: '2024-07-05', time: '14:15', status: 'Pago', registeredById: '3', registeredByName: 'Juliana Alves' },
+    { id: 'p3', studentId: '3', student: 'Carlos Pereira', items: [{ id: 1, description: 'Plano Trimestral', quantity: 1, price: 277.00 }], amount: '277.00', date: '2024-05-10', time: '11:00', status: 'Pago', registeredById: '6', registeredByName: 'Ricardo Mendes' },
+    { id: 'p4', studentId: '4', student: 'Ana Costa', items: [{ id: 1, description: 'Avaliação Física', quantity: 1, price: 150.00 }], amount: '150.00', date: '2024-06-20', time: '16:45', status: 'Pago', registeredById: '3', registeredByName: 'Juliana Alves' },
+    { id: 'p5', studentId: '1', student: 'João da Silva', items: [{ id: 1, description: 'Garrafa de Água', quantity: 2, price: 25.00 }], amount: '50.00', date: '2024-07-18', time: '10:05', status: 'Pago', registeredById: '6', registeredByName: 'Ricardo Mendes' },
 ];
 let nextId = payments.length + 1;
 // -------------------------
@@ -45,7 +47,9 @@ export async function getPayments(): Promise<Payment[]> {
             amount: '8.00', 
             date: today, 
             time: '08:45', 
-            status: 'Pago'
+            status: 'Pago',
+            registeredById: '3',
+            registeredByName: 'Juliana Alves'
         });
     }
     return Promise.resolve(payments);

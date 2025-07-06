@@ -11,6 +11,8 @@ import {
   Check,
   ChevronRight,
   Globe,
+  Dumbbell,
+  AreaChart,
 } from "lucide-react"
 import { motion } from "framer-motion"
 
@@ -44,9 +46,14 @@ const translations = {
           description: "Ficha completa com histórico de pagamentos, treinos, avaliações físicas, metas e observações.",
         },
         {
+          icon: Dumbbell,
+          title: "Criação de Planos de Treino",
+          description: "Crie modelos de treino para diferentes níveis e objetivos e atribua aos seus alunos com facilidade.",
+        },
+        {
           icon: Wallet,
           title: "Financeiro e Ponto de Venda",
-          description: "Controle o fluxo de caixa, pagamentos recorrentes, planos e venda de produtos, tudo integrado.",
+          description: "Controle fluxo de caixa, planos, produtos e pagamentos recorrentes com integração ao Stripe.",
         },
         {
           icon: HeartPulse,
@@ -56,7 +63,7 @@ const translations = {
         {
           icon: Fingerprint,
           title: "Controle de Acesso Integrado",
-          description: "Integre com catracas e biometria com PIN e digital, com bloqueio automático de inadimplentes.",
+          description: "Integre com catracas por PIN e biometria, com bloqueio automático de inadimplentes.",
         },
         {
           icon: Network,
@@ -100,21 +107,22 @@ const translations = {
             "Tudo do Profissional",
             "Gestão Multi-Unidades",
             "Relatórios Avançados",
-            "Gestão de Funcionários",
+            "Suporte na Implantação",
           ],
           cta: "Escolher Plano",
         },
         {
           name: "Enterprise",
-          price: "Custom",
-          period: "",
-          students: "501+ alunos",
+          price: "R$ 697",
+          period: "/mês",
+          students: "501-1000 alunos",
           features: [
             "Tudo do Business",
-            "Setup Personalizado",
+            "Gestão de Funcionários",
+            "API para integrações",
             "Suporte Prioritário",
           ],
-          cta: "Fale Conosco",
+          cta: "Escolher Plano",
         },
       ],
     },
@@ -150,9 +158,14 @@ const translations = {
           description: "Complete profile with payment history, workouts, physical assessments, goals, and notes.",
         },
         {
+            icon: Dumbbell,
+            title: "Workout Plan Creation",
+            description: "Create workout templates for different levels and goals and easily assign them to your members.",
+        },
+        {
           icon: Wallet,
           title: "Financials & Point of Sale",
-          description: "Control cash flow, recurring payments, plans, and product sales, all integrated.",
+          description: "Control cash flow, plans, products, and recurring payments with Stripe integration.",
         },
         {
           icon: HeartPulse,
@@ -162,7 +175,7 @@ const translations = {
         {
           icon: Fingerprint,
           title: "Integrated Access Control",
-          description: "Integrate with turnstiles and biometrics using PIN and fingerprint, with automatic blocking.",
+          description: "Integrate with turnstiles via PIN and biometrics, with automatic blocking for overdue members.",
         },
         {
           icon: Network,
@@ -173,7 +186,7 @@ const translations = {
     },
     pricing: {
       title: "Choose the perfect plan for you",
-      subtitle: "Transparent pricing that grows with your business. The student limit is the total across all your units. No surprises.",
+      subtitle: "Transparent pricing that grows with your business. The member limit is the total across all your units. No surprises.",
       plans: [
         {
           name: "Starter",
@@ -206,21 +219,22 @@ const translations = {
             "Everything in Professional",
             "Multi-Branch Management",
             "Advanced Reports",
-            "Employee Management",
+            "Onboarding Support",
           ],
           cta: "Choose Plan",
         },
         {
           name: "Enterprise",
-          price: "Custom",
-          period: "",
-          students: "501+ members",
+          price: "$140",
+          period: "/month",
+          students: "501-1000 members",
           features: [
             "Everything in Business",
-            "Custom Setup",
+            "Employee Management",
+            "API for integrations",
             "Priority Support",
           ],
-          cta: "Contact Us",
+          cta: "Choose Plan",
         },
       ],
     },
@@ -323,7 +337,7 @@ export default function LandingPage() {
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl font-headline">{t.pricing.title}</h2>
             <p className="text-muted-foreground md:text-lg">{t.pricing.subtitle}</p>
           </div>
-          <div className="mx-auto mt-12 grid max-w-5xl gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mx-auto mt-12 grid max-w-6xl gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {t.pricing.plans.map((plan) => (
               <Card key={plan.name} className={`flex flex-col ${plan.popular ? "border-primary ring-2 ring-primary" : ""}`}>
                 {plan.popular && (
