@@ -155,29 +155,29 @@ export function WorkoutPlans() {
           ) : plans.length > 0 ? (
             <Accordion type="single" collapsible className="w-full space-y-2">
               {plans.map((plan) => (
-                <AccordionItem value={plan.id} key={plan.id} className="border rounded-md px-4 bg-card">
-                  <AccordionTrigger className="hover:no-underline font-medium py-3">
-                    <div className="flex items-center justify-between w-full">
+                <AccordionItem value={plan.id} key={plan.id} className="border rounded-md bg-card">
+                  <div className="flex items-center w-full">
+                    <AccordionTrigger className="flex-1 text-left px-4 py-3 hover:no-underline font-medium">
                       <span className="text-base font-semibold text-foreground">{plan.name}</span>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">{plan.level}</Badge>
-                        <Badge variant="secondary">{plan.goal}</Badge>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <MoreVertical className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem onSelect={() => handleEdit(plan)}>Editar</DropdownMenuItem>
-                                <DropdownMenuItem>Atribuir a Aluno</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => handleDelete(plan.id)} className="text-destructive focus:text-destructive">Excluir</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
+                    </AccordionTrigger>
+                    <div className="flex items-center gap-2 pr-4">
+                      <Badge variant="outline">{plan.level}</Badge>
+                      <Badge variant="secondary">{plan.goal}</Badge>
+                      <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreVertical className="h-4 w-4" />
+                              </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                              <DropdownMenuItem onSelect={() => handleEdit(plan)}>Editar</DropdownMenuItem>
+                              <DropdownMenuItem>Atribuir a Aluno</DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => handleDelete(plan.id)} className="text-destructive focus:text-destructive">Excluir</DropdownMenuItem>
+                          </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="pb-4">
+                  </div>
+                  <AccordionContent className="pb-4 px-4">
                     {plan.workouts.map((day, index) => (
                       <div key={day.id}>
                         {index > 0 && <Separator className="my-4" />}
