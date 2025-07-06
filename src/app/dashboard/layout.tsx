@@ -22,6 +22,10 @@ import {
   HeartPulse,
   Tags,
   ShoppingBasket,
+  Bell,
+  LifeBuoy,
+  Info,
+  MessageSquare,
 } from "lucide-react"
 import { usePathname, useRouter } from 'next/navigation'
 import { differenceInDays } from 'date-fns'
@@ -46,6 +50,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Logo } from "@/components/logo"
@@ -53,6 +61,10 @@ import type { Role } from "@/services/employees"
 import { SubscriptionContext, type SubscriptionUiStatus } from "@/lib/subscription-context"
 import { getSubscription, type Subscription } from "@/services/subscription"
 import { SubscriptionAlertBanner } from "@/components/subscription-alert-banner"
+import { useToast } from "@/hooks/use-toast"
+import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 
 const navItems = [
@@ -229,40 +241,46 @@ export default function DashboardLayout({
                   {activeItem?.label}
                 </h1>
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="secondary" size="icon" className="rounded-full">
-                    <Avatar>
-                      <AvatarImage src="https://placehold.co/40x40.png" alt="User" data-ai-hint="person face" />
-                      <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <span className="sr-only">Toggle user menu</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <Link href="/dashboard/profile">
+
+              <div className="flex items-center gap-2">
+                <HelpCenter />
+                <Notifications />
+              
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="secondary" size="icon" className="rounded-full">
+                      <Avatar>
+                        <AvatarImage src="https://placehold.co/40x40.png" alt="User" data-ai-hint="person face" />
+                        <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <span className="sr-only">Toggle user menu</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <Link href="/dashboard/profile">
+                      <DropdownMenuItem>
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Perfil</span>
+                      </DropdownMenuItem>
+                    </Link>
                     <DropdownMenuItem>
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Perfil</span>
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      <span>Faturamento</span>
                     </DropdownMenuItem>
-                  </Link>
-                  <DropdownMenuItem>
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    <span>Faturamento</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Configurações</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sair</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <DropdownMenuItem>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Configurações</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Sair</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </header>
             <div className="flex-1 overflow-y-auto p-4 sm:p-6">
               <SubscriptionAlertBanner />
@@ -274,3 +292,135 @@ export default function DashboardLayout({
     </SubscriptionContext.Provider>
   )
 }
+
+function Notifications() {
+    const notifications = [
+        { title: "Pagamento recebido", description: "João da Silva pagou a mensalidade.", time: "Agora" },
+        { title: "Novo aluno cadastrado", description: "Mariana Costa acaba de se inscrever no plano Anual.", time: "5 min atrás" },
+        { title: "Assinatura a vencer", description: "Sua assinatura FitCore expira em 3 dias.", time: "1 hora atrás" },
+        { title: "Atualização do Sistema", description: "O sistema será atualizado hoje às 23h.", time: "3 horas atrás" },
+    ]
+    return (
+        <Sheet>
+            <SheetTrigger asChild>
+                 <Button variant="outline" size="icon" className="relative">
+                    <Bell className="h-4 w-4" />
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                    </span>
+                    <span className="sr-only">Abrir notificações</span>
+                </Button>
+            </SheetTrigger>
+            <SheetContent>
+                <SheetHeader>
+                    <SheetTitle>Notificações</SheetTitle>
+                </SheetHeader>
+                <div className="mt-4 space-y-4">
+                    {notifications.map((item, index) => (
+                         <div key={index} className="flex items-start gap-3">
+                            <div className="bg-primary/10 text-primary p-2 rounded-full">
+                                <Users className="h-5 w-5" />
+                            </div>
+                            <div className="flex-1">
+                                <p className="font-semibold">{item.title}</p>
+                                <p className="text-sm text-muted-foreground">{item.description}</p>
+                                <p className="text-xs text-muted-foreground/70 mt-1">{item.time}</p>
+                            </div>
+                         </div>
+                    ))}
+                </div>
+            </SheetContent>
+        </Sheet>
+    )
+}
+
+function HelpCenter() {
+    const { toast } = useToast();
+
+    const handleSupportSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        toast({
+            title: "Chamado Enviado com Sucesso!",
+            description: "Nossa equipe de suporte entrará em contato em breve."
+        })
+    }
+    return (
+         <Dialog>
+            <DialogTrigger asChild>
+                <Button variant="outline" size="icon">
+                    <LifeBuoy className="h-4 w-4" />
+                    <span className="sr-only">Abrir central de ajuda</span>
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Central de Ajuda</DialogTitle>
+                    <DialogDescription>
+                        Encontre respostas, tutoriais e entre em contato com nosso suporte.
+                    </DialogDescription>
+                </DialogHeader>
+                <Tabs defaultValue="faq" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="faq"><MessageSquare className="mr-2"/> Dúvidas</TabsTrigger>
+                        <TabsTrigger value="about"><Info className="mr-2"/> Sobre</TabsTrigger>
+                        <TabsTrigger value="support"><LifeBuoy className="mr-2"/> Suporte</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="faq" className="mt-4">
+                        <Accordion type="single" collapsible>
+                            <AccordionItem value="item-1">
+                                <AccordionTrigger>Como cadastro um novo aluno?</AccordionTrigger>
+                                <AccordionContent>
+                                    Vá para a seção "Alunos" no menu lateral, clique em "Adicionar Aluno" e preencha o formulário com os dados do aluno.
+                                </AccordionContent>
+                            </AccordionItem>
+                             <AccordionItem value="item-2">
+                                <AccordionTrigger>Como registro um pagamento?</AccordionTrigger>
+                                <AccordionContent>
+                                    Acesse a seção "Financeiro", clique em "Registrar Pagamento", selecione o aluno, os itens e confirme o valor. A fatura será gerada automaticamente.
+                                </AccordionContent>
+                            </AccordionItem>
+                             <AccordionItem value="item-3">
+                                <AccordionTrigger>Onde configuro a integração com a catraca?</AccordionTrigger>
+                                <AccordionContent>
+                                   Em "Configurações" (ícone de engrenagem), você encontrará a seção "Integração de Hardware" para informar o IP e as credenciais da sua catraca.
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
+                    </TabsContent>
+                    <TabsContent value="about" className="mt-4 p-4 bg-muted/50 rounded-lg">
+                        <h3 className="font-semibold text-lg font-headline">O que é o FitCore?</h3>
+                        <p className="text-muted-foreground mt-2">
+                            O FitCore é um sistema de gestão completo (SaaS) projetado para academias e estúdios. Nossa missão é simplificar sua operação diária, automatizando tarefas desde o controle financeiro e de acesso de alunos até a criação de treinos e o gerenciamento de múltiplas unidades. Focamos em uma interface intuitiva e ferramentas poderosas para que você possa se concentrar no que realmente importa: o sucesso dos seus alunos e do seu negócio.
+                        </p>
+                    </TabsContent>
+                    <TabsContent value="support" className="mt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-4">
+                                <h3 className="font-semibold">Informações de Contato</h3>
+                                <p className="text-sm text-muted-foreground">Precisa de ajuda urgente? Entre em contato conosco.</p>
+                                <p className="text-sm"><strong>E-mail:</strong> suporte@fitcore.com</p>
+                                <p className="text-sm"><strong>Telefone:</strong> (11) 4002-8922</p>
+                                <p className="text-sm"><strong>Horário:</strong> Seg a Sex, das 9h às 18h.</p>
+                            </div>
+                            <form className="space-y-4" onSubmit={handleSupportSubmit}>
+                                <h3 className="font-semibold">Abrir um Chamado</h3>
+                                <div className="space-y-2">
+                                    <Label htmlFor="subject">Assunto</Label>
+                                    <Input id="subject" placeholder="Ex: Dúvida sobre faturamento" />
+                                </div>
+                                 <div className="space-y-2">
+                                    <Label htmlFor="message">Sua Mensagem</Label>
+                                    <Textarea id="message" placeholder="Descreva sua dúvida ou problema em detalhes." />
+                                </div>
+                                <Button type="submit" className="w-full">Enviar Chamado</Button>
+                            </form>
+                        </div>
+                    </TabsContent>
+                </Tabs>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+    
