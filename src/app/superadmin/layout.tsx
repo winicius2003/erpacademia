@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { LayoutDashboard, Building, Send, LogOut, Loader2 } from "lucide-react"
+import { LayoutDashboard, Building, Send, LogOut, Loader2, DollarSign } from "lucide-react"
 import { usePathname, useRouter } from 'next/navigation'
 
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset } from "@/components/ui/sidebar"
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 const navItems = [
   { href: "/superadmin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/superadmin/academies", icon: Building, label: "Academias" },
+  { href: "/superadmin/billing", icon: DollarSign, label: "Faturamento" },
   { href: "/superadmin/messaging", icon: Send, label: "Mensagens" },
 ]
 
