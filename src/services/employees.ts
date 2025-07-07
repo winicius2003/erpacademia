@@ -38,6 +38,11 @@ export async function getEmployeeByLogin(login: string): Promise<Employee | null
     return Promise.resolve(employee || null);
 }
 
+export async function getEmployeeByPin(pin: string): Promise<Employee | null> {
+    const employee = employees.find(e => e.accessPin === pin);
+    return Promise.resolve(employee || null);
+}
+
 export async function addEmployee(employeeData: Omit<Employee, 'id'>): Promise<string> {
     const newId = (nextId++).toString();
     const newEmployee: Employee = {

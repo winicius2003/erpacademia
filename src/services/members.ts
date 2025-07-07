@@ -30,6 +30,12 @@ export async function getMemberById(id: string): Promise<Member | null> {
     return Promise.resolve(member || null);
 }
 
+export async function getMemberByPin(pin: string): Promise<Member | null> {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const member = members.find(m => m.accessPin === pin);
+    return Promise.resolve(member || null);
+}
+
 export async function addMember(memberData: Omit<Member, 'id'>): Promise<string> {
     const newId = (nextId++).toString();
     const newMember: Member = {
