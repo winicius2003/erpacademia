@@ -5,7 +5,7 @@ import { format } from "date-fns"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { z } from "zod"
-import { PlusCircle, Printer, Loader2, Calendar as CalendarIcon, Ruler, Weight, User, MoreVertical, Edit, Trash2 } from "lucide-react"
+import { PlusCircle, Printer, Loader2, Calendar as CalendarIcon, Ruler, User, MoreVertical, Edit, Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -23,32 +23,61 @@ import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { getMembers, type Member } from "@/services/members"
-import { getAssessments, addAssessment, type Assessment } from "@/services/assessments"
+import { getAssessments, addAssessment, type Assessment, type AssessmentType } from "@/services/assessments"
 import { cn } from "@/lib/utils"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Badge } from "@/components/ui/badge"
 
-const measuresSchema = z.object({
-  weight: z.coerce.number().positive("Inválido"),
-  height: z.coerce.number().positive("Inválido"),
-  bodyFat: z.coerce.number().positive("Inválido"),
-  muscleMass: z.coerce.number().positive("Inválido"),
-  chest: z.coerce.number().positive("Inválido"),
-  waist: z.coerce.number().positive("Inválido"),
-  hips: z.coerce.number().positive("Inválido"),
-  rightArm: z.coerce.number().positive("Inválido"),
-  leftArm: z.coerce.number().positive("Inválido"),
-  rightThigh: z.coerce.number().positive("Inválido"),
-  leftThigh: z.coerce.number().positive("Inválido"),
-});
-
-const assessmentSchema = z.object({
-  studentId: z.string().min(1, "Selecione um aluno"),
+const baseSchema = z.object({
+  studentId: z.string().min(1, "Selecione um aluno."),
   date: z.date({ required_error: "A data é obrigatória." }),
-  measures: measuresSchema,
   notes: z.string().optional(),
 });
 
+const anthropometrySchema = baseSchema.extend({
+  type: z.literal("Antropometria"),
+  measures: z.object({
+    weight: z.coerce.number().positive("Inválido"),
+    height: z.coerce.number().positive("Inválido"),
+    bodyFat: z.coerce.number().optional(),
+    muscleMass: z.coerce.number().optional(),
+    chest: z.coerce.number().positive("Inválido"),
+    waist: z.coerce.number().positive("Inválido"),
+    hips: z.coerce.number().positive("Inválido"),
+    rightArm: z.coerce.number().positive("Inválido"),
+    leftArm: z.coerce.number().positive("Inválido"),
+    rightThigh: z.coerce.number().positive("Inválido"),
+    leftThigh: z.coerce.number().positive("Inválido"),
+  }),
+});
+
+const bioimpedanceSchema = baseSchema.extend({
+  type: z.literal("Bioimpedância"),
+  measures: z.object({
+    weight: z.coerce.number().positive("Inválido"),
+    height: z.coerce.number().positive("Inválido"),
+    bodyFat: z.coerce.number().positive("Inválido"),
+    muscleMass: z.coerce.number().positive("Inválido"),
+    visceralFat: z.coerce.number().positive("Inválido"),
+    metabolicAge: z.coerce.number().positive("Inválido"),
+    bodyWater: z.coerce.number().positive("Inválido"),
+  }),
+});
+
+const assessmentSchema = z.discriminatedUnion("type", [
+  anthropometrySchema,
+  bioimpedanceSchema,
+]);
+
 type AssessmentFormValues = z.infer<typeof assessmentSchema>;
+
+const initialAnthropometryMeasures = {
+  weight: 0, height: 0, bodyFat: 0, muscleMass: 0, chest: 0, waist: 0, hips: 0, rightArm: 0, leftArm: 0, rightThigh: 0, leftThigh: 0
+};
+
+const initialBioimpedanceMeasures = {
+  weight: 0, height: 0, bodyFat: 0, muscleMass: 0, visceralFat: 0, metabolicAge: 0, bodyWater: 0
+};
 
 export default function AssessmentsPage() {
   const { toast } = useToast()
@@ -60,7 +89,14 @@ export default function AssessmentsPage() {
 
   const form = useForm<AssessmentFormValues>({
     resolver: zodResolver(assessmentSchema),
+    defaultValues: {
+      date: new Date(),
+      type: "Antropometria",
+      measures: initialAnthropometryMeasures
+    },
   });
+
+  const assessmentType = form.watch("type");
 
   const fetchData = React.useCallback(async () => {
     setIsLoading(true);
@@ -82,25 +118,29 @@ export default function AssessmentsPage() {
   const handleAddNewClick = () => {
     form.reset({
       date: new Date(),
-      measures: { weight: 0, height: 0, bodyFat: 0, muscleMass: 0, chest: 0, waist: 0, hips: 0, rightArm: 0, leftArm: 0, rightThigh: 0, leftThigh: 0 }
+      type: "Antropometria",
+      measures: initialAnthropometryMeasures,
     });
     setIsDialogOpen(true);
   };
 
   const onSubmit: SubmitHandler<AssessmentFormValues> = async (data) => {
     const studentName = members.find(m => m.id === data.studentId)?.name || 'Desconhecido';
+    
+    // BMI is calculated for both types
     const bmi = (data.measures.weight / ((data.measures.height / 100) ** 2)).toFixed(2);
     
     const assessmentData = {
       studentId: data.studentId,
       studentName: studentName,
       date: format(data.date, "yyyy-MM-dd"),
+      type: data.type,
       measures: { ...data.measures, bmi: parseFloat(bmi) },
       notes: data.notes,
     };
 
     try {
-      await addAssessment(assessmentData);
+      await addAssessment(assessmentData as Omit<Assessment, 'id'>);
       toast({ title: "Avaliação Registrada", description: "Os dados da avaliação foram salvos com sucesso." });
       fetchData();
       setIsDialogOpen(false);
@@ -145,9 +185,9 @@ export default function AssessmentsPage() {
                     <TableRow>
                       <TableHead>Aluno</TableHead>
                       <TableHead>Data</TableHead>
+                      <TableHead>Tipo</TableHead>
                       <TableHead className="text-center">Peso (kg)</TableHead>
                       <TableHead className="text-center">Gordura (%)</TableHead>
-                      <TableHead className="text-center">M. Muscular (kg)</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -156,9 +196,9 @@ export default function AssessmentsPage() {
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">{item.studentName}</TableCell>
                         <TableCell>{format(new Date(item.date.replace(/-/g, '/')), "dd/MM/yyyy")}</TableCell>
+                        <TableCell><Badge variant="outline">{item.type}</Badge></TableCell>
                         <TableCell className="text-center">{item.measures.weight.toFixed(1)}</TableCell>
-                        <TableCell className="text-center">{item.measures.bodyFat.toFixed(1)}</TableCell>
-                        <TableCell className="text-center">{item.measures.muscleMass.toFixed(1)}</TableCell>
+                        <TableCell className="text-center">{item.measures.bodyFat?.toFixed(1) || '-'}</TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -193,11 +233,11 @@ export default function AssessmentsPage() {
         <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>Registrar Nova Avaliação Física</DialogTitle>
-            <DialogDescription>Preencha todos os campos com os dados coletados.</DialogDescription>
+            <DialogDescription>Escolha o tipo e preencha todos os campos com os dados coletados.</DialogDescription>
           </DialogHeader>
           <Form {...form}>
             <form id="assessment-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <FormField control={form.control} name="studentId" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Aluno</FormLabel>
@@ -227,30 +267,71 @@ export default function AssessmentsPage() {
                     <FormMessage />
                   </FormItem>
                 )} />
+                <FormField control={form.control} name="type" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Avaliação</FormLabel>
+                    <Select onValueChange={(value: AssessmentType) => {
+                      field.onChange(value);
+                      const newMeasures = value === "Antropometria" ? initialAnthropometryMeasures : initialBioimpedanceMeasures;
+                      form.setValue("measures", newMeasures as any); // Use 'as any' to satisfy TS for discriminated union
+                    }} defaultValue={field.value}>
+                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        <SelectItem value="Antropometria">Antropometria</SelectItem>
+                        <SelectItem value="Bioimpedância">Bioimpedância</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )} />
               </div>
+
+              {assessmentType === "Antropometria" && (
+                <>
+                  <Separator />
+                  <div className="space-y-4">
+                    <h3 className="text-md font-medium">Medidas Antropométricas</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <FormField control={form.control} name="measures.weight" render={({ field }) => ( <FormItem><FormLabel>Peso (kg)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="measures.height" render={({ field }) => ( <FormItem><FormLabel>Altura (cm)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="measures.bodyFat" render={({ field }) => ( <FormItem><FormLabel>% Gordura (Opcional)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="measures.muscleMass" render={({ field }) => ( <FormItem><FormLabel>M. Muscular (Opcional)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    </div>
+                  </div>
+                  <Separator />
+                  <div className="space-y-4">
+                    <h3 className="text-md font-medium">Perímetros (cm)</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <FormField control={form.control} name="measures.chest" render={({ field }) => ( <FormItem><FormLabel>Tórax</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="measures.waist" render={({ field }) => ( <FormItem><FormLabel>Cintura</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="measures.hips" render={({ field }) => ( <FormItem><FormLabel>Quadril</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="measures.rightArm" render={({ field }) => ( <FormItem><FormLabel>Braço D.</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="measures.leftArm" render={({ field }) => ( <FormItem><FormLabel>Braço E.</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="measures.rightThigh" render={({ field }) => ( <FormItem><FormLabel>Coxa D.</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="measures.leftThigh" render={({ field }) => ( <FormItem><FormLabel>Coxa E.</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {assessmentType === "Bioimpedância" && (
+                <>
+                  <Separator />
+                  <div className="space-y-4">
+                    <h3 className="text-md font-medium">Resultados da Bioimpedância</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <FormField control={form.control} name="measures.weight" render={({ field }) => ( <FormItem><FormLabel>Peso (kg)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="measures.height" render={({ field }) => ( <FormItem><FormLabel>Altura (cm)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="measures.bodyFat" render={({ field }) => ( <FormItem><FormLabel>% Gordura Corporal</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="measures.muscleMass" render={({ field }) => ( <FormItem><FormLabel>M. Muscular (kg)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="measures.visceralFat" render={({ field }) => ( <FormItem><FormLabel>Gordura Visceral</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="measures.metabolicAge" render={({ field }) => ( <FormItem><FormLabel>Idade Metabólica</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="measures.bodyWater" render={({ field }) => ( <FormItem><FormLabel>% Água Corporal</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    </div>
+                  </div>
+                </>
+              )}
+
               <Separator />
-              <div className="space-y-4">
-                <h3 className="text-md font-medium">Medidas Antropométricas</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <FormField control={form.control} name="measures.weight" render={({ field }) => ( <FormItem><FormLabel>Peso (kg)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem> )} />
-                    <FormField control={form.control} name="measures.height" render={({ field }) => ( <FormItem><FormLabel>Altura (cm)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem> )} />
-                    <FormField control={form.control} name="measures.bodyFat" render={({ field }) => ( <FormItem><FormLabel>% Gordura</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem> )} />
-                    <FormField control={form.control} name="measures.muscleMass" render={({ field }) => ( <FormItem><FormLabel>M. Muscular (kg)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem> )} />
-                </div>
-              </div>
-              <Separator />
-               <div className="space-y-4">
-                <h3 className="text-md font-medium">Perímetros (cm)</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <FormField control={form.control} name="measures.chest" render={({ field }) => ( <FormItem><FormLabel>Tórax</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem> )} />
-                    <FormField control={form.control} name="measures.waist" render={({ field }) => ( <FormItem><FormLabel>Cintura</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem> )} />
-                    <FormField control={form.control} name="measures.hips" render={({ field }) => ( <FormItem><FormLabel>Quadril</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem> )} />
-                    <FormField control={form.control} name="measures.rightArm" render={({ field }) => ( <FormItem><FormLabel>Braço D.</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem> )} />
-                    <FormField control={form.control} name="measures.leftArm" render={({ field }) => ( <FormItem><FormLabel>Braço E.</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem> )} />
-                    <FormField control={form.control} name="measures.rightThigh" render={({ field }) => ( <FormItem><FormLabel>Coxa D.</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem> )} />
-                    <FormField control={form.control} name="measures.leftThigh" render={({ field }) => ( <FormItem><FormLabel>Coxa E.</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem> )} />
-                </div>
-              </div>
               <FormField control={form.control} name="notes" render={({ field }) => (
                 <FormItem>
                     <FormLabel>Observações</FormLabel>
@@ -301,25 +382,23 @@ function PrintableAssessmentSheet() {
                         </div>
                     </div>
                     <Separator className="bg-gray-300" />
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-4 pt-4">
+                    <div className="grid grid-cols-3 gap-x-8 gap-y-4 pt-4">
                        <Field label="Aluno(a)" />
                        <Field label="Data da Avaliação" />
+                       <Field label="Tipo de Avaliação" />
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
                     <Separator className="my-6 bg-gray-300" />
-                    <h2 className="text-lg font-bold font-headline mb-4">Medidas Antropométricas</h2>
+                    <h2 className="text-lg font-bold font-headline mb-4">Medidas Básicas</h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6">
                         <Field label="Peso (kg)" />
                         <Field label="Altura (cm)" />
                         <Field label="IMC" />
-                        <Field label="% Gordura" />
-                        <Field label="Massa Muscular (kg)" />
-                        <Field label="Idade Metabólica" />
                     </div>
 
                     <Separator className="my-6 bg-gray-300" />
-                    <h2 className="text-lg font-bold font-headline mb-4">Perímetros (cm)</h2>
+                    <h2 className="text-lg font-bold font-headline mb-4">Perímetros (Antropometria)</h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6">
                         <Field label="Tórax" />
                         <Field label="Cintura" />
@@ -330,6 +409,18 @@ function PrintableAssessmentSheet() {
                         <Field label="Coxa D." />
                         <Field label="Coxa E." />
                     </div>
+
+                     <Separator className="my-6 bg-gray-300" />
+                    <h2 className="text-lg font-bold font-headline mb-4">Resultados (Bioimpedância)</h2>
+                     <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6">
+                        <Field label="% Gordura Corporal" />
+                        <Field label="% Água Corporal" />
+                        <Field label="Massa Muscular (kg)" />
+                        <Field label="Massa Óssea (kg)" />
+                        <Field label="Gordura Visceral" />
+                        <Field label="Idade Metabólica" />
+                    </div>
+
                      <Separator className="my-6 bg-gray-300" />
                     <h2 className="text-lg font-bold font-headline mb-4">Observações</h2>
                     <div className="grid grid-cols-1 gap-4">
