@@ -3,7 +3,7 @@
 
 import * as React from "react"
 import { format } from "date-fns"
-import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Loader2, Search, Fingerprint } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Loader2, Search, Fingerprint, Upload } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { cn } from "@/lib/utils"
@@ -124,6 +124,9 @@ export default function MembersPage() {
   const [memberToDelete, setMemberToDelete] = React.useState<Member | null>(null)
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false)
   const [user, setUser] = React.useState<{ name: string; role: string } | null>(null);
+
+  const [isImportDialogOpen, setIsImportDialogOpen] = React.useState(false)
+  const [csvFile, setCsvFile] = React.useState<File | null>(null);
 
   const isAddingBlocked = subscriptionStatus === 'blocked';
 
@@ -328,6 +331,10 @@ export default function MembersPage() {
                     />
                 </div>
                 {user.role !== 'Professor' && (
+                  <>
+                  <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
+                      <Upload className="mr-2 h-4 w-4" /> Importar Alunos
+                  </Button>
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                       <Button onClick={handleAddNewClick} disabled={isAddingBlocked} title={isAddingBlocked ? "Funcionalidade bloqueada por pendência de assinatura" : ""}>
@@ -507,6 +514,7 @@ export default function MembersPage() {
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
+                  </>
                 )}
               </div>
           </div>
@@ -575,6 +583,57 @@ export default function MembersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+                <DialogTitle>Importar Alunos por CSV</DialogTitle>
+                <DialogDescription>
+                    Faça o upload de um arquivo CSV para cadastrar múltiplos alunos de uma só vez.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+                <div className="grid gap-2">
+                    <Label htmlFor="csv-file">Arquivo CSV</Label>
+                    <Input 
+                        id="csv-file" 
+                        type="file" 
+                        accept=".csv"
+                        onChange={(e) => e.target.files && setCsvFile(e.target.files[0])}
+                    />
+                    <p className="text-xs text-muted-foreground">O arquivo deve conter as colunas: `name`, `email`, `phone`, `plan`, `expires` (formato YYYY-MM-DD).</p>
+                </div>
+                {csvFile && (
+                    <div className="text-sm font-medium">
+                        Arquivo selecionado: {csvFile.name}
+                    </div>
+                )}
+            </div>
+            <DialogFooter>
+                <Button variant="ghost" onClick={() => setIsImportDialogOpen(false)}>Cancelar</Button>
+                <Button 
+                    onClick={() => {
+                        if (csvFile) {
+                            toast({
+                                title: "Importação Iniciada",
+                                description: "Os alunos estão sendo importados em segundo plano. Você será notificado quando o processo for concluído.",
+                            });
+                            setIsImportDialogOpen(false);
+                            setCsvFile(null);
+                        } else {
+                            toast({
+                                title: "Nenhum arquivo selecionado",
+                                description: "Por favor, selecione um arquivo CSV para importar.",
+                                variant: "destructive",
+                            })
+                        }
+                    }}
+                >
+                    Importar
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

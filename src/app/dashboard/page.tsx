@@ -1,7 +1,8 @@
+
 "use client"
 
 import * as React from "react"
-import { Users, UserMinus, TrendingUp, BadgePercent, Loader2, UserX, ClipboardX, CalendarCheck } from "lucide-react"
+import { Users, UserMinus, TrendingUp, BadgePercent, Loader2, UserX, ClipboardX, CalendarCheck, Target } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import {
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/card"
 import { MonthlyGrowthChart } from "@/components/monthly-growth-chart"
 import { DailyPresenceChart } from "@/components/daily-presence-chart"
+import { ProjectedRevenueChart } from "@/components/projected-revenue-chart"
 import type { Role } from "@/services/employees"
 import { getMembers, type Member } from "@/services/members"
 
@@ -23,6 +25,16 @@ const adminStatsTemplate = [
   { key: "monthlyRevenue", title: "Receita Mensal", value: "R$ 45.231,89", change: "+20.1% em relação ao último mês", Icon: TrendingUp },
   { key: "retentionRate", title: "Taxa de Retenção", value: "92%", change: "+2% em relação ao último mês", Icon: BadgePercent },
 ]
+
+// Dummy data for the new projected revenue chart
+const projectedRevenueData = Array.from({ length: 30 }, (_, i) => {
+    const day = i + 1;
+    // Simulate realized revenue up to day 20
+    const realizado = day <= 20 ? 1500 + Math.random() * 500 - (day * 20) : 0;
+    const previsto = 1500 + Math.random() * 200 - (day*15); // Projected for the whole month
+    return { day: day.toString(), realizado, previsto };
+});
+
 
 export default function Dashboard() {
   const [user, setUser] = React.useState<{ name: string; role: Role } | null>(null)
@@ -114,7 +126,16 @@ export default function Dashboard() {
         ))}
       </div>
       {user.role !== 'Professor' && (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <Card className="xl:col-span-2">
+            <CardHeader>
+              <CardTitle className="font-headline">Receita Realizada vs. Projetada (Mês)</CardTitle>
+              <CardDescription>Acompanhe o desempenho financeiro diário em relação à meta.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ProjectedRevenueChart data={projectedRevenueData} />
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader>
               <CardTitle className="font-headline">Novos Alunos (Mês)</CardTitle>
@@ -124,10 +145,10 @@ export default function Dashboard() {
               <MonthlyGrowthChart />
             </CardContent>
           </Card>
-          <Card>
+          <Card className="xl:col-span-3">
             <CardHeader>
-              <CardTitle className="font-headline">Check-ins (Semana)</CardTitle>
-              <CardDescription>Número de check-ins nos últimos 7 dias.</CardDescription>
+              <CardTitle className="font-headline">Check-ins na Semana</CardTitle>
+              <CardDescription>Volume de presença de alunos nos últimos 7 dias.</CardDescription>
             </CardHeader>
             <CardContent>
               <DailyPresenceChart />
