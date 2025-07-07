@@ -13,6 +13,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+
 import { MonthlyGrowthChart } from "@/components/monthly-growth-chart"
 import { DailyPresenceChart } from "@/components/daily-presence-chart"
 import { ProjectedRevenueChart } from "@/components/projected-revenue-chart"
@@ -35,6 +45,65 @@ const projectedRevenueData = Array.from({ length: 30 }, (_, i) => {
     const previsto = 1500 + Math.random() * 200 - (day*15); // Projected for the whole month
     return { day: day.toString(), realizado, previsto };
 });
+
+
+function OperationalStat({ title, icon: Icon, members, theme, emptyText }: { title: string, icon: React.ElementType, members: Member[], theme: {bg: string, text: string}, emptyText: string }) {
+    const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+
+    return (
+        <>
+            <div 
+                className="block p-4 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                onClick={() => members.length > 0 && setIsDialogOpen(true)}
+            >
+                <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-full ${theme.bg}`}>
+                       <Icon className={`h-6 w-6 ${theme.text}`} />
+                    </div>
+                    <div>
+                        <p className="text-2xl font-bold">{members.length}</p>
+                        <p className="text-sm font-medium text-muted-foreground">{title}</p>
+                    </div>
+                </div>
+            </div>
+
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{title}</DialogTitle>
+                        <DialogDescription>
+                            Lista de alunos correspondentes a este critério.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="max-h-[60vh] overflow-y-auto pr-4 -mr-4">
+                        {members.length > 0 ? (
+                            <ul className="space-y-2">
+                                {members.map(member => (
+                                    <li key={member.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                                        <div className="flex items-center gap-2">
+                                            <Avatar className="h-8 w-8">
+                                                <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint="person face" />
+                                                <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <span className="font-medium">{member.name}</span>
+                                        </div>
+                                        <Link href={`/dashboard/members/${member.id}`} legacyBehavior>
+                                          <a onClick={() => setIsDialogOpen(false)}>
+                                            <Button variant="ghost" size="sm">Ver Ficha</Button>
+                                          </a>
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-muted-foreground text-center py-4">{emptyText}</p>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </>
+    );
+}
 
 
 export default function Dashboard() {
@@ -109,22 +178,20 @@ export default function Dashboard() {
   }
 
   const getOperationalStats = () => {
-    if (!members) return { overdue: 0, absent: 0, birthdays: 0 };
+    if (!members) return { overdue: [], absent: [], birthdays: [] };
     
-    const overdue = members.filter(m => m.status === 'Atrasado').length;
-    const absent = members.filter(m => m.attendanceStatus === 'Faltante').length;
+    const overdueMembers = members.filter(m => m.status === 'Atrasado');
+    const absentMembers = members.filter(m => m.attendanceStatus === 'Faltante');
     
     const today = new Date();
-    const todayMonth = today.getMonth() + 1;
-    const todayDay = today.getDate();
     
-    const birthdays = members.filter(m => {
+    const birthdayMembers = members.filter(m => {
         if (!m.dob) return false;
         const dobDate = new Date(m.dob.replace(/-/g, '/'));
-        return dobDate.getMonth() + 1 === todayMonth && dobDate.getDate() === todayDay;
-    }).length;
+        return dobDate.getMonth() === today.getMonth() && dobDate.getDate() === today.getDate();
+    });
     
-    return { overdue, absent, birthdays };
+    return { overdue: overdueMembers, absent: absentMembers, birthdays: birthdayMembers };
   }
 
   const stats = user.role === 'Professor' ? getProfessorStats() : getAdminStats();
@@ -154,39 +221,27 @@ export default function Dashboard() {
                 <CardDescription>Resumo rápido das principais ações para hoje.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-3">
-                <Link href="/dashboard/members" className="block p-4 rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-4">
-                        <div className="bg-red-100 dark:bg-red-900/50 p-3 rounded-full">
-                           <UserX className="h-6 w-6 text-red-600 dark:text-red-300" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold">{operationalStats.overdue}</p>
-                            <p className="text-sm font-medium text-muted-foreground">Alunos Inadimplentes</p>
-                        </div>
-                    </div>
-                </Link>
-                <Link href="/dashboard/members" className="block p-4 rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-4">
-                       <div className="bg-yellow-100 dark:bg-yellow-900/50 p-3 rounded-full">
-                           <UserMinus className="h-6 w-6 text-yellow-600 dark:text-yellow-300" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold">{operationalStats.absent}</p>
-                            <p className="text-sm font-medium text-muted-foreground">Alunos Faltantes</p>
-                        </div>
-                    </div>
-                </Link>
-                <Link href="/dashboard/members" className="block p-4 rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-4">
-                        <div className="bg-sky-100 dark:bg-sky-900/50 p-3 rounded-full">
-                           <CakeSlice className="h-6 w-6 text-sky-600 dark:text-sky-300" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold">{operationalStats.birthdays}</p>
-                            <p className="text-sm font-medium text-muted-foreground">Aniversariantes do Dia</p>
-                        </div>
-                    </div>
-                </Link>
+                <OperationalStat 
+                  title="Alunos Inadimplentes"
+                  icon={UserX}
+                  members={operationalStats.overdue}
+                  theme={{ bg: 'bg-red-100 dark:bg-red-900/50', text: 'text-red-600 dark:text-red-300' }}
+                  emptyText="Nenhum aluno inadimplente hoje."
+                />
+                <OperationalStat 
+                  title="Alunos Faltantes"
+                  icon={UserMinus}
+                  members={operationalStats.absent}
+                  theme={{ bg: 'bg-yellow-100 dark:bg-yellow-900/50', text: 'text-yellow-600 dark:text-yellow-300' }}
+                  emptyText="Nenhum aluno faltante nos últimos dias."
+                />
+                <OperationalStat 
+                  title="Aniversariantes do Dia"
+                  icon={CakeSlice}
+                  members={operationalStats.birthdays}
+                  theme={{ bg: 'bg-sky-100 dark:bg-sky-900/50', text: 'text-sky-600 dark:text-sky-300' }}
+                  emptyText="Nenhum aniversariante hoje."
+                />
             </CardContent>
         </Card>
       )}
