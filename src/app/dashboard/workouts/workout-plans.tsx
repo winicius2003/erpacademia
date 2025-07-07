@@ -357,36 +357,50 @@ function WorkoutDayField({
         </Button>
       </CardHeader>
       <CardContent className="p-4 pt-0">
-        <div className="space-y-2">
-          {fields.map((field, exIndex) => (
-            <div key={field.id} className="flex flex-wrap items-start gap-x-2 gap-y-2 p-2 -mx-2 rounded-md hover:bg-background/50">
-              <div className="flex items-center gap-2 flex-grow-[2] min-w-[200px] flex-1">
-                  <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
-                   <FormField
-                      control={control}
-                      name={`workouts.${dayIndex}.exercises.${exIndex}.name`}
-                      render={({ field }) => (
-                        <FormItem className="w-full">
-                           <ExerciseCombobox field={field} exerciseOptions={exerciseOptions} />
-                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-              </div>
-              <FormField control={control} name={`workouts.${dayIndex}.exercises.${exIndex}.sets`} render={({ field }) => (
-                <FormItem className="flex-grow min-w-[60px]"><FormControl><Input placeholder="Séries" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <FormField control={control} name={`workouts.${dayIndex}.exercises.${exIndex}.reps`} render={({ field }) => (
-                <FormItem className="flex-grow min-w-[70px]"><FormControl><Input placeholder="Reps" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <FormField control={control} name={`workouts.${dayIndex}.exercises.${exIndex}.rest`} render={({ field }) => (
-                <FormItem className="flex-grow min-w-[70px]"><FormControl><Input placeholder="Descanso" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <Button type="button" variant="ghost" size="icon" onClick={() => remove(exIndex)} className="h-9 w-9 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+        <div className="overflow-x-auto">
+          {/* Headers */}
+          <div className="flex items-center gap-x-2 px-2 mb-2 text-sm font-medium text-muted-foreground min-w-[600px]">
+            <div className="flex items-center gap-2 flex-grow-[2] min-w-[200px] flex-1">
+              <GripVertical className="h-5 w-5 text-transparent" /> {/* Spacer */}
+              Exercício
             </div>
-          ))}
+            <div className="w-[80px] text-center">Séries</div>
+            <div className="w-[80px] text-center">Reps</div>
+            <div className="w-[80px] text-center">Descanso</div>
+            <div className="w-9" /> {/* Spacer for delete button */}
+          </div>
+
+          <div className="space-y-2 min-w-[600px]">
+            {fields.map((field, exIndex) => (
+              <div key={field.id} className="flex items-start gap-x-2 p-2 -mx-2 rounded-md hover:bg-background/50">
+                <div className="flex items-center gap-2 flex-grow-[2] min-w-[200px] flex-1">
+                  <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
+                  <FormField
+                    control={control}
+                    name={`workouts.${dayIndex}.exercises.${exIndex}.name`}
+                    render={({ field }) => (
+                      <FormItem className="w-full">
+                        <ExerciseCombobox field={field} exerciseOptions={exerciseOptions} />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField control={control} name={`workouts.${dayIndex}.exercises.${exIndex}.sets`} render={({ field }) => (
+                  <FormItem className="w-[80px]"><FormControl><Input placeholder="3" {...field} className="text-center" /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={control} name={`workouts.${dayIndex}.exercises.${exIndex}.reps`} render={({ field }) => (
+                  <FormItem className="w-[80px]"><FormControl><Input placeholder="10-12" {...field} className="text-center" /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={control} name={`workouts.${dayIndex}.exercises.${exIndex}.rest`} render={({ field }) => (
+                  <FormItem className="w-[80px]"><FormControl><Input placeholder="60s" {...field} className="text-center" /></FormControl><FormMessage /></FormItem>
+                )} />
+                <Button type="button" variant="ghost" size="icon" onClick={() => remove(exIndex)} className="h-9 w-9 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+              </div>
+            ))}
+          </div>
         </div>
-        <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => append({ name: "", sets: "3", reps: "10-12", rest: "60s" })}>
+        <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ name: "", sets: "3", reps: "10-12", rest: "60s" })}>
           <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Exercício
         </Button>
       </CardContent>
