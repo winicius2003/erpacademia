@@ -2,10 +2,11 @@
 "use client"
 
 import * as React from "react"
-import { format } from "date-fns"
+import { format, addMonths, parseISO } from "date-fns"
 import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Loader2, Search, Fingerprint, Upload } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Papa from "papaparse"
+import * as XLSX from "xlsx"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -127,8 +128,11 @@ export default function MembersPage() {
   const [user, setUser] = React.useState<{ name: string; role: string } | null>(null);
 
   const [isImportDialogOpen, setIsImportDialogOpen] = React.useState(false)
-  const [csvFile, setCsvFile] = React.useState<File | null>(null);
+  const [importFile, setImportFile] = React.useState<File | null>(null);
+  const [importPreview, setImportPreview] = React.useState<Partial<Member>[]>([]);
+  const [importErrors, setImportErrors] = React.useState<string[]>([]);
   const [isImporting, setIsImporting] = React.useState(false);
+  const [importStep, setImportStep] = React.useState(1); // 1: Upload, 2: Confirm
 
   const isAddingBlocked = subscriptionStatus === 'blocked';
 
@@ -306,7 +310,7 @@ export default function MembersPage() {
   };
 
   const handleDownloadTemplate = () => {
-    const headers = "Nome,Email,Telefone,Plano,Vence (YYYY-MM-DD),Status";
+    const headers = "Nome,Email,Telefone,Plano,Vence (YYYY-MM-DD),Situação";
     const sampleData = "\nJoão Exemplo,joao@exemplo.com,(11) 99999-8888,Mensal,2025-08-30,Ativo";
     const csvContent = "data:text/csv;charset=utf-8," + headers + sampleData;
     const encodedUri = encodeURI(csvContent);
@@ -317,85 +321,137 @@ export default function MembersPage() {
     link.click();
     document.body.removeChild(link);
   };
+  
+  const resetImportDialog = () => {
+      setImportFile(null);
+      setImportPreview([]);
+      setImportErrors([]);
+      setImportStep(1);
+      setIsImporting(false);
+  }
 
-  const handleImportSubmit = async () => {
-    if (!csvFile) {
+  const handlePreviewImport = () => {
+    if (!importFile) {
         toast({ title: "Nenhum arquivo selecionado", variant: "destructive" });
         return;
     }
     setIsImporting(true);
-    
-    Papa.parse(csvFile, {
-        header: true,
-        skipEmptyLines: true,
-        complete: async (results) => {
-            const newMembers = results.data as any[];
-            let successCount = 0;
-            let errorCount = 0;
+    setImportErrors([]);
+    setImportPreview([]);
 
-            const addMemberPromises = newMembers.map(async (row) => {
-                try {
-                    const name = row["Nome"] || row["name"];
-                    const email = row["Email"] || row["email"];
-                    const phone = row["Telefone"] || row["phone"];
-                    const plan = row["Plano"] || row["plan"];
-                    const expires = row["Vence (YYYY-MM-DD)"] || row["expires"] || row["Vence"];
-                    const status = row["Status"] || row["Situação"] || row["status"];
-                    
-                    if (!name || !email || !plan || !expires || !status) {
-                        console.warn("Linha ignorada por falta de dados:", row);
-                        errorCount++;
-                        return;
-                    }
-                    
-                    const memberData = {
-                        name: name,
-                        email: email,
-                        phone: phone || "",
-                        plan: plan,
-                        expires: new Date(expires).toISOString().split('T')[0], // Ensure YYYY-MM-DD
-                        status: status === "Ativo" ? "Ativo" : "Inativo",
-                        cpf: "",
-                        rg: "",
-                        dob: new Date().toISOString().split('T')[0],
-                        professor: "Não atribuído",
-                        attendanceStatus: "Presente" as const,
-                        workoutStatus: "Pendente" as const,
-                        goal: "",
-                        notes: "Aluno importado via CSV.",
-                        accessPin: "",
-                        fingerprintRegistered: false,
-                    };
+    const normalizeHeader = (header: string) => header.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-                    await addMember(memberData);
-                    successCount++;
-                } catch (e) {
-                    console.error("Erro ao importar linha:", row, e);
-                    errorCount++;
-                }
-            });
+    const processData = (data: any[]) => {
+      let currentErrors: string[] = [];
+      const mappedData = data.map((row, index) => {
+          const normalizedRow: {[key: string]: any} = {};
+          for (const key in row) {
+              normalizedRow[normalizeHeader(key)] = row[key];
+          }
 
-            await Promise.all(addMemberPromises);
+          const member: Partial<Member> = {
+              name: normalizedRow['nome'],
+              email: normalizedRow['email'],
+              plan: normalizedRow['plano'] || 'Mensal',
+              status: normalizedRow['situacao'] === 'Ativo' ? 'Ativo' : 'Inativo',
+              expires: normalizedRow['vence'] || normalizedRow['vencimento'],
+              phone: normalizedRow['telefone'] || normalizedRow['celular'] || ''
+          };
 
-            toast({
-                title: "Importação Concluída",
-                description: `${successCount} alunos importados com sucesso. ${errorCount > 0 ? `${errorCount} linhas falharam.` : ''}`,
-            });
-            
-            setIsImporting(false);
-            setIsImportDialogOpen(false);
-            setCsvFile(null);
-            fetchData();
-        },
-        error: (error) => {
-            toast({
-                title: "Erro ao ler o arquivo",
-                description: "Verifique o formato do arquivo CSV e tente novamente.",
-                variant: "destructive"
-            });
-            setIsImporting(false);
-        }
-    });
+          if (!member.name || !member.email) {
+              currentErrors.push(`Linha ${index + 2}: Nome e Email são obrigatórios.`);
+              return null;
+          }
+
+          if (member.expires && typeof member.expires !== 'string') {
+              member.expires = format(new Date(member.expires), 'yyyy-MM-dd');
+          } else if (member.expires) {
+            try {
+                //Handles YYYY-MM-DD, YYYY/MM/DD
+                member.expires = format(parseISO(member.expires.replace(/\//g, '-')), 'yyyy-MM-dd');
+            } catch {
+                currentErrors.push(`Linha ${index + 2}: Formato de data inválido para "${member.expires}". Use YYYY-MM-DD.`);
+                return null;
+            }
+          } else {
+              member.expires = format(addMonths(new Date(), 1), 'yyyy-MM-dd');
+          }
+
+          return member;
+      }).filter(Boolean) as Partial<Member>[];
+
+      setImportPreview(mappedData);
+      setImportErrors(currentErrors);
+      setImportStep(2);
+      setIsImporting(false);
+    };
+
+    if (importFile.name.endsWith('.csv')) {
+        Papa.parse(importFile, {
+            header: true,
+            skipEmptyLines: true,
+            complete: (results) => processData(results.data),
+            error: () => {
+                toast({ title: "Erro ao ler CSV", variant: "destructive" });
+                setIsImporting(false);
+            }
+        });
+    } else {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = e.target?.result;
+                const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet);
+                processData(json);
+            } catch (error) {
+                toast({ title: "Erro ao ler arquivo Excel", variant: "destructive" });
+                setIsImporting(false);
+            }
+        };
+        reader.readAsArrayBuffer(importFile);
+    }
+  };
+
+  const handleConfirmImport = async () => {
+      setIsImporting(true);
+      let successCount = 0;
+      let errorCount = 0;
+
+      const importPromises = importPreview.map(async (member) => {
+          try {
+              const memberData = {
+                  ...member,
+                  cpf: "",
+                  rg: "",
+                  dob: new Date().toISOString().split('T')[0],
+                  professor: "Não atribuído",
+                  attendanceStatus: "Presente" as const,
+                  workoutStatus: "Pendente" as const,
+                  goal: "Importado via Planilha",
+                  notes: "",
+                  accessPin: "",
+                  fingerprintRegistered: false,
+              };
+              await addMember(memberData as Omit<Member, 'id'>);
+              successCount++;
+          } catch (e) {
+              errorCount++;
+          }
+      });
+      
+      await Promise.all(importPromises);
+
+      toast({
+          title: "Importação Concluída",
+          description: `${successCount} alunos importados com sucesso. ${errorCount > 0 ? `${errorCount} falharam.` : ''}`,
+      });
+
+      fetchData();
+      setIsImportDialogOpen(false);
+      resetImportDialog();
   };
 
   if (!user || isLoading) {
@@ -430,7 +486,7 @@ export default function MembersPage() {
                 </div>
                 {user.role !== 'Professor' && (
                   <>
-                  <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
+                  <Button variant="outline" onClick={() => { setIsImportDialogOpen(true); resetImportDialog(); }}>
                       <Upload className="mr-2 h-4 w-4" /> Importar Alunos
                   </Button>
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -683,43 +739,86 @@ export default function MembersPage() {
       </AlertDialog>
 
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-4xl">
             <DialogHeader>
-                <DialogTitle>Importar Alunos por CSV</DialogTitle>
+                <DialogTitle>Importar Alunos</DialogTitle>
                 <DialogDescription>
-                    Faça o upload de um arquivo CSV para cadastrar múltiplos alunos de uma só vez.
+                  {importStep === 1 
+                    ? "Faça o upload de um arquivo CSV ou Excel para cadastrar múltiplos alunos. O sistema importará as colunas: Nome, Email, Plano, Vence e Situação."
+                    : "Confirme os dados para importação. Alunos com erros não serão importados."}
                 </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-                <div className="grid gap-2">
-                    <Label htmlFor="csv-file">Arquivo CSV</Label>
-                    <Input 
-                        id="csv-file" 
-                        type="file" 
-                        accept=".csv"
-                        onChange={(e) => e.target.files && setCsvFile(e.target.files[0])}
-                        disabled={isImporting}
-                    />
-                    <Button variant="link" size="sm" className="p-0 h-auto justify-start" onClick={handleDownloadTemplate}>
-                      Baixar modelo de exemplo
-                    </Button>
-                    <p className="text-xs text-muted-foreground">O arquivo deve conter as colunas: Nome, Email, Telefone, Plano, Vence (YYYY-MM-DD), Status.</p>
-                </div>
-                {csvFile && !isImporting && (
-                    <div className="text-sm font-medium">
-                        Arquivo selecionado: {csvFile.name}
-                    </div>
+
+            {importStep === 1 && (
+              <div className="space-y-4 py-4">
+                  <div className="grid gap-2">
+                      <Label htmlFor="csv-file">Arquivo CSV ou Excel</Label>
+                      <Input 
+                          id="csv-file" 
+                          type="file" 
+                          accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                          onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+                          disabled={isImporting}
+                      />
+                      <Button variant="link" size="sm" className="p-0 h-auto justify-start" onClick={handleDownloadTemplate}>
+                        Baixar modelo de exemplo (.csv)
+                      </Button>
+                  </div>
+              </div>
+            )}
+            
+            {importStep === 2 && (
+              <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
+                {importErrors.length > 0 && (
+                  <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
+                    <h3 className="font-bold mb-2">Erros Encontrados:</h3>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {importErrors.map((err, i) => <li key={i}>{err}</li>)}
+                    </ul>
+                  </div>
                 )}
-            </div>
+                <h3 className="font-bold">Pré-visualização ({importPreview.length} alunos):</h3>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Plano</TableHead>
+                      <TableHead>Vencimento</TableHead>
+                      <TableHead>Situação</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {importPreview.map((member, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{member.name}</TableCell>
+                        <TableCell>{member.email}</TableCell>
+                        <TableCell><Badge variant="outline">{member.plan}</Badge></TableCell>
+                        <TableCell>{member.expires}</TableCell>
+                        <TableCell><Badge variant={member.status === 'Ativo' ? 'secondary' : 'destructive'}>{member.status}</Badge></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
             <DialogFooter>
                 <Button variant="ghost" onClick={() => setIsImportDialogOpen(false)}>Cancelar</Button>
-                <Button 
-                    onClick={handleImportSubmit}
-                    disabled={isImporting || !csvFile}
-                >
-                    {isImporting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Importar Alunos
-                </Button>
+                {importStep === 1 && (
+                  <Button onClick={handlePreviewImport} disabled={isImporting || !importFile}>
+                    {isImporting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Visualizar Importação
+                  </Button>
+                )}
+                 {importStep === 2 && (
+                   <div className="flex gap-2">
+                      <Button variant="outline" onClick={() => setImportStep(1)}>Voltar</Button>
+                      <Button onClick={handleConfirmImport} disabled={isImporting || importPreview.length === 0}>
+                        {isImporting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Confirmar e Importar {importPreview.length} Alunos
+                      </Button>
+                   </div>
+                )}
             </DialogFooter>
         </DialogContent>
       </Dialog>
