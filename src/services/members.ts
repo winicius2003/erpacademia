@@ -1,10 +1,25 @@
 'use server';
 
 import { format, addMonths } from 'date-fns';
-import type { Member as MemberType } from '@/app/dashboard/members/page';
 
-// The full Member type is defined in the page, we can reuse it
-export type Member = MemberType;
+export type Member = {
+  id: string,
+  name: string,
+  email: string,
+  phone: string,
+  plan: string,
+  status: "Ativo" | "Inativo" | "Atrasado",
+  expires: string,
+  cpf: string,
+  rg: string,
+  professor: string,
+  attendanceStatus: "Presente" | "Faltante",
+  workoutStatus: "Completo" | "Pendente",
+  goal: string,
+  notes: string,
+  accessPin?: string,
+  fingerprintRegistered?: boolean,
+};
 
 
 // --- In-Memory Database ---
@@ -36,14 +51,14 @@ export async function getMemberByPin(pin: string): Promise<Member | null> {
     return Promise.resolve(member || null);
 }
 
-export async function addMember(memberData: Omit<Member, 'id'>): Promise<string> {
+export async function addMember(memberData: Omit<Member, 'id'>): Promise<Member> {
     const newId = (nextId++).toString();
     const newMember: Member = {
         id: newId,
         ...memberData,
     };
     members.push(newMember);
-    return Promise.resolve(newId);
+    return Promise.resolve(newMember);
 }
 
 export async function updateMember(id: string, memberData: Partial<Omit<Member, 'id'>>): Promise<void> {

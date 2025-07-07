@@ -73,27 +73,10 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { getMembers, addMember, updateMember, deleteMember } from "@/services/members"
+import { getMembers, addMember, updateMember, deleteMember, type Member } from "@/services/members"
 import { useSubscription } from "@/lib/subscription-context"
+import { getPlans, type Plan } from "@/services/plans"
 
-export type Member = {
-  id: string,
-  name: string,
-  email: string,
-  phone: string,
-  plan: string,
-  status: "Ativo" | "Inativo" | "Atrasado",
-  expires: string,
-  cpf: string,
-  rg: string,
-  professor: string,
-  attendanceStatus: "Presente" | "Faltante",
-  workoutStatus: "Completo" | "Pendente",
-  goal: string,
-  notes: string,
-  accessPin?: string,
-  fingerprintRegistered?: boolean,
-};
 
 const initialMemberFormState = {
   id: "",
@@ -131,6 +114,7 @@ export default function MembersPage() {
   const { status: subscriptionStatus } = useSubscription()
 
   const [members, setMembers] = React.useState<Member[]>([])
+  const [plans, setPlans] = React.useState<Plan[]>([]);
   const [isLoading, setIsLoading] = React.useState(true)
   const [filteredMembers, setFilteredMembers] = React.useState<Member[]>([]);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -143,15 +127,16 @@ export default function MembersPage() {
 
   const isAddingBlocked = subscriptionStatus === 'blocked';
 
-  const fetchMembers = React.useCallback(async () => {
+  const fetchData = React.useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await getMembers();
-      setMembers(data);
+      const [membersData, plansData] = await Promise.all([getMembers(), getPlans()]);
+      setMembers(membersData);
+      setPlans(plansData);
     } catch (error) {
       toast({
-        title: "Erro ao buscar alunos",
-        description: "Não foi possível carregar a lista de alunos.",
+        title: "Erro ao buscar dados",
+        description: "Não foi possível carregar os dados de alunos e planos.",
         variant: "destructive",
       });
     } finally {
@@ -160,8 +145,8 @@ export default function MembersPage() {
   }, [toast]);
 
   React.useEffect(() => {
-    fetchMembers();
-  }, [fetchMembers]);
+    fetchData();
+  }, [fetchData]);
 
 
   React.useEffect(() => {
@@ -250,7 +235,7 @@ export default function MembersPage() {
         goal: memberFormData.goal,
         notes: memberFormData.notes,
         accessPin: memberFormData.accessPin,
-        fingerprintRegistered: false, // This would be updated by the biometric device integration
+        fingerprintRegistered: false,
     };
 
     setIsLoading(true);
@@ -258,16 +243,28 @@ export default function MembersPage() {
         if (isEditing) {
             await updateMember(memberFormData.id, memberDataToSave);
             toast({ title: "Aluno Atualizado", description: "Os dados do aluno foram atualizados com sucesso." });
+            fetchData();
+            setIsDialogOpen(false);
+            setIsLoading(false);
         } else {
-            await addMember(memberDataToSave);
-            toast({ title: "Aluno Adicionado", description: "O novo aluno foi cadastrado com sucesso." });
+            const newMember = await addMember(memberDataToSave);
+            const selectedPlanData = plans.find(p => p.name === newMember.plan);
+            
+            toast({ title: "Aluno Adicionado", description: "Redirecionando para o primeiro pagamento." });
+
+            const query = new URLSearchParams({
+                action: 'new_payment',
+                studentId: newMember.id,
+                studentName: newMember.name,
+                planName: newMember.plan,
+                planPrice: selectedPlanData ? String(selectedPlanData.price) : "0",
+            });
+            
+            router.push(`/dashboard/financial?${query.toString()}`);
         }
-        fetchMembers();
     } catch (error) {
         toast({ title: "Erro", description: `Não foi possível salvar o aluno.`, variant: "destructive" });
-    } finally {
         setIsLoading(false);
-        setIsDialogOpen(false);
     }
   }
 
@@ -282,7 +279,7 @@ export default function MembersPage() {
     try {
         await deleteMember(memberToDelete.id);
         toast({ title: "Aluno Excluído", description: "O aluno foi removido do sistema." });
-        fetchMembers();
+        fetchData();
     } catch (error) {
         toast({ title: "Erro ao excluir", description: "Não foi possível remover o aluno.", variant: "destructive" });
     } finally {
@@ -395,9 +392,7 @@ export default function MembersPage() {
                                           <SelectValue placeholder="Selecione um plano" />
                                       </SelectTrigger>
                                       <SelectContent>
-                                          <SelectItem value="Mensal">Mensal</SelectItem>
-                                          <SelectItem value="Trimestral">Trimestral</SelectItem>
-                                          <SelectItem value="Anual">Anual</SelectItem>
+                                          {plans.map(plan => <SelectItem key={plan.id} value={plan.name}>{plan.name}</SelectItem>)}
                                       </SelectContent>
                                       </Select>
                                   </div>
@@ -494,7 +489,10 @@ export default function MembersPage() {
                         </Tabs>
                       </form>
                       <DialogFooter>
-                        <Button type="submit" form="add-member-form">{isEditing ? 'Salvar Alterações' : 'Salvar Aluno'}</Button>
+                        <Button type="submit" form="add-member-form" disabled={isLoading}>
+                            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            {isEditing ? 'Salvar Alterações' : 'Salvar e Ir para Pagamento'}
+                        </Button>
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>

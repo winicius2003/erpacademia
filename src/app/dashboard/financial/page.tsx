@@ -97,8 +97,8 @@ export default function FinancialPage() {
     const router = useRouter()
     const { toast } = useToast()
     const { status: subscriptionStatus } = useSubscription()
-    const studentId = searchParams.get('studentId')
-    const studentName = searchParams.get('studentName')
+    const studentIdParam = searchParams.get('studentId')
+    const studentNameParam = searchParams.get('studentName')
 
     const [user, setUser] = React.useState<{ id: string, name: string, role: Role } | null>(null);
     const [payments, setPayments] = React.useState<Payment[]>([])
@@ -157,6 +157,32 @@ export default function FinancialPage() {
         }
         fetchData();
     }, [fetchData]);
+    
+     // Effect to handle the post-member-creation payment flow
+    React.useEffect(() => {
+        const action = searchParams.get('action');
+        const studentId = searchParams.get('studentId');
+        const studentName = searchParams.get('studentName');
+        const planName = searchParams.get('planName');
+        const planPrice = searchParams.get('planPrice');
+
+        if (action === 'new_payment' && studentId && planName && planPrice && studentName) {
+            setNewPaymentData({
+                studentId: studentId,
+                date: new Date(),
+                items: [{ id: 1, description: planName, quantity: 1, price: parseFloat(planPrice) }],
+            });
+            setIsPaymentDialogOpen(true);
+            
+            toast({
+                title: "Primeiro Pagamento",
+                description: `Registre o pagamento inicial para ${studentName}.`,
+            });
+            
+            // Clean up URL to prevent re-triggering
+            router.replace('/dashboard/financial', { scroll: false });
+        }
+    }, [searchParams, router, toast]);
 
     // Effect for Cash Flow Tab
     React.useEffect(() => {
@@ -304,7 +330,7 @@ export default function FinancialPage() {
     
     const clearFilter = () => router.push('/dashboard/financial');
     
-    const defaultTab = studentName ? "payments" : "cashflow";
+    const defaultTab = studentNameParam ? "payments" : "cashflow";
 
     if (isLoading && !user) return <div className="flex h-64 w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
 
@@ -455,14 +481,14 @@ export default function FinancialPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <CardTitle className="font-headline">Histórico de Pagamentos</CardTitle>
-                                {studentName ? (
-                                    <CardDescription>Exibindo pagamentos para <span className="font-bold text-foreground">{studentName}</span>.</CardDescription>
+                                {studentNameParam ? (
+                                    <CardDescription>Exibindo pagamentos para <span className="font-bold text-foreground">{studentNameParam}</span>.</CardDescription>
                                 ) : (
                                     <CardDescription>Gerencie todos os pagamentos dos alunos.</CardDescription>
                                 )}
                             </div>
                             <div className="flex items-center gap-2">
-                                {studentName && (<Button variant="outline" size="sm" onClick={clearFilter}><X className="mr-2 h-4 w-4" />Limpar filtro</Button>)}
+                                {studentNameParam && (<Button variant="outline" size="sm" onClick={clearFilter}><X className="mr-2 h-4 w-4" />Limpar filtro</Button>)}
                                 <Button onClick={() => setIsPaymentDialogOpen(true)} disabled={isSalesBlocked} title={isSalesBlocked ? "Bloqueado por pendência" : ""}>
                                     <PlusCircle className="mr-2 h-4 w-4" />Registrar Pagamento
                                 </Button>
@@ -528,7 +554,7 @@ export default function FinancialPage() {
                         <Separator />
                         <div>
                             <Label className="mb-2 block">Itens da Fatura</Label>
-                            <div className="space-y-2">{newPaymentData.items.map((item, index) => (<div key={item.id} className="flex items-end gap-2"><div className="flex-1"><Label htmlFor={`item-desc-${index}`} className="sr-only">Descrição</Label><Select onValueChange={(value) => handleProductSelect(index, value)}><SelectTrigger><SelectValue placeholder="Selecione um item" /></SelectTrigger><SelectContent>{availableProducts.map(p => <SelectItem key={p.name} value={p.name}>{p.name}</SelectItem>)}</SelectContent></Select></div><div className="w-20"><Label htmlFor={`item-qty-${index}`} className="sr-only">Qtd.</Label><Input id={`item-qty-${index}`} type="number" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value))} placeholder="Qtd." /></div><div className="w-28"><Label htmlFor={`item-price-${index}`} className="sr-only">Preço</Label><Input id={`item-price-${index}`} type="number" step="0.01" value={item.price} onChange={(e) => handleItemChange(index, 'price', parseFloat(e.target.value))} placeholder="Preço" /></div><Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button></div>))}</div>
+                            <div className="space-y-2">{newPaymentData.items.map((item, index) => (<div key={item.id} className="flex items-end gap-2"><div className="flex-1"><Label htmlFor={`item-desc-${index}`} className="sr-only">Descrição</Label><Select onValueChange={(value) => handleProductSelect(index, value)} defaultValue={item.description}><SelectTrigger><SelectValue placeholder="Selecione um item" /></SelectTrigger><SelectContent>{availableProducts.map(p => <SelectItem key={p.name} value={p.name}>{p.name}</SelectItem>)}</SelectContent></Select></div><div className="w-20"><Label htmlFor={`item-qty-${index}`} className="sr-only">Qtd.</Label><Input id={`item-qty-${index}`} type="number" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value))} placeholder="Qtd." /></div><div className="w-28"><Label htmlFor={`item-price-${index}`} className="sr-only">Preço</Label><Input id={`item-price-${index}`} type="number" step="0.01" value={item.price} onChange={(e) => handleItemChange(index, 'price', parseFloat(e.target.value))} placeholder="Preço" /></div><Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button></div>))}</div>
                             <Button type="button" variant="outline" size="sm" className="mt-2" onClick={handleAddItem}>Adicionar Item</Button>
                         </div>
                         <Separator />

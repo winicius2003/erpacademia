@@ -11,7 +11,8 @@ export type Plan = {
 let plans: Plan[] = [
     { id: 'plan-1', name: 'Mensal', price: 97.00, durationDays: 30 },
     { id: 'plan-2', name: 'Trimestral', price: 277.00, durationDays: 90 },
-    { id: 'plan-3', name: 'Anual', price: 997.00, durationDays: 365 },
+    { id: 'plan-3', name: 'Semestral', price: 550.00, durationDays: 180 },
+    { id: 'plan-4', name: 'Anual', price: 997.00, durationDays: 365 },
 ];
 let nextId = plans.length + 1;
 
