@@ -101,6 +101,8 @@ export default function FinancialPage() {
 
     // State to manage the post-creation payment trigger
     const [paymentAction, setPaymentAction] = React.useState<{studentId: string; studentName: string; planName: string; planPrice: string;} | null>(null);
+    const [hasAttemptedRefetch, setHasAttemptedRefetch] = React.useState(false);
+
 
     const [user, setUser] = React.useState<{ id: string, name: string, role: Role } | null>(null);
     const [payments, setPayments] = React.useState<Payment[]>([])
@@ -181,27 +183,29 @@ export default function FinancialPage() {
     }, []); // Run only once on mount to capture the params
 
     // Part 2: Open dialog only when the trigger is set and the data is ready
-    React.useEffect(() => {
+     React.useEffect(() => {
         if (paymentAction && members.length > 0) {
             const studentExists = members.some(m => m.id === paymentAction.studentId);
             if (studentExists) {
+                // SUCCESS: Student found, open dialog.
                 setNewPaymentData({
                     studentId: paymentAction.studentId,
                     date: new Date(),
                     items: [{ id: 1, description: paymentAction.planName, quantity: 1, price: parseFloat(paymentAction.planPrice) }],
                 });
                 setIsPaymentDialogOpen(true);
-                
                 toast({
                     title: "Primeiro Pagamento",
                     description: `Registre o pagamento inicial para ${paymentAction.studentName}.`,
                 });
-                
-                // Reset the action so it doesn't trigger on subsequent re-renders
-                setPaymentAction(null);
+                setPaymentAction(null); // Reset action
+            } else if (!hasAttemptedRefetch) {
+                // FAIL: Student not found, try to refetch data ONCE.
+                setHasAttemptedRefetch(true); // Mark that we've tried to refetch
+                fetchData(); // Call fetchData again, hopefully it gets the fresh list
             }
         }
-    }, [paymentAction, members, toast]);
+    }, [paymentAction, members, toast, fetchData, hasAttemptedRefetch]);
 
     // Effect for Cash Flow Tab
     React.useEffect(() => {
