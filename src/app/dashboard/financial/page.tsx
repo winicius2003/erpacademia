@@ -5,7 +5,7 @@ import * as React from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { format, isToday, isSameDay, parseISO } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { MoreHorizontal, PlusCircle, Download, Calendar as CalendarIcon, DollarSign, TrendingUp, Users, AlertCircle, Trash2, X, Target, Loader2, UsersRound, ArrowRightLeft, MinusCircle } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Download, Calendar as CalendarIcon, DollarSign, TrendingUp, Users, AlertCircle, Trash2, X, Target, Loader2, UsersRound, ArrowRightLeft, MinusCircle, ChevronsUpDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -119,6 +119,9 @@ export default function FinancialPage() {
     const [isExpenseDialogOpen, setIsExpenseDialogOpen] = React.useState(false)
     const [isInvoiceOpen, setIsInvoiceOpen] = React.useState(false)
     const [currentInvoice, setCurrentInvoice] = React.useState<Payment | null>(null)
+    const [isStudentComboboxOpen, setIsStudentComboboxOpen] = React.useState(false)
+    const [studentSearch, setStudentSearch] = React.useState("")
+
 
     // States for cashier closing
     const [todaySummary, setTodaySummary] = React.useState({ inflow: 0, outflow: 0, balance: 0 })
@@ -136,9 +139,23 @@ export default function FinancialPage() {
                 getPlans(),
                 getProducts()
             ]);
+            
+            // Check for a newly added member from sessionStorage to fix state refresh issue
+            const newlyAddedMemberJson = sessionStorage.getItem('fitcore.newlyAddedMember');
+            let finalMembersData = membersData;
+
+            if (newlyAddedMemberJson) {
+                const newMember = JSON.parse(newlyAddedMemberJson);
+                // Ensure we don't add a duplicate if the fetch was fast enough
+                if (!membersData.some(m => m.id === newMember.id)) {
+                    finalMembersData = [newMember, ...membersData];
+                }
+                sessionStorage.removeItem('fitcore.newlyAddedMember');
+            }
+            
+            setMembers(finalMembersData); // Use the potentially updated list
             setPayments(paymentsData);
             setExpenses(expensesData);
-            setMembers(membersData);
 
             const planItems = plansData.map(p => ({ name: p.name, price: p.price }));
             const productItems = productsData.map(p => ({ name: p.name, price: p.price }));
@@ -563,7 +580,55 @@ export default function FinancialPage() {
                 <form id="payment-form" onSubmit={handleSavePayment}>
                     <div className="grid gap-4 py-4">
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="grid gap-2"><Label htmlFor="student">Aluno</Label><Select value={newPaymentData.studentId} onValueChange={(value) => setNewPaymentData({ ...newPaymentData, studentId: value })}><SelectTrigger><SelectValue placeholder="Selecione um aluno" /></SelectTrigger><SelectContent>{members.map((member) => (<SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>))}</SelectContent></Select></div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="student">Aluno</Label>
+                                <Popover open={isStudentComboboxOpen} onOpenChange={setIsStudentComboboxOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            aria-expanded={isStudentComboboxOpen}
+                                            className="w-full justify-between"
+                                        >
+                                            {newPaymentData.studentId
+                                                ? members.find((member) => member.id === newPaymentData.studentId)?.name
+                                                : "Selecione ou pesquise um aluno..."}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)]" align="start">
+                                        <div className="p-2">
+                                            <Input
+                                                placeholder="Pesquisar aluno..."
+                                                value={studentSearch}
+                                                onChange={(e) => setStudentSearch(e.target.value)}
+                                                autoFocus
+                                            />
+                                        </div>
+                                        <div className="max-h-[250px] overflow-auto">
+                                            {members
+                                                .filter(member => member.name.toLowerCase().includes(studentSearch.toLowerCase()))
+                                                .map((member) => (
+                                                    <div
+                                                        key={member.id}
+                                                        className="text-sm p-2 cursor-pointer hover:bg-accent flex items-center gap-2"
+                                                        onClick={() => {
+                                                            setNewPaymentData({ ...newPaymentData, studentId: member.id });
+                                                            setIsStudentComboboxOpen(false);
+                                                            setStudentSearch("");
+                                                        }}
+                                                    >
+                                                        {member.name}
+                                                    </div>
+                                                ))
+                                            }
+                                            {members.filter(member => member.name.toLowerCase().includes(studentSearch.toLowerCase())).length === 0 && (
+                                                <p className="p-2 text-sm text-center text-muted-foreground">Nenhum aluno encontrado.</p>
+                                            )}
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
                             <div className="grid gap-2"><Label htmlFor="paymentDate">Data</Label><Popover><PopoverTrigger asChild><Button variant={"outline"} className={cn("w-full justify-start text-left", !newPaymentData.date && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{newPaymentData.date ? format(newPaymentData.date, "dd/MM/yyyy") : <span>Escolha uma data</span>}</Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={newPaymentData.date} onSelect={(date) => date && setNewPaymentData({...newPaymentData, date})} initialFocus /></PopoverContent></Popover></div>
                         </div>
                         <Separator />
