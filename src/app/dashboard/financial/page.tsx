@@ -140,20 +140,7 @@ export default function FinancialPage() {
                 getProducts()
             ]);
             
-            // Check for a newly added member from sessionStorage to fix state refresh issue
-            const newlyAddedMemberJson = sessionStorage.getItem('fitcore.newlyAddedMember');
-            let finalMembersData = membersData;
-
-            if (newlyAddedMemberJson) {
-                const newMember = JSON.parse(newlyAddedMemberJson);
-                // Ensure we don't add a duplicate if the fetch was fast enough
-                if (!membersData.some(m => m.id === newMember.id)) {
-                    finalMembersData = [newMember, ...membersData];
-                }
-                sessionStorage.removeItem('fitcore.newlyAddedMember');
-            }
-            
-            setMembers(finalMembersData); // Use the potentially updated list
+            setMembers(membersData);
             setPayments(paymentsData);
             setExpenses(expensesData);
 

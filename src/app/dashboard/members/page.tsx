@@ -249,9 +249,6 @@ export default function MembersPage() {
         } else {
             const newMember = await addMember(memberDataToSave);
             const selectedPlanData = plans.find(p => p.name === newMember.plan);
-
-            // Store new member in session storage for the financial page to pick up
-            sessionStorage.setItem('fitcore.newlyAddedMember', JSON.stringify(newMember));
             
             toast({ title: "Aluno Adicionado", description: "Redirecionando para o primeiro pagamento." });
 
