@@ -166,7 +166,8 @@ export default function FinancialPage() {
         const planName = searchParams.get('planName');
         const planPrice = searchParams.get('planPrice');
 
-        if (action === 'new_payment' && studentId && planName && planPrice && studentName) {
+        // Only proceed if we have members loaded and the correct action is present
+        if (action === 'new_payment' && studentId && planName && planPrice && studentName && members.length > 0) {
             setNewPaymentData({
                 studentId: studentId,
                 date: new Date(),
@@ -182,7 +183,7 @@ export default function FinancialPage() {
             // Clean up URL to prevent re-triggering
             router.replace('/dashboard/financial', { scroll: false });
         }
-    }, [searchParams, router, toast]);
+    }, [searchParams, router, toast, members]); // Add members to dependency array
 
     // Effect for Cash Flow Tab
     React.useEffect(() => {

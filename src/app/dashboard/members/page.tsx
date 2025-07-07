@@ -373,7 +373,18 @@ export default function MembersPage() {
                                           </Button>
                                       </PopoverTrigger>
                                       <PopoverContent className="w-auto p-0">
-                                          <Calendar mode="single" selected={memberFormData.dob} onSelect={(d) => handleInputChange('dob', d)} initialFocus />
+                                          <Calendar
+                                            mode="single"
+                                            selected={memberFormData.dob}
+                                            onSelect={(d) => handleInputChange('dob', d)}
+                                            captionLayout="dropdown-buttons"
+                                            fromYear={1940}
+                                            toYear={new Date().getFullYear()}
+                                            disabled={(date) =>
+                                              date > new Date() || date < new Date("1940-01-01")
+                                            }
+                                            initialFocus
+                                          />
                                       </PopoverContent>
                                       </Popover>
                                   </div>
