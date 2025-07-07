@@ -97,8 +97,10 @@ export default function FinancialPage() {
     const router = useRouter()
     const { toast } = useToast()
     const { status: subscriptionStatus } = useSubscription()
-    const studentIdParam = searchParams.get('studentId')
     const studentNameParam = searchParams.get('studentName')
+
+    // State to manage the post-creation payment trigger
+    const [paymentAction, setPaymentAction] = React.useState<{studentId: string; studentName: string; planName: string; planPrice: string;} | null>(null);
 
     const [user, setUser] = React.useState<{ id: string, name: string, role: Role } | null>(null);
     const [payments, setPayments] = React.useState<Payment[]>([])
@@ -158,7 +160,7 @@ export default function FinancialPage() {
         fetchData();
     }, [fetchData]);
     
-     // Effect to handle the post-member-creation payment flow
+    // Part 1: Check for action on mount, store it in state, and clean the URL
     React.useEffect(() => {
         const action = searchParams.get('action');
         const studentId = searchParams.get('studentId');
@@ -166,24 +168,36 @@ export default function FinancialPage() {
         const planName = searchParams.get('planName');
         const planPrice = searchParams.get('planPrice');
 
-        // Only proceed if we have members loaded and the correct action is present
-        if (action === 'new_payment' && studentId && planName && planPrice && studentName && members.length > 0) {
-            setNewPaymentData({
-                studentId: studentId,
-                date: new Date(),
-                items: [{ id: 1, description: planName, quantity: 1, price: parseFloat(planPrice) }],
-            });
-            setIsPaymentDialogOpen(true);
-            
-            toast({
-                title: "Primeiro Pagamento",
-                description: `Registre o pagamento inicial para ${studentName}.`,
-            });
-            
+        if (action === 'new_payment' && studentId && studentName && planName && planPrice) {
+            setPaymentAction({ studentId, studentName, planName, planPrice });
             // Clean up URL to prevent re-triggering
             router.replace('/dashboard/financial', { scroll: false });
         }
-    }, [searchParams, router, toast, members]); // Add members to dependency array
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Run only once on mount to capture the params
+
+    // Part 2: Open dialog only when the trigger is set and the data is ready
+    React.useEffect(() => {
+        if (paymentAction && members.length > 0) {
+            const studentExists = members.some(m => m.id === paymentAction.studentId);
+            if (studentExists) {
+                setNewPaymentData({
+                    studentId: paymentAction.studentId,
+                    date: new Date(),
+                    items: [{ id: 1, description: paymentAction.planName, quantity: 1, price: parseFloat(paymentAction.planPrice) }],
+                });
+                setIsPaymentDialogOpen(true);
+                
+                toast({
+                    title: "Primeiro Pagamento",
+                    description: `Registre o pagamento inicial para ${paymentAction.studentName}.`,
+                });
+                
+                // Reset the action so it doesn't trigger on subsequent re-renders
+                setPaymentAction(null);
+            }
+        }
+    }, [paymentAction, members, toast]);
 
     // Effect for Cash Flow Tab
     React.useEffect(() => {
