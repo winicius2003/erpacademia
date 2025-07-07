@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -20,7 +21,6 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Logo } from "@/components/logo"
 import Image from "next/image"
 
 export function InvoiceDialog({ isOpen, onOpenChange, invoiceData }) {
