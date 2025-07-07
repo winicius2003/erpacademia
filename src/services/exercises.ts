@@ -5,7 +5,7 @@ export type ExerciseListItem = {
     exercises: string[];
 };
 
-export const exerciseList: ExerciseListItem[] = [
+const exerciseList: ExerciseListItem[] = [
     {
         group: 'Peito (Chest)',
         exercises: [
