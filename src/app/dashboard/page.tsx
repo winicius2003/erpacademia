@@ -3,7 +3,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Users, UserMinus, TrendingUp, BadgePercent, Loader2, UserX, ClipboardX, CalendarCheck, Target, CakeSlice } from "lucide-react"
+import { Users, UserMinus, TrendingUp, BadgePercent, Loader2, UserX, ClipboardX, CalendarCheck, Target, CakeSlice, MessageCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import {
@@ -49,8 +49,29 @@ const projectedRevenueData = Array.from({ length: 30 }, (_, i) => {
 });
 
 
-function OperationalStat({ title, icon: Icon, members, theme, emptyText }: { title: string, icon: React.ElementType, members: Member[], theme: {bg: string, text: string}, emptyText: string }) {
+function OperationalStat({ title, icon: Icon, members, theme, emptyText, messageType }: { title: string, icon: React.ElementType, members: Member[], theme: {bg: string, text: string}, emptyText: string, messageType?: 'birthday' | 'absent' }) {
     const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+
+    const handleSendMessage = (phone: string, name: string) => {
+        if (!phone || !messageType) return;
+        
+        const cleanedPhone = phone.replace(/\D/g, '');
+        let message = '';
+
+        if (messageType === 'birthday') {
+            message = `Olá, ${name}! A equipe da Academia Exemplo deseja a você um feliz aniversário! 🎉🎂 Muitas felicidades e ótimos treinos!`;
+        } else if (messageType === 'absent') {
+            message = `Olá, ${name}! Sentimos sua falta aqui na Academia Exemplo. Que tal voltar a treinar com a gente e manter o foco nos seus objetivos? Estamos te esperando! 💪😊`;
+        }
+
+        if (!message) return;
+
+        // Assumes BR country code '55' if not present.
+        const fullPhone = cleanedPhone.length > 11 ? cleanedPhone : `55${cleanedPhone}`;
+
+        const url = `https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank', 'noopener,noreferrer');
+    };
 
     return (
         <>
@@ -89,11 +110,25 @@ function OperationalStat({ title, icon: Icon, members, theme, emptyText }: { tit
                                             </Avatar>
                                             <span className="font-medium">{member.name}</span>
                                         </div>
-                                        <Link href={`/dashboard/members/${member.id}`} legacyBehavior>
-                                          <a onClick={() => setIsDialogOpen(false)}>
-                                            <Button variant="ghost" size="sm">Ver Ficha</Button>
-                                          </a>
-                                        </Link>
+                                        <div className="flex items-center gap-1">
+                                            {messageType && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handleSendMessage(member.phone, member.name)}
+                                                    disabled={!member.phone}
+                                                    title={!member.phone ? "Telefone não cadastrado" : "Enviar mensagem no WhatsApp"}
+                                                >
+                                                    <MessageCircle className="h-4 w-4" />
+                                                    <span className="hidden sm:inline ml-1">WhatsApp</span>
+                                                </Button>
+                                            )}
+                                            <Link href={`/dashboard/members/${member.id}`} legacyBehavior>
+                                              <a onClick={() => setIsDialogOpen(false)}>
+                                                <Button variant="ghost" size="sm">Ver Ficha</Button>
+                                              </a>
+                                            </Link>
+                                        </div>
                                     </li>
                                 ))}
                             </ul>
@@ -246,6 +281,7 @@ export default function Dashboard() {
                   members={operationalStats.absent}
                   theme={{ bg: 'bg-yellow-100 dark:bg-yellow-900/50', text: 'text-yellow-600 dark:text-yellow-300' }}
                   emptyText="Nenhum aluno faltante nos últimos dias."
+                  messageType="absent"
                 />
                 <OperationalStat 
                   title="Aniversariantes do Dia"
@@ -253,6 +289,7 @@ export default function Dashboard() {
                   members={operationalStats.birthdays}
                   theme={{ bg: 'bg-sky-100 dark:bg-sky-900/50', text: 'text-sky-600 dark:text-sky-300' }}
                   emptyText="Nenhum aniversariante hoje."
+                  messageType="birthday"
                 />
             </CardContent>
         </Card>
