@@ -1,3 +1,4 @@
+
 'use server';
 
 import { format } from 'date-fns';
@@ -61,12 +62,12 @@ export async function getPaymentsByStudentId(studentId: string): Promise<Payment
     return Promise.resolve(studentPayments);
 }
 
-export async function addPayment(paymentData: Omit<Payment, 'id'>): Promise<string> {
+export async function addPayment(paymentData: Omit<Payment, 'id'>): Promise<Payment> {
     const newId = `p${nextId++}`;
     const newPayment: Payment = {
         id: newId,
         ...paymentData,
     };
     payments.unshift(newPayment); // Add to the beginning of the list
-    return Promise.resolve(newId);
+    return Promise.resolve(newPayment);
 }
