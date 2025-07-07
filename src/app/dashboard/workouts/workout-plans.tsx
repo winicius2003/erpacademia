@@ -2,10 +2,11 @@
 
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useFieldArray, useForm, type SubmitHandler } from "react-hook-form"
+import { useFieldArray, useForm, type SubmitHandler, type UseFormReturn, type Control, type ControllerRenderProps } from "react-hook-form"
 import { z } from "zod"
-import { GripVertical, MoreVertical, PlusCircle, Trash2, XIcon, Loader2 } from "lucide-react"
+import { GripVertical, MoreVertical, PlusCircle, Trash2, XIcon, Loader2, ChevronsUpDown, Check } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import {
   Accordion,
   AccordionContent,
@@ -22,8 +23,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -32,7 +45,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useToast } from "@/hooks/use-toast"
-import { getWorkoutPlans, addWorkoutPlan, updateWorkoutPlan, deleteWorkoutPlan, type WorkoutPlan, type WorkoutDay, type Exercise } from "@/services/workouts"
+import { getWorkoutPlans, addWorkoutPlan, updateWorkoutPlan, deleteWorkoutPlan, type WorkoutPlan } from "@/services/workouts"
+import { getExercises, type ExerciseListItem } from "@/services/exercises"
+
 
 const exerciseSchema = z.object({
   id: z.string().optional(),
@@ -60,6 +75,7 @@ type WorkoutPlanFormValues = z.infer<typeof workoutPlanSchema>;
 
 export function WorkoutPlans() {
   const [plans, setPlans] = React.useState<WorkoutPlan[]>([]);
+  const [exerciseOptions, setExerciseOptions] = React.useState<ExerciseListItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [editingPlan, setEditingPlan] = React.useState<WorkoutPlan | null>(null);
@@ -80,21 +96,22 @@ export function WorkoutPlans() {
     name: "workouts",
   });
 
-  const fetchPlans = React.useCallback(async () => {
+  const fetchPlansAndExercises = React.useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await getWorkoutPlans();
-      setPlans(data);
+      const [plansData, exercisesData] = await Promise.all([getWorkoutPlans(), getExercises()]);
+      setPlans(plansData);
+      setExerciseOptions(exercisesData);
     } catch (error) {
-      toast({ title: "Erro ao buscar planos", variant: "destructive" });
+      toast({ title: "Erro ao buscar dados", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   }, [toast]);
 
   React.useEffect(() => {
-    fetchPlans();
-  }, [fetchPlans]);
+    fetchPlansAndExercises();
+  }, [fetchPlansAndExercises]);
 
   const handleAddNew = () => {
     setEditingPlan(null);
@@ -116,7 +133,7 @@ export function WorkoutPlans() {
   const handleDelete = async (planId: string) => {
     await deleteWorkoutPlan(planId);
     toast({ title: "Plano Excluído", description: "O plano de treino foi removido." });
-    fetchPlans();
+    fetchPlansAndExercises();
   };
 
   const onSubmit: SubmitHandler<WorkoutPlanFormValues> = async (data) => {
@@ -128,7 +145,7 @@ export function WorkoutPlans() {
         await addWorkoutPlan(data);
         toast({ title: "Plano Criado", description: "O novo plano de treino foi criado com sucesso." });
       }
-      fetchPlans();
+      fetchPlansAndExercises();
       setIsDialogOpen(false);
     } catch (error) {
       toast({ title: "Erro ao salvar", description: "Não foi possível salvar o plano.", variant: "destructive" });
@@ -273,7 +290,14 @@ export function WorkoutPlans() {
                 <Label className="text-lg font-semibold">Dias de Treino</Label>
                 <div className="space-y-4 mt-2">
                   {workoutFields.map((field, index) => (
-                    <WorkoutDayField key={field.id} control={form.control} dayIndex={index} removeDay={removeWorkout} />
+                    <WorkoutDayField 
+                      key={field.id} 
+                      control={form.control} 
+                      dayIndex={index} 
+                      removeDay={removeWorkout} 
+                      exerciseOptions={exerciseOptions}
+                      form={form}
+                    />
                   ))}
                 </div>
                 <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => appendWorkout({ name: `Treino ${String.fromCharCode(65 + workoutFields.length)}`, exercises: [{ name: "", sets: "3", reps: "10-12", rest: "60s" }] })}>
@@ -295,7 +319,19 @@ export function WorkoutPlans() {
   );
 }
 
-function WorkoutDayField({ control, dayIndex, removeDay }) {
+function WorkoutDayField({ 
+  control,
+  dayIndex, 
+  removeDay, 
+  exerciseOptions,
+  form
+} : {
+  control: Control<WorkoutPlanFormValues>,
+  dayIndex: number,
+  removeDay: (index: number) => void,
+  exerciseOptions: ExerciseListItem[],
+  form: UseFormReturn<WorkoutPlanFormValues>
+}) {
   const { fields, append, remove } = useFieldArray({
     control,
     name: `workouts.${dayIndex}.exercises`,
@@ -323,21 +359,28 @@ function WorkoutDayField({ control, dayIndex, removeDay }) {
       <CardContent className="p-4 pt-0">
         <div className="space-y-2">
           {fields.map((field, exIndex) => (
-            <div key={field.id} className="flex flex-wrap items-end gap-x-2 gap-y-4 p-2 -mx-2 rounded-md hover:bg-background/50">
-              <div className="flex items-center gap-2 flex-grow-[2] min-w-[150px] flex-1">
+            <div key={field.id} className="flex flex-wrap items-start gap-x-2 gap-y-2 p-2 -mx-2 rounded-md hover:bg-background/50">
+              <div className="flex items-center gap-2 flex-grow-[2] min-w-[200px] flex-1">
                   <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
-                  <FormField control={control} name={`workouts.${dayIndex}.exercises.${exIndex}.name`} render={({ field }) => (
-                      <FormItem className="w-full"><FormControl><Input placeholder="Exercício" {...field} /></FormControl></FormItem>
-                  )} />
+                   <FormField
+                      control={control}
+                      name={`workouts.${dayIndex}.exercises.${exIndex}.name`}
+                      render={({ field }) => (
+                        <FormItem className="w-full">
+                           <ExerciseCombobox field={field} exerciseOptions={exerciseOptions} />
+                           <FormMessage />
+                        </FormItem>
+                      )}
+                    />
               </div>
               <FormField control={control} name={`workouts.${dayIndex}.exercises.${exIndex}.sets`} render={({ field }) => (
-                <FormItem className="flex-grow min-w-[60px]"><FormControl><Input placeholder="Séries" {...field} /></FormControl></FormItem>
+                <FormItem className="flex-grow min-w-[60px]"><FormControl><Input placeholder="Séries" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={control} name={`workouts.${dayIndex}.exercises.${exIndex}.reps`} render={({ field }) => (
-                <FormItem className="flex-grow min-w-[70px]"><FormControl><Input placeholder="Reps" {...field} /></FormControl></FormItem>
+                <FormItem className="flex-grow min-w-[70px]"><FormControl><Input placeholder="Reps" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={control} name={`workouts.${dayIndex}.exercises.${exIndex}.rest`} render={({ field }) => (
-                <FormItem className="flex-grow min-w-[70px]"><FormControl><Input placeholder="Descanso" {...field} /></FormControl></FormItem>
+                <FormItem className="flex-grow min-w-[70px]"><FormControl><Input placeholder="Descanso" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
               <Button type="button" variant="ghost" size="icon" onClick={() => remove(exIndex)} className="h-9 w-9 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
             </div>
@@ -348,5 +391,76 @@ function WorkoutDayField({ control, dayIndex, removeDay }) {
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+
+function ExerciseCombobox({
+  field,
+  exerciseOptions,
+}: {
+  field: ControllerRenderProps<WorkoutPlanFormValues, `workouts.${number}.exercises.${number}.name`>;
+  exerciseOptions: ExerciseListItem[];
+}) {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <FormControl>
+          <Button
+            variant="outline"
+            role="combobox"
+            className={cn(
+              "w-full justify-between font-normal",
+              !field.value && "text-muted-foreground"
+            )}
+          >
+            {field.value || "Selecione ou digite um exercício"}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </FormControl>
+      </PopoverTrigger>
+      <PopoverContent className="w-[350px] p-0" align="start">
+        <Command>
+          <CommandInput
+            placeholder="Pesquisar exercício..."
+            onValueChange={field.onChange}
+            value={field.value || ''}
+          />
+          <CommandList>
+            <CommandEmpty>
+              <div className="p-2 text-sm text-muted-foreground">
+                Nenhum exercício encontrado.
+                <br />
+                O valor digitado será usado como um novo exercício.
+              </div>
+            </CommandEmpty>
+            {exerciseOptions.map((group) => (
+              <CommandGroup key={group.group} heading={group.group}>
+                {group.exercises.map((exercise) => (
+                  <CommandItem
+                    value={exercise}
+                    key={exercise}
+                    onSelect={() => {
+                      field.onChange(exercise);
+                      setOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        exercise === field.value ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {exercise}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            ))}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
