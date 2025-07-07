@@ -5,6 +5,7 @@ import * as React from "react"
 import { format } from "date-fns"
 import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Loader2, Search, Fingerprint, Upload } from "lucide-react"
 import { useRouter } from "next/navigation"
+import Papa from "papaparse"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -127,6 +128,7 @@ export default function MembersPage() {
 
   const [isImportDialogOpen, setIsImportDialogOpen] = React.useState(false)
   const [csvFile, setCsvFile] = React.useState<File | null>(null);
+  const [isImporting, setIsImporting] = React.useState(false);
 
   const isAddingBlocked = subscriptionStatus === 'blocked';
 
@@ -301,6 +303,99 @@ export default function MembersPage() {
 
   const handleViewPayments = (member: Member) => {
     router.push(`/dashboard/financial?studentId=${member.id}&studentName=${encodeURIComponent(member.name)}`);
+  };
+
+  const handleDownloadTemplate = () => {
+    const headers = "Nome,Email,Telefone,Plano,Vence (YYYY-MM-DD),Status";
+    const sampleData = "\nJoão Exemplo,joao@exemplo.com,(11) 99999-8888,Mensal,2025-08-30,Ativo";
+    const csvContent = "data:text/csv;charset=utf-8," + headers + sampleData;
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "modelo_importacao_alunos.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImportSubmit = async () => {
+    if (!csvFile) {
+        toast({ title: "Nenhum arquivo selecionado", variant: "destructive" });
+        return;
+    }
+    setIsImporting(true);
+    
+    Papa.parse(csvFile, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (results) => {
+            const newMembers = results.data as any[];
+            let successCount = 0;
+            let errorCount = 0;
+
+            const addMemberPromises = newMembers.map(async (row) => {
+                try {
+                    const name = row["Nome"] || row["name"];
+                    const email = row["Email"] || row["email"];
+                    const phone = row["Telefone"] || row["phone"];
+                    const plan = row["Plano"] || row["plan"];
+                    const expires = row["Vence (YYYY-MM-DD)"] || row["expires"] || row["Vence"];
+                    const status = row["Status"] || row["Situação"] || row["status"];
+                    
+                    if (!name || !email || !plan || !expires || !status) {
+                        console.warn("Linha ignorada por falta de dados:", row);
+                        errorCount++;
+                        return;
+                    }
+                    
+                    const memberData = {
+                        name: name,
+                        email: email,
+                        phone: phone || "",
+                        plan: plan,
+                        expires: new Date(expires).toISOString().split('T')[0], // Ensure YYYY-MM-DD
+                        status: status === "Ativo" ? "Ativo" : "Inativo",
+                        cpf: "",
+                        rg: "",
+                        dob: new Date().toISOString().split('T')[0],
+                        professor: "Não atribuído",
+                        attendanceStatus: "Presente" as const,
+                        workoutStatus: "Pendente" as const,
+                        goal: "",
+                        notes: "Aluno importado via CSV.",
+                        accessPin: "",
+                        fingerprintRegistered: false,
+                    };
+
+                    await addMember(memberData);
+                    successCount++;
+                } catch (e) {
+                    console.error("Erro ao importar linha:", row, e);
+                    errorCount++;
+                }
+            });
+
+            await Promise.all(addMemberPromises);
+
+            toast({
+                title: "Importação Concluída",
+                description: `${successCount} alunos importados com sucesso. ${errorCount > 0 ? `${errorCount} linhas falharam.` : ''}`,
+            });
+            
+            setIsImporting(false);
+            setIsImportDialogOpen(false);
+            setCsvFile(null);
+            fetchData();
+        },
+        error: (error) => {
+            toast({
+                title: "Erro ao ler o arquivo",
+                description: "Verifique o formato do arquivo CSV e tente novamente.",
+                variant: "destructive"
+            });
+            setIsImporting(false);
+        }
+    });
   };
 
   if (!user || isLoading) {
@@ -603,10 +698,14 @@ export default function MembersPage() {
                         type="file" 
                         accept=".csv"
                         onChange={(e) => e.target.files && setCsvFile(e.target.files[0])}
+                        disabled={isImporting}
                     />
-                    <p className="text-xs text-muted-foreground">O arquivo deve conter as colunas: `name`, `email`, `phone`, `plan`, `expires` (formato YYYY-MM-DD).</p>
+                    <Button variant="link" size="sm" className="p-0 h-auto justify-start" onClick={handleDownloadTemplate}>
+                      Baixar modelo de exemplo
+                    </Button>
+                    <p className="text-xs text-muted-foreground">O arquivo deve conter as colunas: Nome, Email, Telefone, Plano, Vence (YYYY-MM-DD), Status.</p>
                 </div>
-                {csvFile && (
+                {csvFile && !isImporting && (
                     <div className="text-sm font-medium">
                         Arquivo selecionado: {csvFile.name}
                     </div>
@@ -615,24 +714,11 @@ export default function MembersPage() {
             <DialogFooter>
                 <Button variant="ghost" onClick={() => setIsImportDialogOpen(false)}>Cancelar</Button>
                 <Button 
-                    onClick={() => {
-                        if (csvFile) {
-                            toast({
-                                title: "Importação Iniciada",
-                                description: "Os alunos estão sendo importados em segundo plano. Você será notificado quando o processo for concluído.",
-                            });
-                            setIsImportDialogOpen(false);
-                            setCsvFile(null);
-                        } else {
-                            toast({
-                                title: "Nenhum arquivo selecionado",
-                                description: "Por favor, selecione um arquivo CSV para importar.",
-                                variant: "destructive",
-                            })
-                        }
-                    }}
+                    onClick={handleImportSubmit}
+                    disabled={isImporting || !csvFile}
                 >
-                    Importar
+                    {isImporting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Importar Alunos
                 </Button>
             </DialogFooter>
         </DialogContent>
