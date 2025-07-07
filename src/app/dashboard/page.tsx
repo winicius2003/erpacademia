@@ -24,8 +24,8 @@ const adminStatsTemplate = [
   { key: "monthlyRevenue", title: "Receita Mensal", value: "R$ 45.231,89", change: "+20.1% em relação ao último mês", Icon: TrendingUp },
   { key: "retentionRate", title: "Taxa de Retenção", value: "92%", change: "+2% em relação ao último mês", Icon: BadgePercent },
   { key: "renewalRate", title: "Índice de Renovação", value: "85%", change: "dos alunos elegíveis renovaram", Icon: BadgePercent },
-  { key: "defaultRate", title: "Índice de Inadimplência", value: "0%", change: "de alunos com pagamentos atrasados", Icon: UserX },
-  { key: "inactiveMembers", title: "Alunos Inativos", Icon: Users },
+  { key: "riskGroup", title: "Grupo de Risco", Icon: Target },
+  { key: "defaultRate", title: "Índice de Inadimplência", Icon: UserX },
 ];
 
 // Dummy data for the new projected revenue chart
@@ -96,27 +96,28 @@ export default function Dashboard() {
   
   const getAdminStats = () => {
     const totalMembers = members.length;
-    if (totalMembers === 0) return [];
+    if (totalMembers === 0) return adminStatsTemplate.map(s => ({...s, value: s.value || '0'}));
 
     const activeMembers = members.filter(m => m.status === 'Ativo');
-    const inactiveMembers = members.filter(m => m.status === 'Inativo');
     const overdueMembers = members.filter(m => m.status === 'Atrasado');
+    const riskGroupMembers = members.filter(m => m.attendanceStatus === 'Faltante' && m.status === 'Ativo');
 
-    const defaultRate = (overdueMembers.length / totalMembers) * 100;
+    const defaultRate = activeMembers.length > 0 ? (overdueMembers.length / activeMembers.length) * 100 : 0;
 
     const statsValues = {
-      activeMembers: activeMembers.length.toString(),
-      inactiveMembers: inactiveMembers.length.toString(),
-      defaultRate: `${defaultRate.toFixed(1)}%`,
+      activeMembers: { value: activeMembers.length.toString(), change: `${activeMembers.length} de ${totalMembers} alunos totais` },
+      defaultRate: { value: `${defaultRate.toFixed(1)}%`, change: `${overdueMembers.length} alunos com pagamentos atrasados` },
+      riskGroup: { value: riskGroupMembers.length.toString(), change: 'Alunos ativos com baixa frequência' }
     };
     
-    return adminStatsTemplate.map(stat => ({
-        ...stat,
-        value: stat.key in statsValues ? statsValues[stat.key as keyof typeof statsValues] : stat.value,
-        change: stat.key === 'activeMembers' ? `${activeMembers.length} de ${totalMembers} alunos totais` 
-              : stat.key === 'inactiveMembers' ? `${inactiveMembers.length} alunos cancelaram ou congelaram`
-              : stat.change,
-    }));
+    return adminStatsTemplate.map(stat => {
+        const dynamicStat = statsValues[stat.key as keyof typeof statsValues];
+        return {
+            ...stat,
+            value: dynamicStat ? dynamicStat.value : stat.value,
+            change: dynamicStat ? dynamicStat.change : stat.change,
+        }
+    });
   }
 
   const stats = user.role === 'Professor' ? getProfessorStats() : getAdminStats();
