@@ -65,6 +65,16 @@ export function InvoiceDialog({ isOpen, onOpenChange, invoiceData }) {
             <h3 className="font-semibold mb-2 text-muted-foreground">Cobrança para:</h3>
             <p className="font-medium">{invoiceData.student}</p>
           </div>
+
+          <Separator className="my-4" />
+
+          <div>
+            <h3 className="font-semibold mb-2 text-muted-foreground">Detalhes do Pagamento</h3>
+            <p className="text-sm"><strong>Método:</strong> {invoiceData.paymentMethod}</p>
+            {invoiceData.transactionId && (
+                <p className="text-sm"><strong>ID da Transação:</strong> {invoiceData.transactionId}</p>
+            )}
+          </div>
           
           <Separator className="my-4" />
           

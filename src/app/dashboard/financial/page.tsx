@@ -69,7 +69,7 @@ import { InvoiceDialog } from "@/components/invoice-dialog"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { getMembers, type Member } from "@/services/members"
-import { getPayments, addPayment, type Payment } from "@/services/payments"
+import { getPayments, addPayment, type Payment, type PaymentMethod } from "@/services/payments"
 import { getExpenses, addExpense, type Expense, type ExpenseCategory } from "@/services/expenses"
 import { useSubscription } from "@/lib/subscription-context"
 import { getPlans } from "@/services/plans"
@@ -90,6 +90,14 @@ const initialExpenseFormState = {
     description: "",
     amount: 0,
     category: "Outros" as ExpenseCategory,
+}
+
+const initialPaymentFormState = {
+    studentId: "",
+    date: new Date(),
+    items: [{ id: 1, description: "", quantity: 1, price: 0.00 }],
+    paymentMethod: "Dinheiro" as PaymentMethod,
+    transactionId: "",
 }
 
 export default function FinancialPage() {
@@ -188,11 +196,11 @@ export default function FinancialPage() {
             const studentExists = members.some(m => m.id === paymentAction.studentId);
             if (studentExists) {
                 // SUCCESS: Student found, open dialog.
-                setNewPaymentData({
+                setNewPaymentData(prev => ({
+                    ...prev,
                     studentId: paymentAction.studentId,
-                    date: new Date(),
                     items: [{ id: 1, description: paymentAction.planName, quantity: 1, price: parseFloat(paymentAction.planPrice) }],
-                });
+                }));
                 setIsPaymentDialogOpen(true);
                 toast({
                     title: "Primeiro Pagamento",
@@ -279,11 +287,7 @@ export default function FinancialPage() {
     }, [payments, expenses, user]);
 
     // Payment Dialog Logic
-    const [newPaymentData, setNewPaymentData] = React.useState({
-        studentId: "",
-        date: new Date(),
-        items: [{ id: 1, description: "", quantity: 1, price: 0.00 }],
-    });
+    const [newPaymentData, setNewPaymentData] = React.useState(initialPaymentFormState);
     const totalAmount = newPaymentData.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
     const handleItemChange = (index, field, value) => setNewPaymentData(p => ({ ...p, items: p.items.map((it, i) => i === index ? {...it, [field]: value} : it) }));
     const handleAddItem = () => setNewPaymentData(p => ({ ...p, items: [...p.items, { id: Date.now(), description: "", quantity: 1, price: 0 }] }));
@@ -306,16 +310,18 @@ export default function FinancialPage() {
             studentId: newPaymentData.studentId, student: selectedMember.name, items: newPaymentData.items,
             amount: totalAmount.toFixed(2), date: format(newPaymentData.date, "yyyy-MM-dd"),
             time: format(new Date(), "HH:mm"), status: "Pago", registeredById: user.id, registeredByName: user.name,
+            paymentMethod: newPaymentData.paymentMethod,
+            transactionId: newPaymentData.transactionId
         };
 
         setIsLoading(true);
         try {
-            const savedPayment = await addPayment(newPayment);
+            const savedPayment = await addPayment(newPayment as Omit<Payment, 'id'>);
             setPayments(prev => [savedPayment, ...prev]);
             setCurrentInvoice(savedPayment);
             setIsPaymentDialogOpen(false);
             setIsInvoiceOpen(true);
-            setNewPaymentData({ studentId: "", date: new Date(), items: [{ id: 1, description: "", quantity: 1, price: 0.00 }] });
+            setNewPaymentData(initialPaymentFormState);
             toast({ title: "Pagamento Registrado" });
         } catch (error) {
             toast({ title: "Erro ao salvar", variant: "destructive" });
@@ -622,6 +628,29 @@ export default function FinancialPage() {
                             </div>
                             <div className="grid gap-2"><Label htmlFor="paymentDate">Data</Label><Popover><PopoverTrigger asChild><Button variant={"outline"} className={cn("w-full justify-start text-left", !newPaymentData.date && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{newPaymentData.date ? format(newPaymentData.date, "dd/MM/yyyy") : <span>Escolha uma data</span>}</Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={newPaymentData.date} onSelect={(date) => date && setNewPaymentData({...newPaymentData, date})} initialFocus /></PopoverContent></Popover></div>
                         </div>
+
+                        <div className="grid grid-cols-2 gap-4 items-end">
+                            <div className="grid gap-2">
+                                <Label htmlFor="paymentMethod">Forma de Pagamento</Label>
+                                <Select value={newPaymentData.paymentMethod} onValueChange={(v: PaymentMethod) => setNewPaymentData({...newPaymentData, paymentMethod: v, transactionId: ''})}>
+                                    <SelectTrigger id="paymentMethod"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                                        <SelectItem value="Pix">Pix</SelectItem>
+                                        <SelectItem value="Cartão de Débito">Cartão de Débito</SelectItem>
+                                        <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
+                                        <SelectItem value="Boleto">Boleto</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            { (newPaymentData.paymentMethod === 'Cartão de Crédito' || newPaymentData.paymentMethod === 'Cartão de Débito') && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="transactionId">ID da Transação</Label>
+                                <Input id="transactionId" value={newPaymentData.transactionId} onChange={e => setNewPaymentData({...newPaymentData, transactionId: e.target.value})} placeholder="Código do comprovante" />
+                            </div>
+                            )}
+                        </div>
+
                         <Separator />
                         <div>
                             <Label className="mb-2 block">Itens da Fatura</Label>
