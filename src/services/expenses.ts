@@ -51,3 +51,8 @@ export async function addExpense(expenseData: Omit<Expense, 'id'>): Promise<Expe
     const newId = `e${nextId++}`;
     const newExpense: Expense = {
         id: newId,
+        ...expenseData
+    };
+    expenses.unshift(newExpense);
+    return Promise.resolve(newExpense);
+}
