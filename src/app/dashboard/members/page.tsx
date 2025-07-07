@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { format, addMonths, parseISO } from "date-fns"
+import { format, addMonths, parseISO, parse } from "date-fns"
 import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Loader2, Search, Fingerprint, Upload } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Papa from "papaparse"
@@ -363,19 +363,39 @@ export default function MembersPage() {
               return null;
           }
 
-          if (member.expires && typeof member.expires !== 'string') {
-              member.expires = format(new Date(member.expires), 'yyyy-MM-dd');
-          } else if (member.expires) {
-            try {
-                //Handles YYYY-MM-DD, YYYY/MM/DD
-                member.expires = format(parseISO(member.expires.replace(/\//g, '-')), 'yyyy-MM-dd');
-            } catch {
-                currentErrors.push(`Linha ${index + 2}: Formato de data inválido para "${member.expires}". Use YYYY-MM-DD.`);
-                return null;
+          if (member.expires) {
+            let dateToParse = member.expires;
+            if (typeof dateToParse !== 'string') {
+                if (dateToParse instanceof Date && !isNaN(dateToParse.getTime())) {
+                    member.expires = format(dateToParse, 'yyyy-MM-dd');
+                } else {
+                     currentErrors.push(`Linha ${index + 2}: Valor de data inválido da planilha para "${member.expires}".`);
+                     return null;
+                }
+            } else {
+                const firstDateStr = dateToParse.split('|')[0].trim();
+                let parsedDate: Date | null = null;
+                
+                if (/^\d{2}\/\d{2}\/\d{4}$/.test(firstDateStr)) {
+                    parsedDate = parse(firstDateStr, 'dd/MM/yyyy', new Date());
+                } else {
+                    try {
+                        parsedDate = parseISO(firstDateStr.replace(/\//g, '-'));
+                    } catch (e) {
+                        // ignore, will be caught by the next check
+                    }
+                }
+                
+                if (parsedDate && !isNaN(parsedDate.getTime())) {
+                    member.expires = format(parsedDate, 'yyyy-MM-dd');
+                } else {
+                    currentErrors.push(`Linha ${index + 2}: Formato de data inválido para "${member.expires}". Use YYYY-MM-DD.`);
+                    return null;
+                }
             }
-          } else {
-              member.expires = format(addMonths(new Date(), 1), 'yyyy-MM-dd');
-          }
+        } else {
+            member.expires = format(addMonths(new Date(), 1), 'yyyy-MM-dd');
+        }
 
           return member;
       }).filter(Boolean) as Partial<Member>[];
