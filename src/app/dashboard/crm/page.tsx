@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -133,12 +134,19 @@ function OperationalStat({ title, icon: Icon, members, theme, emptyText, message
                             <ul className="space-y-2">
                                 {members.map(member => (
                                     <li key={member.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-3">
                                             <Avatar className="h-8 w-8">
                                                 <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint="person face" />
                                                 <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
                                             </Avatar>
-                                            <span className="font-medium">{member.name}</span>
+                                            <div>
+                                                <p className="font-medium">{member.name}</p>
+                                                {member.phone ? (
+                                                    <p className="text-sm text-muted-foreground">{member.phone}</p>
+                                                ) : (
+                                                    <p className="text-xs italic text-muted-foreground">Sem telefone</p>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="flex items-center gap-1">
                                             {messageType && (
@@ -494,3 +502,5 @@ export default function CrmPage() {
     </>
   )
 }
+
+    
