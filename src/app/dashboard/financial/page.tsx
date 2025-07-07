@@ -5,7 +5,7 @@ import * as React from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { format, isToday, isSameDay, parseISO } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { MoreHorizontal, PlusCircle, Download, Calendar as CalendarIcon, DollarSign, TrendingUp, Users, AlertCircle, Trash2, X, Target, Loader2, UsersRound, ArrowRightLeft, MinusCircle, ChevronsUpDown } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Download, Calendar as CalendarIcon, DollarSign, TrendingUp, Users, AlertCircle, Trash2, X, Target, Loader2, UsersRound, ArrowRightLeft, MinusCircle, ChevronsUpDown, Search } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -131,6 +131,7 @@ export default function FinancialPage() {
     const [currentInvoice, setCurrentInvoice] = React.useState<Payment | null>(null)
     const [isStudentComboboxOpen, setIsStudentComboboxOpen] = React.useState(false)
     const [studentSearch, setStudentSearch] = React.useState("")
+    const [paymentSearch, setPaymentSearch] = React.useState("");
 
 
     // States for cashier closing
@@ -360,6 +361,25 @@ export default function FinancialPage() {
     const clearFilter = () => router.push('/dashboard/financial');
     
     const defaultTab = studentNameParam ? "payments" : "cashflow";
+    
+    const filteredPayments = React.useMemo(() => {
+        const lowercasedSearch = paymentSearch.toLowerCase();
+        
+        if (!lowercasedSearch) {
+            if (studentNameParam) {
+                const lowercasedStudentName = studentNameParam.toLowerCase();
+                return payments.filter(p => p.student.toLowerCase() === lowercasedStudentName);
+            }
+            return payments;
+        }
+
+        return payments.filter(payment =>
+            payment.student.toLowerCase().includes(lowercasedSearch) ||
+            (payment.transactionId && payment.transactionId.toLowerCase().includes(lowercasedSearch)) ||
+            payment.id.toLowerCase().includes(lowercasedSearch)
+        );
+    }, [payments, paymentSearch, studentNameParam]);
+
 
     if (isLoading && !user) return <div className="flex h-64 w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
 
@@ -507,7 +527,7 @@ export default function FinancialPage() {
             <TabsContent value="payments">
                 <Card className="mt-4">
                     <CardHeader>
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between flex-wrap gap-4">
                             <div>
                                 <CardTitle className="font-headline">Histórico de Pagamentos</CardTitle>
                                 {studentNameParam ? (
@@ -517,6 +537,16 @@ export default function FinancialPage() {
                                 )}
                             </div>
                             <div className="flex items-center gap-2">
+                                <div className="relative">
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        type="search"
+                                        placeholder="Pesquisar por aluno, ID..."
+                                        className="pl-8 w-full md:w-[250px]"
+                                        value={paymentSearch}
+                                        onChange={(e) => setPaymentSearch(e.target.value)}
+                                    />
+                                </div>
                                 {studentNameParam && (<Button variant="outline" size="sm" onClick={clearFilter}><X className="mr-2 h-4 w-4" />Limpar filtro</Button>)}
                                 <Button onClick={() => setIsPaymentDialogOpen(true)} disabled={isSalesBlocked} title={isSalesBlocked ? "Bloqueado por pendência" : ""}>
                                     <PlusCircle className="mr-2 h-4 w-4" />Registrar Pagamento
@@ -529,6 +559,7 @@ export default function FinancialPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Aluno</TableHead>
+                                    <TableHead>ID</TableHead>
                                     <TableHead>Valor</TableHead>
                                     <TableHead className="hidden md:table-cell">Data</TableHead>
                                     <TableHead>Status</TableHead>
@@ -536,9 +567,10 @@ export default function FinancialPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {payments.length > 0 ? payments.map((payment) => (
+                                {filteredPayments.length > 0 ? filteredPayments.map((payment) => (
                                     <TableRow key={payment.id}>
                                         <TableCell className="font-medium">{payment.student}</TableCell>
+                                        <TableCell className="font-mono text-xs text-muted-foreground">{payment.transactionId || payment.id}</TableCell>
                                         <TableCell>R$ {payment.amount}</TableCell>
                                         <TableCell className="hidden md:table-cell">{format(parseISO(payment.date), "dd/MM/yyyy")}</TableCell>
                                         <TableCell><Badge variant={payment.status === 'Pago' ? 'secondary' : 'destructive'}>{payment.status}</Badge></TableCell>
@@ -554,7 +586,7 @@ export default function FinancialPage() {
                                         </TableCell>
                                     </TableRow>
                                 )) : (
-                                    <TableRow><TableCell colSpan={5} className="h-24 text-center">Nenhum pagamento encontrado.</TableCell></TableRow>
+                                    <TableRow><TableCell colSpan={6} className="h-24 text-center">Nenhum pagamento encontrado.</TableCell></TableRow>
                                 )}
                             </TableBody>
                         </Table>
