@@ -201,6 +201,7 @@ export default function MembersPage() {
   const handleEditClick = (member: Member) => {
     setIsEditing(true);
     const expiresDate = member.expires ? new Date(member.expires.replace(/-/g, '/')) : undefined;
+    const dobDate = member.dob ? new Date(member.dob.replace(/-/g, '/')) : undefined;
     
     setMemberFormData({
       ...initialMemberFormState,
@@ -210,6 +211,7 @@ export default function MembersPage() {
       phone: member.phone,
       cpf: member.cpf,
       rg: member.rg,
+      dob: dobDate,
       plan: member.plan,
       expires: expiresDate,
       goal: member.goal || "",
@@ -221,7 +223,7 @@ export default function MembersPage() {
 
   const handleSaveMember = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!memberFormData.name || !memberFormData.plan || !memberFormData.expires || !memberFormData.email) return
+    if (!memberFormData.name || !memberFormData.plan || !memberFormData.expires || !memberFormData.email || !memberFormData.dob) return
 
     const memberDataToSave = {
         name: memberFormData.name,
@@ -229,6 +231,7 @@ export default function MembersPage() {
         phone: memberFormData.phone,
         cpf: memberFormData.cpf,
         rg: memberFormData.rg,
+        dob: format(memberFormData.dob!, "yyyy-MM-dd"),
         plan: memberFormData.plan,
         expires: format(memberFormData.expires!, "yyyy-MM-dd"),
         status: "Ativo" as const,

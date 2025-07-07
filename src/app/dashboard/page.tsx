@@ -2,7 +2,8 @@
 "use client"
 
 import * as React from "react"
-import { Users, UserMinus, TrendingUp, BadgePercent, Loader2, UserX, ClipboardX, CalendarCheck, Target } from "lucide-react"
+import Link from "next/link"
+import { Users, UserMinus, TrendingUp, BadgePercent, Loader2, UserX, ClipboardX, CalendarCheck, Target, CakeSlice } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import {
@@ -107,7 +108,27 @@ export default function Dashboard() {
     }))
   }
 
+  const getOperationalStats = () => {
+    if (!members) return { overdue: 0, absent: 0, birthdays: 0 };
+    
+    const overdue = members.filter(m => m.status === 'Atrasado').length;
+    const absent = members.filter(m => m.attendanceStatus === 'Faltante').length;
+    
+    const today = new Date();
+    const todayMonth = today.getMonth() + 1;
+    const todayDay = today.getDate();
+    
+    const birthdays = members.filter(m => {
+        if (!m.dob) return false;
+        const dobDate = new Date(m.dob.replace(/-/g, '/'));
+        return dobDate.getMonth() + 1 === todayMonth && dobDate.getDate() === todayDay;
+    }).length;
+    
+    return { overdue, absent, birthdays };
+  }
+
   const stats = user.role === 'Professor' ? getProfessorStats() : getAdminStats();
+  const operationalStats = user.role !== 'Professor' ? getOperationalStats() : null;
 
   return (
     <div className="grid gap-6">
@@ -125,6 +146,51 @@ export default function Dashboard() {
           </Card>
         ))}
       </div>
+
+      {user.role !== 'Professor' && operationalStats && (
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline text-lg">Avisos Operacionais do Dia</CardTitle>
+                <CardDescription>Resumo rápido das principais ações para hoje.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-3">
+                <Link href="/dashboard/members" className="block p-4 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-4">
+                        <div className="bg-red-100 dark:bg-red-900/50 p-3 rounded-full">
+                           <UserX className="h-6 w-6 text-red-600 dark:text-red-300" />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold">{operationalStats.overdue}</p>
+                            <p className="text-sm font-medium text-muted-foreground">Alunos Inadimplentes</p>
+                        </div>
+                    </div>
+                </Link>
+                <Link href="/dashboard/members" className="block p-4 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-4">
+                       <div className="bg-yellow-100 dark:bg-yellow-900/50 p-3 rounded-full">
+                           <UserMinus className="h-6 w-6 text-yellow-600 dark:text-yellow-300" />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold">{operationalStats.absent}</p>
+                            <p className="text-sm font-medium text-muted-foreground">Alunos Faltantes</p>
+                        </div>
+                    </div>
+                </Link>
+                <Link href="/dashboard/members" className="block p-4 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-4">
+                        <div className="bg-sky-100 dark:bg-sky-900/50 p-3 rounded-full">
+                           <CakeSlice className="h-6 w-6 text-sky-600 dark:text-sky-300" />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold">{operationalStats.birthdays}</p>
+                            <p className="text-sm font-medium text-muted-foreground">Aniversariantes do Dia</p>
+                        </div>
+                    </div>
+                </Link>
+            </CardContent>
+        </Card>
+      )}
+
       {user.role !== 'Professor' && (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           <Card className="xl:col-span-2">
