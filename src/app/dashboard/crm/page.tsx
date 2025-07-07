@@ -13,6 +13,7 @@ import {
   UserX,
   UserMinus,
   CakeSlice,
+  User,
 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -80,105 +81,6 @@ const initialFormState = {
   status: "Novo Lead" as LeadStatus,
 }
 type LeadFormData = typeof initialFormState;
-
-function OperationalStat({ title, icon: Icon, members, theme, emptyText, messageType }: { title: string, icon: React.ElementType, members: Member[], theme: {bg: string, text: string}, emptyText: string, messageType?: 'birthday' | 'absent' }) {
-    const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-
-    const handleSendMessage = (phone: string, name: string) => {
-        if (!phone || !messageType) return;
-        
-        const cleanedPhone = phone.replace(/\D/g, '');
-        let message = '';
-
-        if (messageType === 'birthday') {
-            message = `Olá, ${name}! A equipe da Academia Exemplo deseja a você um feliz aniversário! 🎉🎂 Muitas felicidades e ótimos treinos!`;
-        } else if (messageType === 'absent') {
-            message = `Olá, ${name}! Sentimos sua falta aqui na Academia Exemplo. Que tal voltar a treinar com a gente e manter o foco nos seus objetivos? Estamos te esperando! 💪😊`;
-        }
-
-        if (!message) return;
-
-        const fullPhone = cleanedPhone.length > 11 ? cleanedPhone : `55${cleanedPhone}`;
-
-        const url = `https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`;
-        window.open(url, '_blank', 'noopener,noreferrer');
-    };
-
-    return (
-        <>
-            <div 
-                className="block p-4 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                onClick={() => members.length > 0 && setIsDialogOpen(true)}
-            >
-                <div className="flex items-center gap-4">
-                    <div className={`p-3 rounded-full ${theme.bg}`}>
-                       <Icon className={`h-6 w-6 ${theme.text}`} />
-                    </div>
-                    <div>
-                        <p className="text-2xl font-bold">{members.length}</p>
-                        <p className="text-sm font-medium text-muted-foreground">{title}</p>
-                    </div>
-                </div>
-            </div>
-
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{title}</DialogTitle>
-                        <DialogDescription>
-                            Lista de alunos correspondentes a este critério.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="max-h-[60vh] overflow-y-auto pr-4 -mr-4">
-                        {members.length > 0 ? (
-                            <ul className="space-y-2">
-                                {members.map(member => (
-                                    <li key={member.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
-                                        <div className="flex items-center gap-3">
-                                            <Avatar className="h-8 w-8">
-                                                <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint="person face" />
-                                                <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <p className="font-medium">{member.name}</p>
-                                                {member.phone ? (
-                                                    <p className="text-sm text-muted-foreground">{member.phone}</p>
-                                                ) : (
-                                                    <p className="text-xs italic text-muted-foreground">Sem telefone</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            {messageType && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => handleSendMessage(member.phone, member.name)}
-                                                    disabled={!member.phone}
-                                                    title={!member.phone ? "Telefone não cadastrado" : "Enviar mensagem no WhatsApp"}
-                                                >
-                                                    <MessageSquare className="h-4 w-4" />
-                                                    <span className="hidden sm:inline ml-1">WhatsApp</span>
-                                                </Button>
-                                            )}
-                                            <Link href={`/dashboard/members/${member.id}`} legacyBehavior>
-                                              <a onClick={() => setIsDialogOpen(false)}>
-                                                <Button variant="ghost" size="sm">Ver Ficha</Button>
-                                              </a>
-                                            </Link>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="text-muted-foreground text-center py-4">{emptyText}</p>
-                        )}
-                    </div>
-                </DialogContent>
-            </Dialog>
-        </>
-    );
-}
 
 export default function CrmPage() {
   const [leadsByStatus, setLeadsByStatus] = React.useState<Record<LeadStatus, Lead[]>>({
@@ -334,6 +236,26 @@ export default function CrmPage() {
     
     return { overdue: overdueMembers, absent: absentMembers, birthdays: birthdayMembers };
   }
+
+  const handleSendMessage = (phone: string, name: string, messageType: 'birthday' | 'absent') => {
+      if (!phone || !messageType) return;
+      
+      const cleanedPhone = phone.replace(/\D/g, '');
+      let message = '';
+
+      if (messageType === 'birthday') {
+          message = `Olá, ${name}! A equipe da Academia Exemplo deseja a você um feliz aniversário! 🎉🎂 Muitas felicidades e ótimos treinos!`;
+      } else if (messageType === 'absent') {
+          message = `Olá, ${name}! Sentimos sua falta aqui na Academia Exemplo. Que tal voltar a treinar com a gente e manter o foco nos seus objetivos? Estamos te esperando! 💪😊`;
+      }
+
+      if (!message) return;
+
+      const fullPhone = cleanedPhone.length > 11 ? cleanedPhone : `55${cleanedPhone}`;
+
+      const url = `https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+  };
   
   const operationalStats = getOperationalStats();
 
@@ -417,37 +339,132 @@ export default function CrmPage() {
           )}
         </TabsContent>
         <TabsContent value="relacionamento" className="mt-4">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="font-headline text-lg">Avisos Operacionais do Dia</CardTitle>
-                    <CardDescription>Resumo rápido das principais ações de relacionamento para hoje.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-4 md:grid-cols-3">
-                    <OperationalStat 
-                      title="Alunos Inadimplentes"
-                      icon={UserX}
-                      members={operationalStats.overdue}
-                      theme={{ bg: 'bg-red-100 dark:bg-red-900/50', text: 'text-red-600 dark:text-red-300' }}
-                      emptyText="Nenhum aluno inadimplente hoje."
-                    />
-                    <OperationalStat 
-                      title="Alunos Faltantes"
-                      icon={UserMinus}
-                      members={operationalStats.absent}
-                      theme={{ bg: 'bg-yellow-100 dark:bg-yellow-900/50', text: 'text-yellow-600 dark:text-yellow-300' }}
-                      emptyText="Nenhum aluno faltante nos últimos dias."
-                      messageType="absent"
-                    />
-                    <OperationalStat 
-                      title="Aniversariantes do Dia"
-                      icon={CakeSlice}
-                      members={operationalStats.birthdays}
-                      theme={{ bg: 'bg-sky-100 dark:bg-sky-900/50', text: 'text-sky-600 dark:text-sky-300' }}
-                      emptyText="Nenhum aniversariante hoje."
-                      messageType="birthday"
-                    />
-                </CardContent>
-            </Card>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-sky-600 dark:text-sky-400">
+                            <CakeSlice className="h-6 w-6" /> Aniversariantes do Dia
+                        </CardTitle>
+                        <CardDescription>Envie uma mensagem para parabenizá-los e fortalecer o relacionamento.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="max-h-96 overflow-y-auto">
+                        {operationalStats.birthdays.length > 0 ? (
+                            <ul className="space-y-2">
+                                {operationalStats.birthdays.map(member => (
+                                    <li key={member.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-9 w-9">
+                                                <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint="person face" />
+                                                <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <p className="font-medium text-sm">{member.name}</p>
+                                                <p className="text-xs text-muted-foreground">{member.phone || "Sem telefone"}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center">
+                                            <Button variant="ghost" size="icon" onClick={() => handleSendMessage(member.phone, member.name, 'birthday')} disabled={!member.phone} title="Enviar WhatsApp">
+                                                <MessageSquare className="h-4 w-4" />
+                                            </Button>
+                                            <Link href={`/dashboard/members/${member.id}`}>
+                                                <Button variant="ghost" size="icon" title="Ver Ficha">
+                                                    <User className="h-4 w-4" />
+                                                </Button>
+                                            </Link>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-center text-sm text-muted-foreground py-4">Nenhum aniversariante hoje.</p>
+                        )}
+                    </CardContent>
+                </Card>
+
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
+                            <UserMinus className="h-6 w-6" /> Alunos Faltantes
+                        </CardTitle>
+                        <CardDescription>Envie uma mensagem de incentivo para os alunos que não aparecem há alguns dias.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="max-h-96 overflow-y-auto">
+                        {operationalStats.absent.length > 0 ? (
+                            <ul className="space-y-2">
+                                {operationalStats.absent.map(member => (
+                                     <li key={member.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-9 w-9">
+                                                <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint="person face" />
+                                                <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <p className="font-medium text-sm">{member.name}</p>
+                                                <p className="text-xs text-muted-foreground">{member.phone || "Sem telefone"}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center">
+                                            <Button variant="ghost" size="icon" onClick={() => handleSendMessage(member.phone, member.name, 'absent')} disabled={!member.phone} title="Enviar WhatsApp">
+                                                <MessageSquare className="h-4 w-4" />
+                                            </Button>
+                                            <Link href={`/dashboard/members/${member.id}`}>
+                                                <Button variant="ghost" size="icon" title="Ver Ficha">
+                                                    <User className="h-4 w-4" />
+                                                </Button>
+                                            </Link>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-center text-sm text-muted-foreground py-4">Nenhum aluno faltante nos últimos dias.</p>
+                        )}
+                    </CardContent>
+                </Card>
+
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                            <UserX className="h-6 w-6" /> Alunos Inadimplentes
+                        </CardTitle>
+                        <CardDescription>Entre em contato com os alunos com mensalidades em atraso.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="max-h-96 overflow-y-auto">
+                        {operationalStats.overdue.length > 0 ? (
+                            <ul className="space-y-2">
+                                {operationalStats.overdue.map(member => (
+                                     <li key={member.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-9 w-9">
+                                                <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint="person face" />
+                                                <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <p className="font-medium text-sm">{member.name}</p>
+                                                <p className="text-xs text-muted-foreground">{member.phone || "Sem telefone"}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center">
+                                            <Link href={`/dashboard/financial?studentId=${member.id}&studentName=${member.name}`}>
+                                                <Button variant="ghost" size="icon" title="Ver Pagamentos">
+                                                    <MessageSquare className="h-4 w-4" />
+                                                </Button>
+                                            </Link>
+                                            <Link href={`/dashboard/members/${member.id}`}>
+                                                <Button variant="ghost" size="icon" title="Ver Ficha">
+                                                    <User className="h-4 w-4" />
+                                                </Button>
+                                            </Link>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-center text-sm text-muted-foreground py-4">Nenhum aluno inadimplente.</p>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
         </TabsContent>
       </Tabs>
 
