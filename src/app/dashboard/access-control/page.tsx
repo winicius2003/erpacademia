@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Eye, MoreHorizontal, PlusCircle, Trash2, Loader2, WalletCards } from "lucide-react"
+import { Eye, MoreHorizontal, PlusCircle, Trash2, Loader2, WalletCards, ShieldCheck } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -57,14 +57,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { getEmployees, addEmployee, updateEmployee, deleteEmployee, type Employee, type Role } from "@/services/employees"
+import { Checkbox } from "@/components/ui/checkbox"
+
+export const allPermissions = ["Painel", "Alunos", "Treinos", "Agenda", "Financeiro", "CRM", "Colaboradores", "Relatórios", "Configurações", "Assinatura", "Gympass", "Planos", "Produtos", "Avaliações", "Frequência"]
 
 export const rolePermissions: Record<Role, string[]> = {
-  Admin: ["Painel", "Alunos", "Treinos", "Agenda", "Financeiro", "CRM", "Controle de Acesso", "Relatórios", "Configurações"],
-  Gerente: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Controle de Acesso"],
-  Gestor: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Relatórios"],
-  Professor: ["Painel", "Alunos", "Treinos", "Agenda"],
-  Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Controle de Acesso"],
-  Estagiário: ["Alunos", "Agenda"],
+  Admin: allPermissions,
+  Gerente: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Colaboradores"],
+  Gestor: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Relatórios", "Planos", "Produtos", "Avaliações", "Frequência"],
+  Professor: ["Painel", "Alunos", "Treinos", "Agenda", "Avaliações"],
+  Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Produtos"],
+  Estagiário: ["Alunos", "Agenda", "Treinos"],
 }
 
 const initialEmployeeFormState = {
@@ -89,7 +92,8 @@ export default function AccessControlPage() {
   const [user, setUser] = React.useState<{ name: string; role: Role } | null>(null);
   const { toast } = useToast()
   
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+  const [isEmployeeDialogOpen, setIsEmployeeDialogOpen] = React.useState(false)
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = React.useState(false)
   const [isEditing, setIsEditing] = React.useState(false)
   const [employeeFormData, setEmployeeFormData] = React.useState<EmployeeFormData>(initialEmployeeFormState)
   
@@ -158,7 +162,7 @@ export default function AccessControlPage() {
   const handleAddNewClick = () => {
     setIsEditing(false);
     setEmployeeFormData(initialEmployeeFormState);
-    setIsDialogOpen(true);
+    setIsEmployeeDialogOpen(true);
   }
 
   const handleEditClick = (employee: Employee) => {
@@ -168,7 +172,7 @@ export default function AccessControlPage() {
       name: employee.name,
       email: employee.email,
       login: employee.login,
-      password: employee.password,
+      password: '', // Clear password field for editing
       role: employee.role,
       salary: employee.salary,
       workHours: employee.workHours,
@@ -176,28 +180,36 @@ export default function AccessControlPage() {
       cref: employee.cref || '',
       accessPin: employee.accessPin || '',
     });
-    setIsDialogOpen(true);
+    setIsEmployeeDialogOpen(true);
   };
 
   const handleSaveEmployee = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!employeeFormData.name || !employeeFormData.role || !employeeFormData.email || !employeeFormData.login || !employeeFormData.password || !employeeFormData.cpf) {
-        toast({ title: "Campos Obrigatórios", description: "Nome, e-mail, login, senha e CPF são obrigatórios.", variant: "destructive"})
+    if (!employeeFormData.name || !employeeFormData.role || !employeeFormData.email || !employeeFormData.login || !employeeFormData.cpf) {
+        toast({ title: "Campos Obrigatórios", description: "Nome, e-mail, login e CPF são obrigatórios.", variant: "destructive"})
+        return
+    }
+    
+    if (!isEditing && !employeeFormData.password) {
+        toast({ title: "Campo Obrigatório", description: "A senha é obrigatória para novos colaboradores.", variant: "destructive"})
         return
     }
 
-    const employeeData = {
+    const employeeData: Partial<Employee> = {
         name: employeeFormData.name,
         email: employeeFormData.email,
         login: employeeFormData.login,
-        password: employeeFormData.password,
         role: employeeFormData.role,
-        status: "Ativo" as const,
+        status: "Ativo",
         salary: Number(employeeFormData.salary) || 0,
         workHours: employeeFormData.workHours,
         cpf: employeeFormData.cpf,
         cref: employeeFormData.cref,
         accessPin: employeeFormData.accessPin,
+    }
+    
+    if(employeeFormData.password) {
+      employeeData.password = employeeFormData.password
     }
     
     setIsLoading(true);
@@ -206,7 +218,7 @@ export default function AccessControlPage() {
         await updateEmployee(employeeFormData.id, employeeData);
         toast({ title: "Colaborador Atualizado", description: "Os dados foram atualizados com sucesso." })
       } else {
-        await addEmployee(employeeData);
+        await addEmployee(employeeData as Omit<Employee, 'id'>);
         toast({ title: "Colaborador Adicionado", description: "O novo colaborador foi cadastrado." })
       }
       fetchEmployees();
@@ -214,7 +226,7 @@ export default function AccessControlPage() {
       toast({ title: "Erro", description: "Não foi possível salvar o colaborador.", variant: "destructive" });
     } finally {
       setIsLoading(false);
-      setIsDialogOpen(false);
+      setIsEmployeeDialogOpen(false);
     }
   }
 
@@ -246,8 +258,6 @@ export default function AccessControlPage() {
 
   const handleConfirmPaySalary = async () => {
     if (!employeeToPay) return;
-    // Here you would typically call a service to register the payment
-    // For now, we'll just show a toast notification.
     toast({
       title: "Pagamento Registrado",
       description: `O pagamento de salário para ${employeeToPay.name} foi registrado.`,
@@ -263,12 +273,13 @@ export default function AccessControlPage() {
       <CardHeader>
         <div className="flex items-start justify-between">
             <div>
-                <CardTitle className="font-headline">Controle de Acesso e Colaboradores</CardTitle>
+                <CardTitle className="font-headline">Colaboradores</CardTitle>
                 <CardDescription>
-                Adicione, edite e gerencie as permissões dos colaboradores.
+                Adicione, edite e gerencie as permissões dos colaboradores da sua equipe.
                 </CardDescription>
             </div>
              <div className="flex items-center gap-4">
+                <Button variant="outline" onClick={() => setIsProfileDialogOpen(true)}><ShieldCheck className="mr-2 h-4 w-4" />Gerenciar Perfis de Acesso</Button>
                 <Button onClick={handleAddNewClick} disabled={isLoading}><PlusCircle className="mr-2 h-4 w-4" />Adicionar Colaborador</Button>
             </div>
         </div>
@@ -301,6 +312,7 @@ export default function AccessControlPage() {
                     <Select
                       defaultValue={employee.role}
                       onValueChange={(value: Role) => handleRoleChange(employee.id, value)}
+                      disabled={user?.role !== 'Admin'}
                     >
                       <SelectTrigger className="w-full min-w-[140px]">
                         <SelectValue placeholder="Selecione uma função" />
@@ -347,12 +359,12 @@ export default function AccessControlPage() {
                             <DropdownMenuItem onSelect={() => handlePaySalaryClick(employee)}>
                               <WalletCards className="mr-2 h-4 w-4" /> Pagar Salário
                             </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={() => handleDeleteClick(employee)} className="text-destructive focus:text-destructive">
+                              <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                            </DropdownMenuItem>
                           </>
                         )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={() => handleDeleteClick(employee)} className="text-destructive focus:text-destructive">
-                          <Trash2 className="mr-2 h-4 w-4" /> Excluir
-                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -364,7 +376,7 @@ export default function AccessControlPage() {
       </CardContent>
     </Card>
 
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <Dialog open={isEmployeeDialogOpen} onOpenChange={setIsEmployeeDialogOpen}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Editar Colaborador" : "Adicionar Novo Colaborador"}</DialogTitle>
@@ -389,7 +401,7 @@ export default function AccessControlPage() {
              {(employeeFormData.role === 'Professor' || employeeFormData.role === 'Estagiário') && (
                 <div className="grid gap-2">
                     <Label htmlFor="cref">CREF (Obrigatório para Professor/Estagiário)</Label>
-                    <Input id="cref" value={employeeFormData.cref} onChange={(e) => handleInputChange('cref', e.target.value)} placeholder="000000-G/SP" />
+                    <Input id="cref" value={employeeFormData.cref} onChange={(e) => handleInputChange('cref', e.target.value)} placeholder="000000-G/SP" required />
                 </div>
             )}
             <div className="grid grid-cols-2 gap-4">
@@ -441,6 +453,46 @@ export default function AccessControlPage() {
           <Button type="submit" form="employee-form" disabled={isLoading}>{isEditing ? "Salvar Alterações" : "Salvar Colaborador"}</Button>
         </DialogFooter>
       </DialogContent>
+    </Dialog>
+    
+    <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
+        <DialogContent className="sm:max-w-2xl">
+            <DialogHeader>
+                <DialogTitle>Gerenciar Perfis de Acesso</DialogTitle>
+                <DialogDescription>
+                    Veja as permissões de cada perfil. A criação de novos perfis e a edição de permissões é uma funcionalidade avançada.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
+                {Object.entries(rolePermissions).map(([role, permissions]) => (
+                    <Card key={role}>
+                        <CardHeader>
+                            <CardTitle className="text-lg">{role}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {allPermissions.map(permission => (
+                                <div key={permission} className="flex items-center gap-2">
+                                    <Checkbox 
+                                        id={`${role}-${permission}`}
+                                        checked={permissions.includes(permission)}
+                                        disabled
+                                    />
+                                    <Label htmlFor={`${role}-${permission}`} className="text-sm font-normal">{permission}</Label>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+            <DialogFooter>
+                 <Button 
+                    variant="outline" 
+                    onClick={() => toast({ title: "Funcionalidade em desenvolvimento" })}
+                 >
+                    <PlusCircle className="mr-2 h-4 w-4" /> Criar Novo Perfil
+                </Button>
+            </DialogFooter>
+        </DialogContent>
     </Dialog>
     
     <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
