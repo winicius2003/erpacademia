@@ -5,7 +5,7 @@ import { format, parseISO } from "date-fns"
 import { Loader2, Wallet } from "lucide-react"
 
 import { getPaymentsByStudentId, type Payment } from "@/services/payments"
-
+import { getPlans } from "@/services/plans"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -25,8 +25,19 @@ export default function StudentFinancialPage() {
 
         async function fetchData() {
             try {
-                const paymentsData = await getPaymentsByStudentId(parsedUser.id);
-                setPayments(paymentsData);
+                const [paymentsData, plansData] = await Promise.all([
+                    getPaymentsByStudentId(parsedUser.id),
+                    getPlans()
+                ]);
+
+                // Filter payments to only include those that contain a plan name in their item descriptions.
+                const planPayments = paymentsData.filter(payment => 
+                    payment.items.some(item => 
+                        plansData.some(plan => item.description.includes(plan.name))
+                    )
+                );
+                
+                setPayments(planPayments);
             } catch (error) {
                 console.error("Failed to fetch student financial data:", error)
             } finally {
@@ -46,8 +57,8 @@ export default function StudentFinancialPage() {
             <h1 className="text-3xl font-bold font-headline">Meu Financeiro</h1>
              <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Wallet /> Histórico de Pagamentos</CardTitle>
-                    <CardDescription>Visualize todas as suas transações e faturas.</CardDescription>
+                    <CardTitle className="flex items-center gap-2"><Wallet /> Histórico de Pagamentos de Planos</CardTitle>
+                    <CardDescription>Visualize todas as transações referentes aos seus planos de matrícula.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -73,7 +84,7 @@ export default function StudentFinancialPage() {
                                 </TableRow>
                             )) : (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">Nenhum pagamento encontrado.</TableCell>
+                                    <TableCell colSpan={5} className="h-24 text-center">Nenhum pagamento de plano encontrado.</TableCell>
                                 </TableRow>
                             )}
                         </TableBody>
