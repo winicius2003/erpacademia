@@ -3,8 +3,8 @@
 import * as React from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
-import { format } from "date-fns"
-import { ArrowLeft, Dumbbell, Receipt, HeartPulse, Loader2 } from "lucide-react"
+import { format, parseISO } from "date-fns"
+import { ArrowLeft, Dumbbell, Receipt, HeartPulse, Loader2, Shield, FileText } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -110,7 +110,7 @@ export default function MemberProfilePage() {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Vencimento:</span>
-                                <span className="font-medium">{format(new Date(member.expires.replace(/-/g, '/')), "dd/MM/yyyy")}</span>
+                                <span className="font-medium">{format(parseISO(member.expires), "dd/MM/yyyy")}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Professor:</span>
@@ -146,14 +146,36 @@ export default function MemberProfilePage() {
                             </div>
                         </CardContent>
                     </Card>
+                    {member.guardian && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-base flex items-center gap-2"><Shield /> Responsável</CardTitle>
+                            </CardHeader>
+                            <CardContent className="text-sm space-y-2">
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Nome:</span>
+                                    <span className="font-medium">{member.guardian.name}</span>
+                                </div>
+                                 <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Telefone:</span>
+                                    <span className="font-medium">{member.guardian.phone}</span>
+                                </div>
+                                 <div className="flex justify-between">
+                                    <span className="text-muted-foreground">CPF:</span>
+                                    <span className="font-medium">{member.guardian.cpf}</span>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
 
                 <div className="lg:col-span-2">
                     <Tabs defaultValue="payments">
-                        <TabsList className="grid w-full grid-cols-3">
+                        <TabsList className="grid w-full grid-cols-4">
                             <TabsTrigger value="payments"><Receipt className="mr-2" /> Pagamentos</TabsTrigger>
                             <TabsTrigger value="workouts"><Dumbbell className="mr-2" /> Treino</TabsTrigger>
                             <TabsTrigger value="assessments"><HeartPulse className="mr-2" /> Avaliações</TabsTrigger>
+                            <TabsTrigger value="medical"><FileText className="mr-2" /> Atestados</TabsTrigger>
                         </TabsList>
                         
                         <TabsContent value="payments" className="mt-4">
@@ -174,7 +196,7 @@ export default function MemberProfilePage() {
                                         <TableBody>
                                             {payments.length > 0 ? payments.map(payment => (
                                                 <TableRow key={payment.id}>
-                                                    <TableCell>{format(new Date(payment.date.replace(/-/g, '/')), "dd/MM/yyyy")}</TableCell>
+                                                    <TableCell>{format(parseISO(payment.date), "dd/MM/yyyy")}</TableCell>
                                                     <TableCell>R$ {payment.amount}</TableCell>
                                                     <TableCell><Badge variant={payment.status === 'Pago' ? 'secondary' : 'destructive'}>{payment.status}</Badge></TableCell>
                                                     <TableCell>{payment.items.map(i => i.description).join(', ')}</TableCell>
@@ -219,7 +241,7 @@ export default function MemberProfilePage() {
                                         <TableBody>
                                             {assessments.length > 0 ? assessments.map(item => (
                                                 <TableRow key={item.id}>
-                                                    <TableCell>{format(new Date(item.date.replace(/-/g, '/')), "dd/MM/yyyy")}</TableCell>
+                                                    <TableCell>{format(parseISO(item.date), "dd/MM/yyyy")}</TableCell>
                                                     <TableCell>{item.measures.weight.toFixed(1)} kg</TableCell>
                                                     <TableCell>{item.measures.bodyFat?.toFixed(1) || '-'} %</TableCell>
                                                     <TableCell>{item.measures.muscleMass?.toFixed(1) || '-'} kg</TableCell>
@@ -231,6 +253,22 @@ export default function MemberProfilePage() {
                                             )}
                                         </TableBody>
                                     </Table>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                         <TabsContent value="medical" className="mt-4">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Atestados e Laudos Médicos</CardTitle>
+                                </CardHeader>
+                                <CardContent className="text-sm text-muted-foreground whitespace-pre-wrap">
+                                    {member.medicalNotes ? (
+                                        <p>{member.medicalNotes}</p>
+                                    ) : (
+                                        <div className="h-24 flex items-center justify-center">
+                                            <p>Nenhum atestado ou laudo registrado para este aluno.</p>
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
                         </TabsContent>

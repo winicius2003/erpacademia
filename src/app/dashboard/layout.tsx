@@ -81,7 +81,7 @@ const navItems = [
   { href: "/dashboard/financial", icon: Wallet, label: "Financeiro" },
   { href: "/dashboard/crm", icon: HeartHandshake, label: "CRM" },
   { href: "/dashboard/frequency", icon: FileClock, label: "Frequência" },
-  { href: "/dashboard/access-control", icon: UsersRound, label: "Funcionários" },
+  { href: "/dashboard/access-control", icon: UsersRound, label: "Colaboradores" },
   { href: "/dashboard/reports", icon: AreaChart, label: "Relatórios" },
   { href: "/dashboard/gympass", icon: Handshake, label: "Gympass" },
   { href: "/dashboard/plans", icon: Tags, label: "Planos" },
@@ -91,10 +91,11 @@ const navItems = [
 ]
 
 const navPermissions: Record<Role, string[]> = {
-  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro", "CRM", "Frequência", "Funcionários", "Relatórios", "Gympass", "Planos", "Produtos", "Assinatura", "Configurações"],
+  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro", "CRM", "Frequência", "Colaboradores", "Relatórios", "Gympass", "Planos", "Produtos", "Assinatura", "Configurações"],
+  Gerente: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Colaboradores"],
   Gestor: ["Painel", "Alunos", "Avaliações", "Agenda", "Financeiro", "CRM", "Frequência", "Relatórios", "Gympass", "Planos", "Produtos", "Assinatura"],
   Professor: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda"],
-  Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Funcionários", "Produtos"],
+  Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Colaboradores", "Produtos"],
   Estagiário: ["Alunos", "Agenda"],
 }
 

@@ -2,8 +2,8 @@
 "use client"
 
 import * as React from "react"
-import { format, addMonths, parseISO, parse } from "date-fns"
-import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Loader2, Search, Fingerprint, Upload, Copy, KeyRound, RefreshCw } from "lucide-react"
+import { format, addMonths, parseISO, parse, differenceInYears } from "date-fns"
+import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Loader2, Search, Fingerprint, Upload, Copy, KeyRound, RefreshCw, Shield } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Papa from "papaparse"
 import * as XLSX from "xlsx"
@@ -91,21 +91,14 @@ const initialMemberFormState = {
   rg: "",
   plan: "Mensal",
   expires: new Date() as Date | undefined,
-  address: {
-    street: "",
-    number: "",
-    complement: "",
-    neighborhood: "",
-    city: "",
-    state: "",
-    zip: "",
-  },
-  emergencyContact: {
+  guardian: {
     name: "",
+    cpf: "",
     phone: "",
   },
   goal: "",
   notes: "",
+  medicalNotes: "",
   accessPin: "",
   password: "",
 }
@@ -139,8 +132,8 @@ export default function MembersPage() {
   const [newCredentials, setNewCredentials] = React.useState<{ email: string, password?: string } | null>(null);
   const [isCredentialsDialogOpen, setIsCredentialsDialogOpen] = React.useState(false);
 
-
   const isAddingBlocked = subscriptionStatus === 'blocked';
+  const isUnderage = memberFormData.dob ? differenceInYears(new Date(), memberFormData.dob) < 18 : false;
 
   const fetchData = React.useCallback(async () => {
     setIsLoading(true);
@@ -194,7 +187,7 @@ export default function MembersPage() {
     setMemberFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleNestedChange = (category: 'address' | 'emergencyContact', field: string, value: string) => {
+  const handleNestedChange = (category: 'address' | 'guardian', field: string, value: string) => {
     setMemberFormData(prev => ({
       ...prev,
       [category]: {
@@ -212,8 +205,8 @@ export default function MembersPage() {
 
   const handleEditClick = (member: Member) => {
     setIsEditing(true);
-    const expiresDate = member.expires ? new Date(member.expires.replace(/-/g, '/')) : undefined;
-    const dobDate = member.dob ? new Date(member.dob.replace(/-/g, '/')) : undefined;
+    const expiresDate = member.expires ? parseISO(member.expires) : undefined;
+    const dobDate = member.dob ? parseISO(member.dob) : undefined;
     
     setMemberFormData({
       ...initialMemberFormState,
@@ -228,52 +221,50 @@ export default function MembersPage() {
       expires: expiresDate,
       goal: member.goal || "",
       notes: member.notes || "",
+      medicalNotes: member.medicalNotes || "",
       accessPin: member.accessPin || "",
       password: member.password || "",
+      guardian: member.guardian || initialMemberFormState.guardian
     });
     setIsFormDialogOpen(true);
   };
 
   const handleSaveMember = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!memberFormData.name || !memberFormData.plan || !memberFormData.expires || !memberFormData.email || !memberFormData.dob) return
+    if (!memberFormData.name || !memberFormData.plan || !memberFormData.expires || !memberFormData.email || !memberFormData.dob || !memberFormData.cpf) {
+        toast({ title: "Dados Incompletos", description: "Nome, e-mail, CPF, data de nascimento e dados do plano são obrigatórios.", variant: "destructive" });
+        return;
+    }
 
     setIsLoading(true);
     try {
+        const payload = {
+            name: memberFormData.name,
+            email: memberFormData.email,
+            phone: memberFormData.phone,
+            cpf: memberFormData.cpf,
+            rg: memberFormData.rg,
+            dob: format(memberFormData.dob, "yyyy-MM-dd"),
+            plan: memberFormData.plan,
+            expires: format(memberFormData.expires, "yyyy-MM-dd"),
+            goal: memberFormData.goal,
+            notes: memberFormData.notes,
+            medicalNotes: memberFormData.medicalNotes,
+            accessPin: memberFormData.accessPin,
+            password: memberFormData.password,
+            guardian: isUnderage ? memberFormData.guardian : undefined,
+        };
+
         if (isEditing) {
-            const updatePayload = {
-                name: memberFormData.name,
-                email: memberFormData.email,
-                phone: memberFormData.phone,
-                cpf: memberFormData.cpf,
-                rg: memberFormData.rg,
-                dob: format(memberFormData.dob, "yyyy-MM-dd"),
-                plan: memberFormData.plan,
-                expires: format(memberFormData.expires, "yyyy-MM-dd"),
-                goal: memberFormData.goal,
-                notes: memberFormData.notes,
-                accessPin: memberFormData.accessPin,
-                password: memberFormData.password,
-            };
-            await updateMember(memberFormData.id, updatePayload);
+            await updateMember(memberFormData.id, payload);
             toast({ title: "Aluno Atualizado", description: "Os dados do aluno foram atualizados com sucesso." });
         } else {
             const addPayload = {
-                name: memberFormData.name,
-                email: memberFormData.email,
-                phone: memberFormData.phone,
-                cpf: memberFormData.cpf,
-                rg: memberFormData.rg,
-                dob: format(memberFormData.dob, "yyyy-MM-dd"),
-                plan: memberFormData.plan,
-                expires: format(memberFormData.expires, "yyyy-MM-dd"),
+                ...payload,
                 status: "Ativo" as const,
                 professor: "Não atribuído",
                 attendanceStatus: "Presente" as const,
                 workoutStatus: "Pendente" as const,
-                goal: memberFormData.goal,
-                notes: memberFormData.notes,
-                accessPin: memberFormData.accessPin,
                 fingerprintRegistered: false,
             };
             const newMember = await addMember(addPayload);
@@ -572,7 +563,7 @@ export default function MembersPage() {
                         <PlusCircle className="mr-2 h-4 w-4" />Adicionar Aluno
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-3xl">
+                    <DialogContent className="sm:max-w-4xl">
                       <DialogHeader>
                         <DialogTitle>{isEditing ? 'Editar Aluno' : 'Adicionar Novo Aluno'}</DialogTitle>
                         <DialogDescription>
@@ -580,26 +571,20 @@ export default function MembersPage() {
                         </DialogDescription>
                       </DialogHeader>
                       <form id="add-member-form" onSubmit={handleSaveMember}>
-                        <Tabs defaultValue="personal-data">
-                          <TabsList className="grid w-full grid-cols-4">
+                        <Tabs defaultValue="personal-data" className="max-h-[75vh] overflow-hidden flex flex-col">
+                          <TabsList className="grid w-full grid-cols-5">
                               <TabsTrigger value="personal-data">Dados Pessoais</TabsTrigger>
+                              <TabsTrigger value="guardian">Responsável</TabsTrigger>
+                              <TabsTrigger value="health">Saúde</TabsTrigger>
                               <TabsTrigger value="access">Acesso</TabsTrigger>
-                              <TabsTrigger value="address">Endereço</TabsTrigger>
                               <TabsTrigger value="emergency">Emergência</TabsTrigger>
                           </TabsList>
-                          <TabsContent value="personal-data" className="py-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                  <div className="grid gap-2">
+                          <div className="flex-1 overflow-y-auto pt-4 px-1">
+                          <TabsContent value="personal-data" className="py-4 mt-0">
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                  <div className="grid gap-2 lg:col-span-2">
                                       <Label htmlFor="name">Nome Completo</Label>
                                       <Input id="name" value={memberFormData.name} onChange={(e) => handleInputChange('name', e.target.value)} placeholder="Nome do aluno" />
-                                  </div>
-                                  <div className="grid gap-2">
-                                      <Label htmlFor="email">E-mail</Label>
-                                      <Input id="email" type="email" value={memberFormData.email} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="email@exemplo.com" />
-                                  </div>
-                                  <div className="grid gap-2">
-                                      <Label htmlFor="phone">WhatsApp</Label>
-                                      <Input id="phone" type="tel" value={memberFormData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} placeholder="(99) 99999-9999" />
                                   </div>
                                   <div className="grid gap-2">
                                       <Label htmlFor="dob">Nascimento</Label>
@@ -627,6 +612,14 @@ export default function MembersPage() {
                                       </Popover>
                                   </div>
                                   <div className="grid gap-2">
+                                      <Label htmlFor="email">E-mail</Label>
+                                      <Input id="email" type="email" value={memberFormData.email} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="email@exemplo.com" />
+                                  </div>
+                                  <div className="grid gap-2">
+                                      <Label htmlFor="phone">WhatsApp</Label>
+                                      <Input id="phone" type="tel" value={memberFormData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} placeholder="(99) 99999-9999" />
+                                  </div>
+                                   <div className="grid gap-2">
                                       <Label htmlFor="cpf">CPF</Label>
                                       <Input id="cpf" value={memberFormData.cpf} onChange={(e) => handleInputChange('cpf', e.target.value)} placeholder="000.000.000-00" />
                                   </div>
@@ -668,105 +661,108 @@ export default function MembersPage() {
                                     <Label htmlFor="notes">Observações / Anamnese</Label>
                                     <Textarea id="notes" value={memberFormData.notes} onChange={(e) => handleInputChange('notes', e.target.value)} placeholder="Lesões pré-existentes, medicamentos, etc." />
                                 </div>
-                                <Separator className="my-6" />
-                                <div className="space-y-4">
-                                    <h3 className="font-medium flex items-center gap-2"><KeyRound className="h-4 w-4 text-muted-foreground"/> Credenciais do Portal</h3>
-                                    {isEditing ? (
-                                        <div className="grid md:grid-cols-2 gap-4 items-end">
+                          </TabsContent>
+                           <TabsContent value="guardian" className="py-4 mt-0">
+                                {isUnderage ? (
+                                    <div className="space-y-4 p-4 border border-amber-500/50 bg-amber-500/10 rounded-lg">
+                                        <div className="flex items-center gap-2">
+                                            <Shield className="h-5 w-5 text-amber-600" />
+                                            <h3 className="font-semibold text-amber-700">Dados do Responsável (Aluno menor de idade)</h3>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="grid gap-2">
-                                                <Label htmlFor="password">Senha do Portal</Label>
-                                                <div className="flex items-center gap-2">
-                                                    <Input id="password" type="text" value={memberFormData.password} readOnly className="font-mono bg-muted" />
-                                                </div>
+                                                <Label htmlFor="guardian-name">Nome do Responsável</Label>
+                                                <Input id="guardian-name" value={memberFormData.guardian.name} onChange={(e) => handleNestedChange('guardian', 'name', e.target.value)} />
                                             </div>
-                                             <div className="grid gap-2">
-                                                 <Button 
-                                                    type="button" 
-                                                    variant="outline"
-                                                    onClick={() => {
-                                                        const newPass = Math.random().toString(36).slice(-8);
-                                                        handleInputChange('password', newPass);
-                                                        toast({ title: "Nova Senha Gerada", description: "Clique em salvar para confirmar a alteração."})
-                                                    }}
-                                                >
-                                                    <RefreshCw className="mr-2 h-4 w-4" /> Gerar Nova Senha
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="guardian-cpf">CPF do Responsável</Label>
+                                                <Input id="guardian-cpf" value={memberFormData.guardian.cpf} onChange={(e) => handleNestedChange('guardian', 'cpf', e.target.value)} />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="guardian-phone">Telefone do Responsável</Label>
+                                                <Input id="guardian-phone" value={memberFormData.guardian.phone} onChange={(e) => handleNestedChange('guardian', 'phone', e.target.value)} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-center text-muted-foreground py-10">
+                                        <p>Esta seção é habilitada apenas para alunos menores de 18 anos.</p>
+                                    </div>
+                                )}
+                            </TabsContent>
+                            <TabsContent value="health" className="py-4 mt-0">
+                                <div className="space-y-2">
+                                    <Label htmlFor="medicalNotes">Atestados e Laudos Médicos</Label>
+                                    <Textarea id="medicalNotes" value={memberFormData.medicalNotes} onChange={(e) => handleInputChange('medicalNotes', e.target.value)} placeholder="Descreva aqui o conteúdo de atestados, laudos ou qualquer observação médica relevante." rows={8} />
+                                </div>
+                            </TabsContent>
+                           <TabsContent value="access" className="py-4 mt-0">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-4">
+                                        <h3 className="font-medium">Controle de Acesso Físico</h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            Configure a senha PIN e a biometria para acesso via catraca.
+                                        </p>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="access-pin">Senha de Acesso (PIN)</Label>
+                                            <Input id="access-pin" type="text" value={memberFormData.accessPin} onChange={(e) => handleInputChange('accessPin', e.target.value)} placeholder="4 a 6 dígitos numéricos" />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Biometria</Label>
+                                            <div className="flex items-center gap-4 h-10">
+                                                <Button type="button" variant="outline">
+                                                    <Fingerprint className="mr-2 h-4 w-4" /> Cadastrar Digital
                                                 </Button>
                                             </div>
                                         </div>
-                                    ) : (
-                                        <p className="text-sm text-muted-foreground">A senha será gerada automaticamente ao salvar o novo aluno e exibida aqui ao editar.</p>
-                                    )}
-                                </div>
-                          </TabsContent>
-                           <TabsContent value="access" className="py-4">
-                                <div className="space-y-2 mb-4">
-                                    <h3 className="font-medium">Controle de Acesso Físico</h3>
-                                    <p className="text-sm text-muted-foreground">
-                                        Configure a senha PIN e a biometria para acesso via catraca.
-                                    </p>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="access-pin">Senha de Acesso (PIN)</Label>
-                                        <Input id="access-pin" type="text" value={memberFormData.accessPin} onChange={(e) => handleInputChange('accessPin', e.target.value)} placeholder="4 a 6 dígitos numéricos" />
                                     </div>
-                                    <div className="grid gap-2">
-                                        <Label>Biometria</Label>
-                                        <div className="flex items-center gap-4 h-10">
-                                            <Button type="button" variant="outline">
-                                                <Fingerprint className="mr-2 h-4 w-4" /> Cadastrar Digital
-                                            </Button>
-                                        </div>
+                                     <div className="space-y-4">
+                                        <h3 className="font-medium flex items-center gap-2"><KeyRound className="h-4 w-4 text-muted-foreground"/> Credenciais do Portal</h3>
+                                        {isEditing ? (
+                                            <div className="space-y-4">
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="password">Senha do Portal</Label>
+                                                    <div className="flex items-center gap-2">
+                                                        <Input id="password" type="text" value={memberFormData.password} readOnly className="font-mono bg-muted" />
+                                                    </div>
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Button 
+                                                        type="button" 
+                                                        variant="outline"
+                                                        onClick={() => {
+                                                            const newPass = Math.random().toString(36).slice(-8);
+                                                            handleInputChange('password', newPass);
+                                                            toast({ title: "Nova Senha Gerada", description: "Clique em salvar para confirmar a alteração."})
+                                                        }}
+                                                    >
+                                                        <RefreshCw className="mr-2 h-4 w-4" /> Gerar Nova Senha
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground">A senha será gerada automaticamente ao salvar o novo aluno e exibida aqui ao editar.</p>
+                                        )}
                                     </div>
                                 </div>
                             </TabsContent>
-                          <TabsContent value="address" className="py-4">
-                              <div className="grid grid-cols-4 gap-4">
-                                  <div className="grid gap-2 col-span-1">
-                                      <Label htmlFor="zip">CEP</Label>
-                                      <Input id="zip" value={memberFormData.address.zip} onChange={(e) => handleNestedChange('address', 'zip', e.target.value)} placeholder="00000-000" />
-                                  </div>
-                                  <div className="grid gap-2 col-span-3">
-                                      <Label htmlFor="street">Rua</Label>
-                                      <Input id="street" value={memberFormData.address.street} onChange={(e) => handleNestedChange('address', 'street', e.target.value)} placeholder="Nome da rua" />
-                                  </div>
-                                  <div className="grid gap-2 col-span-1">
-                                      <Label htmlFor="number">Número</Label>
-                                      <Input id="number" value={memberFormData.address.number} onChange={(e) => handleNestedChange('address', 'number', e.target.value)} />
-                                  </div>
-                                  <div className="grid gap-2 col-span-3">
-                                      <Label htmlFor="complement">Complemento</Label>
-                                      <Input id="complement" value={memberFormData.address.complement} onChange={(e) => handleNestedChange('address', 'complement', e.target.value)} placeholder="Apto, bloco, etc." />
-                                  </div>
-                                  <div className="grid gap-2 col-span-2">
-                                      <Label htmlFor="neighborhood">Bairro</Label>
-                                      <Input id="neighborhood" value={memberFormData.address.neighborhood} onChange={(e) => handleNestedChange('address', 'neighborhood', e.target.value)} />
-                                  </div>
-                                  <div className="grid gap-2 col-span-1">
-                                      <Label htmlFor="city">Cidade</Label>
-                                      <Input id="city" value={memberFormData.address.city} onChange={(e) => handleNestedChange('address', 'city', e.target.value)} />
-                                  </div>
-                                  <div className="grid gap-2 col-span-1">
-                                      <Label htmlFor="state">Estado</Label>
-                                      <Input id="state" value={memberFormData.address.state} onChange={(e) => handleNestedChange('address', 'state', e.target.value)} />
-                                  </div>
-                              </div>
-                          </TabsContent>
-                          <TabsContent value="emergency" className="py-4">
+                          <TabsContent value="emergency" className="py-4 mt-0">
                               <div className="grid grid-cols-2 gap-4">
                                 <div className="grid gap-2">
                                       <Label htmlFor="emergency-name">Nome do Contato</Label>
-                                      <Input id="emergency-name" value={memberFormData.emergencyContact.name} onChange={(e) => handleNestedChange('emergencyContact', 'name', e.target.value)} placeholder="Nome completo" />
+                                      <Input id="emergency-name" value={memberFormData.guardian.name} onChange={(e) => handleNestedChange('guardian', 'name', e.target.value)} placeholder="Nome completo" />
                                   </div>
                                   <div className="grid gap-2">
                                       <Label htmlFor="emergency-phone">Telefone do Contato</Label>
-                                      <Input id="emergency-phone" value={memberFormData.emergencyContact.phone} onChange={(e) => handleNestedChange('emergencyContact', 'phone', e.target.value)} placeholder="(99) 99999-9999" />
+                                      <Input id="emergency-phone" value={memberFormData.guardian.phone} onChange={(e) => handleNestedChange('guardian', 'phone', e.target.value)} placeholder="(99) 99999-9999" />
                                   </div>
                               </div>
                           </TabsContent>
+                          </div>
                         </Tabs>
                       </form>
-                      <DialogFooter>
+                      <DialogFooter className="mt-4 pt-4 border-t">
+                        <Button type="button" variant="ghost" onClick={() => setIsFormDialogOpen(false)}>Cancelar</Button>
                         <Button type="submit" form="add-member-form" disabled={isLoading}>
                             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                             {isEditing ? 'Salvar Alterações' : 'Salvar Aluno'}
@@ -1006,7 +1002,7 @@ function MemberTable({
                     {member.status}
                     </Badge>
                 </TableCell>
-                <TableCell className="hidden md:table-cell">{format(new Date(member.expires.replace(/-/g, '/')), "dd/MM/yyyy")}</TableCell>
+                <TableCell className="hidden md:table-cell">{format(parseISO(member.expires), "dd/MM/yyyy")}</TableCell>
                 <TableCell>
                     <DropdownMenu>
                     <DropdownMenuTrigger asChild>

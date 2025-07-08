@@ -3,8 +3,9 @@
 
 import * as React from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { format, isToday, isSameDay, parseISO, parse } from "date-fns"
+import { format, isToday, isSameDay, parseISO, parse, startOfDay, endOfDay, subDays } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import type { DateRange } from "react-day-picker"
 import { MoreHorizontal, PlusCircle, Download, Calendar as CalendarIcon, DollarSign, TrendingUp, Users, AlertCircle, Trash2, X, Target, Loader2, UsersRound, ArrowRightLeft, MinusCircle, ChevronsUpDown, Search, Upload, RotateCcw } from "lucide-react"
 import Papa from "papaparse"
 import * as XLSX from "xlsx"
@@ -141,9 +142,12 @@ export default function FinancialPage() {
     const [isLoading, setIsLoading] = React.useState(true)
     const [availableProducts, setAvailableProducts] = React.useState<{ name: string, price: number }[]>([]);
     
-    const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(new Date())
-    const [dailyTransactions, setDailyTransactions] = React.useState<Transaction[]>([])
-    const [dailySummary, setDailySummary] = React.useState({ inflow: 0, outflow: 0, balance: 0 })
+    const [date, setDate] = React.useState<DateRange | undefined>({
+      from: startOfDay(subDays(new Date(), 6)),
+      to: endOfDay(new Date()),
+    })
+    const [periodTransactions, setPeriodTransactions] = React.useState<Transaction[]>([])
+    const [periodSummary, setPeriodSummary] = React.useState({ inflow: 0, outflow: 0, balance: 0 })
     
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false)
     const [isExpenseDialogOpen, setIsExpenseDialogOpen] = React.useState(false)
@@ -239,14 +243,20 @@ export default function FinancialPage() {
     }, [paymentAction, members, toast, fetchData, hasAttemptedRefetch]);
 
     React.useEffect(() => {
-        if (!selectedDate) {
-            setDailyTransactions([]);
-            setDailySummary({ inflow: 0, outflow: 0, balance: 0 });
+        if (!date?.from) {
+            setPeriodTransactions([]);
+            setPeriodSummary({ inflow: 0, outflow: 0, balance: 0 });
             return;
         }
 
+        const fromDate = startOfDay(date.from);
+        const toDate = date.to ? endOfDay(date.to) : endOfDay(date.from);
+
         const paymentsOfDay = payments
-            .filter(p => isSameDay(parseISO(p.date), selectedDate))
+            .filter(p => {
+              const pDate = parseISO(p.date)
+              return pDate >= fromDate && pDate <= toDate
+            })
             .map(p => ({
                 id: p.id,
                 time: p.time,
@@ -257,7 +267,10 @@ export default function FinancialPage() {
             }));
 
         const expensesOfDay = expenses
-            .filter(e => isSameDay(parseISO(e.date), selectedDate))
+            .filter(e => {
+              const eDate = parseISO(e.date)
+              return eDate >= fromDate && eDate <= toDate
+            })
             .map(e => ({
                 id: e.id,
                 time: e.time,
@@ -269,13 +282,13 @@ export default function FinancialPage() {
             }));
 
         const allTransactions = [...paymentsOfDay, ...expensesOfDay].sort((a, b) => a.time.localeCompare(b.time));
-        setDailyTransactions(allTransactions);
+        setPeriodTransactions(allTransactions);
 
         const inflow = paymentsOfDay.reduce((sum, t) => sum + t.amount, 0);
         const outflow = expensesOfDay.reduce((sum, t) => sum + t.amount, 0);
-        setDailySummary({ inflow, outflow, balance: inflow - outflow });
+        setPeriodSummary({ inflow, outflow, balance: inflow - outflow });
 
-    }, [selectedDate, payments, expenses]);
+    }, [date, payments, expenses]);
 
 
     React.useEffect(() => {
@@ -358,7 +371,7 @@ export default function FinancialPage() {
 
         const expenseData = {
             ...newExpenseData,
-            date: format(selectedDate || new Date(), "yyyy-MM-dd"),
+            date: format(date?.from || new Date(), "yyyy-MM-dd"),
             time: format(new Date(), "HH:mm"),
             registeredById: user.id,
             registeredByName: user.name,
@@ -552,75 +565,104 @@ export default function FinancialPage() {
             </TabsList>
 
             <TabsContent value="cashflow" className="mt-4">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-1">
-                        <Card>
-                            <CardContent className="p-0">
+                <div className="grid grid-cols-1 gap-6">
+                    <Card>
+                        <CardHeader>
+                            <div className="flex flex-wrap items-center justify-between gap-4">
+                              <div>
+                                  <CardTitle className="font-headline">
+                                      Movimentações do Período
+                                  </CardTitle>
+                                  <CardDescription>
+                                    Selecione um dia ou um período para visualizar as transações.
+                                  </CardDescription>
+                              </div>
+                               <Popover>
+                                <PopoverTrigger asChild>
+                                <Button
+                                    id="date"
+                                    variant={"outline"}
+                                    className={cn(
+                                    "w-full sm:w-[300px] justify-start text-left font-normal",
+                                    !date && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {date?.from ? (
+                                    date.to ? (
+                                        <>
+                                        {format(date.from, "LLL dd, y", { locale: ptBR })} -{" "}
+                                        {format(date.to, "LLL dd, y", { locale: ptBR })}
+                                        </>
+                                    ) : (
+                                        format(date.from, "LLL dd, y", { locale: ptBR })
+                                    )
+                                    ) : (
+                                    <span>Escolha um período</span>
+                                    )}
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="end">
                                 <Calendar
-                                    mode="single"
-                                    selected={selectedDate}
-                                    onSelect={setSelectedDate}
-                                    className="w-full"
+                                    initialFocus
+                                    mode="range"
+                                    defaultMonth={date?.from}
+                                    selected={date}
+                                    onSelect={setDate}
+                                    numberOfMonths={2}
                                     locale={ptBR}
                                 />
-                            </CardContent>
-                        </Card>
-                    </div>
-                    <div className="lg:col-span-2">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="font-headline">
-                                    Movimentações de {selectedDate ? format(selectedDate, "dd 'de' MMMM, yyyy", { locale: ptBR }) : "Nenhum dia selecionado"}
-                                </CardTitle>
-                                <div className="grid grid-cols-3 gap-4 pt-2">
-                                    <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900/50">
-                                        <p className="text-sm font-medium text-green-800 dark:text-green-300">Entradas</p>
-                                        <p className="text-xl font-bold text-green-900 dark:text-green-200">{dailySummary.inflow.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-                                    </div>
-                                    <div className="p-3 rounded-lg bg-red-100 dark:bg-red-900/50">
-                                        <p className="text-sm font-medium text-red-800 dark:text-red-300">Saídas</p>
-                                        <p className="text-xl font-bold text-red-900 dark:text-red-200">{dailySummary.outflow.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-                                    </div>
-                                    <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/50">
-                                        <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Saldo</p>
-                                        <p className="text-xl font-bold text-blue-900 dark:text-blue-200">{dailySummary.balance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="w-20">Hora</TableHead>
-                                            <TableHead>Descrição</TableHead>
-                                            <TableHead className="text-center w-28">Tipo</TableHead>
-                                            <TableHead className="text-right w-32">Valor</TableHead>
+                                </PopoverContent>
+                            </Popover>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                              <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900/50">
+                                  <p className="text-sm font-medium text-green-800 dark:text-green-300">Entradas</p>
+                                  <p className="text-xl font-bold text-green-900 dark:text-green-200">{periodSummary.inflow.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                              </div>
+                              <div className="p-3 rounded-lg bg-red-100 dark:bg-red-900/50">
+                                  <p className="text-sm font-medium text-red-800 dark:text-red-300">Saídas</p>
+                                  <p className="text-xl font-bold text-red-900 dark:text-red-200">{periodSummary.outflow.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                              </div>
+                              <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/50">
+                                  <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Saldo</p>
+                                  <p className="text-xl font-bold text-blue-900 dark:text-blue-200">{periodSummary.balance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                              </div>
+                          </div>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="w-20">Hora</TableHead>
+                                        <TableHead>Descrição</TableHead>
+                                        <TableHead className="text-center w-28">Tipo</TableHead>
+                                        <TableHead className="text-right w-32">Valor</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {periodTransactions.length > 0 ? periodTransactions.map(t => (
+                                        <TableRow key={t.id}>
+                                            <TableCell>{t.time}</TableCell>
+                                            <TableCell className="font-medium">{t.description}</TableCell>
+                                            <TableCell className="text-center">
+                                                <Badge variant={t.type === 'inflow' ? 'secondary' : 'destructive'}>{t.type === 'inflow' ? 'Entrada' : 'Saída'}</Badge>
+                                            </TableCell>
+                                            <TableCell className={`text-right font-semibold ${t.type === 'inflow' ? 'text-green-600' : 'text-red-600'}`}>
+                                                {t.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                            </TableCell>
                                         </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {dailyTransactions.length > 0 ? dailyTransactions.map(t => (
-                                            <TableRow key={t.id}>
-                                                <TableCell>{t.time}</TableCell>
-                                                <TableCell className="font-medium">{t.description}</TableCell>
-                                                <TableCell className="text-center">
-                                                    <Badge variant={t.type === 'inflow' ? 'secondary' : 'destructive'}>{t.type === 'inflow' ? 'Entrada' : 'Saída'}</Badge>
-                                                </TableCell>
-                                                <TableCell className={`text-right font-semibold ${t.type === 'inflow' ? 'text-green-600' : 'text-red-600'}`}>
-                                                    {t.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                                </TableCell>
-                                            </TableRow>
-                                        )) : (
-                                            <TableRow><TableCell colSpan={4} className="h-24 text-center">Nenhuma movimentação neste dia.</TableCell></TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </CardContent>
-                            <CardFooter className="gap-2">
-                                <Button onClick={() => setIsPaymentDialogOpen(true)} disabled={isSalesBlocked} className="flex-1"><PlusCircle className="mr-2"/> Registrar Venda</Button>
-                                <Button onClick={() => setIsExpenseDialogOpen(true)} variant="outline" className="flex-1"><MinusCircle className="mr-2"/> Registrar Despesa</Button>
-                            </CardFooter>
-                        </Card>
-                    </div>
+                                    )) : (
+                                        <TableRow><TableCell colSpan={4} className="h-24 text-center">Nenhuma movimentação neste período.</TableCell></TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                        <CardFooter className="gap-2">
+                            <Button onClick={() => setIsPaymentDialogOpen(true)} disabled={isSalesBlocked} className="flex-1"><PlusCircle className="mr-2"/> Registrar Venda</Button>
+                            <Button onClick={() => setIsExpenseDialogOpen(true)} variant="outline" className="flex-1"><MinusCircle className="mr-2"/> Registrar Despesa</Button>
+                        </CardFooter>
+                    </Card>
                 </div>
             </TabsContent>
             

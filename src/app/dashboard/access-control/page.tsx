@@ -59,10 +59,11 @@ import { useToast } from "@/hooks/use-toast"
 import { getEmployees, addEmployee, updateEmployee, deleteEmployee, type Employee, type Role } from "@/services/employees"
 
 export const rolePermissions: Record<Role, string[]> = {
-  Admin: ["Painel", "Alunos", "Treinos", "Agenda", "Financeiro", "CRM", "Funcionários", "Relatórios", "Configurações"],
+  Admin: ["Painel", "Alunos", "Treinos", "Agenda", "Financeiro", "CRM", "Colaboradores", "Relatórios", "Configurações"],
+  Gerente: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Colaboradores"],
   Gestor: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Relatórios"],
   Professor: ["Painel", "Alunos", "Treinos", "Agenda"],
-  Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Funcionários"],
+  Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Colaboradores"],
   Estagiário: ["Alunos", "Agenda"],
 }
 
@@ -75,6 +76,8 @@ const initialEmployeeFormState = {
   role: "Professor" as Role,
   salary: 0,
   workHours: "",
+  cpf: "",
+  cref: "",
   accessPin: "",
 }
 
@@ -83,6 +86,7 @@ type EmployeeFormData = typeof initialEmployeeFormState
 export default function AccessControlPage() {
   const [employees, setEmployees] = React.useState<Employee[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
+  const [user, setUser] = React.useState<{ name: string; role: Role } | null>(null);
   const { toast } = useToast()
   
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
@@ -95,15 +99,22 @@ export default function AccessControlPage() {
   const [employeeToPay, setEmployeeToPay] = React.useState<Employee | null>(null);
   const [isPaySalaryAlertOpen, setIsPaySalaryAlertOpen] = React.useState(false);
 
+  React.useEffect(() => {
+    const sessionUser = sessionStorage.getItem("fitcore.user");
+    if(sessionUser) {
+      setUser(JSON.parse(sessionUser));
+    }
+  }, []);
 
   const fetchEmployees = React.useCallback(async () => {
     setIsLoading(true);
     try {
       const data = await getEmployees();
-      setEmployees(data);
+      // Filter out the master admin from the list
+      setEmployees(data.filter(e => e.role !== 'Admin'));
     } catch (error) {
       toast({
-        title: "Erro ao buscar funcionários",
+        title: "Erro ao buscar colaboradores",
         description: "Não foi possível carregar a lista.",
         variant: "destructive",
       });
@@ -161,6 +172,8 @@ export default function AccessControlPage() {
       role: employee.role,
       salary: employee.salary,
       workHours: employee.workHours,
+      cpf: employee.cpf,
+      cref: employee.cref || '',
       accessPin: employee.accessPin || '',
     });
     setIsDialogOpen(true);
@@ -168,7 +181,10 @@ export default function AccessControlPage() {
 
   const handleSaveEmployee = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!employeeFormData.name || !employeeFormData.role || !employeeFormData.email || !employeeFormData.login || !employeeFormData.password) return
+    if (!employeeFormData.name || !employeeFormData.role || !employeeFormData.email || !employeeFormData.login || !employeeFormData.password || !employeeFormData.cpf) {
+        toast({ title: "Campos Obrigatórios", description: "Nome, e-mail, login, senha e CPF são obrigatórios.", variant: "destructive"})
+        return
+    }
 
     const employeeData = {
         name: employeeFormData.name,
@@ -179,6 +195,8 @@ export default function AccessControlPage() {
         status: "Ativo" as const,
         salary: Number(employeeFormData.salary) || 0,
         workHours: employeeFormData.workHours,
+        cpf: employeeFormData.cpf,
+        cref: employeeFormData.cref,
         accessPin: employeeFormData.accessPin,
     }
     
@@ -186,14 +204,14 @@ export default function AccessControlPage() {
     try {
       if (isEditing) {
         await updateEmployee(employeeFormData.id, employeeData);
-        toast({ title: "Funcionário Atualizado", description: "Os dados foram atualizados com sucesso." })
+        toast({ title: "Colaborador Atualizado", description: "Os dados foram atualizados com sucesso." })
       } else {
         await addEmployee(employeeData);
-        toast({ title: "Funcionário Adicionado", description: "O novo funcionário foi cadastrado." })
+        toast({ title: "Colaborador Adicionado", description: "O novo colaborador foi cadastrado." })
       }
       fetchEmployees();
     } catch(error) {
-      toast({ title: "Erro", description: "Não foi possível salvar o funcionário.", variant: "destructive" });
+      toast({ title: "Erro", description: "Não foi possível salvar o colaborador.", variant: "destructive" });
     } finally {
       setIsLoading(false);
       setIsDialogOpen(false);
@@ -210,7 +228,7 @@ export default function AccessControlPage() {
     setIsLoading(true);
     try {
       await deleteEmployee(employeeToDelete.id);
-      toast({ title: "Funcionário Excluído", description: "O funcionário foi removido do sistema.", variant: "destructive" })
+      toast({ title: "Colaborador Excluído", description: "O colaborador foi removido do sistema.", variant: "destructive" })
       fetchEmployees();
     } catch (error) {
       toast({ title: "Erro ao excluir", variant: "destructive" });
@@ -245,13 +263,13 @@ export default function AccessControlPage() {
       <CardHeader>
         <div className="flex items-start justify-between">
             <div>
-                <CardTitle className="font-headline">Gerenciamento de Funcionários</CardTitle>
+                <CardTitle className="font-headline">Controle de Acesso e Colaboradores</CardTitle>
                 <CardDescription>
-                Adicione, edite e gerencie as permissões dos funcionários.
+                Adicione, edite e gerencie as permissões dos colaboradores.
                 </CardDescription>
             </div>
              <div className="flex items-center gap-4">
-                <Button onClick={handleAddNewClick} disabled={isLoading}><PlusCircle className="mr-2 h-4 w-4" />Adicionar Funcionário</Button>
+                <Button onClick={handleAddNewClick} disabled={isLoading}><PlusCircle className="mr-2 h-4 w-4" />Adicionar Colaborador</Button>
             </div>
         </div>
       </CardHeader>
@@ -264,10 +282,10 @@ export default function AccessControlPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Funcionário</TableHead>
+                <TableHead>Colaborador</TableHead>
                 <TableHead>Função</TableHead>
                 <TableHead className="hidden md:table-cell">Horário</TableHead>
-                <TableHead className="hidden lg:table-cell">Salário</TableHead>
+                {user?.role === 'Admin' && <TableHead className="hidden lg:table-cell">Salário</TableHead>}
                 <TableHead className="hidden md:table-cell">Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -288,6 +306,7 @@ export default function AccessControlPage() {
                         <SelectValue placeholder="Selecione uma função" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="Gerente">Gerente</SelectItem>
                         <SelectItem value="Gestor">Gestor</SelectItem>
                         <SelectItem value="Professor">Professor</SelectItem>
                         <SelectItem value="Recepção">Recepção</SelectItem>
@@ -296,9 +315,11 @@ export default function AccessControlPage() {
                     </Select>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">{employee.workHours}</TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    {employee.salary.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                  </TableCell>
+                   {user?.role === 'Admin' && (
+                    <TableCell className="hidden lg:table-cell">
+                      {employee.salary.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </TableCell>
+                  )}
                   <TableCell className="hidden md:table-cell">
                     <Badge variant={employee.status === "Ativo" ? "secondary" : "destructive"}>
                       {employee.status}
@@ -320,10 +341,14 @@ export default function AccessControlPage() {
                         <DropdownMenuItem onSelect={() => handleSimulateView(employee.role as Role)}>
                           <Eye className="mr-2 h-4 w-4" /> Simular Visão
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={() => handlePaySalaryClick(employee)}>
-                          <WalletCards className="mr-2 h-4 w-4" /> Pagar Salário
-                        </DropdownMenuItem>
+                        {user?.role === 'Admin' && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={() => handlePaySalaryClick(employee)}>
+                              <WalletCards className="mr-2 h-4 w-4" /> Pagar Salário
+                            </DropdownMenuItem>
+                          </>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onSelect={() => handleDeleteClick(employee)} className="text-destructive focus:text-destructive">
                           <Trash2 className="mr-2 h-4 w-4" /> Excluir
@@ -342,21 +367,31 @@ export default function AccessControlPage() {
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Editar Funcionário" : "Adicionar Novo Funcionário"}</DialogTitle>
+          <DialogTitle>{isEditing ? "Editar Colaborador" : "Adicionar Novo Colaborador"}</DialogTitle>
           <DialogDescription>
-            {isEditing ? "Atualize os dados e credenciais do funcionário." : "Preencha os dados e credenciais do novo funcionário."}
+            {isEditing ? "Atualize os dados e credenciais do colaborador." : "Preencha os dados e credenciais do novo colaborador."}
           </DialogDescription>
         </DialogHeader>
         <form id="employee-form" onSubmit={handleSaveEmployee}>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-2">
             <div className="grid gap-2">
-              <Label htmlFor="name">Nome</Label>
+              <Label htmlFor="name">Nome Completo</Label>
               <Input id="name" value={employeeFormData.name} onChange={(e) => handleInputChange('name', e.target.value)} placeholder="Nome completo" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="email">E-mail</Label>
               <Input id="email" type="email" value={employeeFormData.email} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="email@exemplo.com" />
             </div>
+             <div className="grid gap-2">
+                <Label htmlFor="cpf">CPF</Label>
+                <Input id="cpf" value={employeeFormData.cpf} onChange={(e) => handleInputChange('cpf', e.target.value)} placeholder="000.000.000-00" />
+            </div>
+             {(employeeFormData.role === 'Professor' || employeeFormData.role === 'Estagiário') && (
+                <div className="grid gap-2">
+                    <Label htmlFor="cref">CREF</Label>
+                    <Input id="cref" value={employeeFormData.cref} onChange={(e) => handleInputChange('cref', e.target.value)} placeholder="000000-G/SP" />
+                </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="login">Login</Label>
@@ -364,7 +399,7 @@ export default function AccessControlPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Senha</Label>
-                <Input id="password" type="password" value={employeeFormData.password} onChange={(e) => handleInputChange('password', e.target.value)} placeholder="••••••••" />
+                <Input id="password" type="password" value={employeeFormData.password} onChange={(e) => handleInputChange('password', e.target.value)} placeholder={isEditing ? 'Deixe em branco para não alterar' : '••••••••'} />
               </div>
             </div>
              <div className="grid grid-cols-2 gap-4">
@@ -379,10 +414,11 @@ export default function AccessControlPage() {
                         <SelectValue placeholder="Selecione uma função" />
                         </SelectTrigger>
                         <SelectContent>
-                        <SelectItem value="Gestor">Gestor</SelectItem>
-                        <SelectItem value="Professor">Professor</SelectItem>
-                        <SelectItem value="Recepção">Recepção</SelectItem>
-                        <SelectItem value="Estagiário">Estagiário</SelectItem>
+                            <SelectItem value="Gerente">Gerente</SelectItem>
+                            <SelectItem value="Gestor">Gestor</SelectItem>
+                            <SelectItem value="Professor">Professor</SelectItem>
+                            <SelectItem value="Recepção">Recepção</SelectItem>
+                            <SelectItem value="Estagiário">Estagiário</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -392,15 +428,17 @@ export default function AccessControlPage() {
                     <Label htmlFor="workHours">Horário de Trabalho</Label>
                     <Input id="workHours" value={employeeFormData.workHours} onChange={(e) => handleInputChange('workHours', e.target.value)} placeholder="Ex: 08:00 - 17:00" />
                 </div>
-                <div className="grid gap-2">
-                    <Label htmlFor="salary">Salário (R$)</Label>
-                    <Input id="salary" type="number" value={employeeFormData.salary} onChange={(e) => handleInputChange('salary', e.target.value)} placeholder="Ex: 1500.00" />
-                </div>
+                {user?.role === 'Admin' && (
+                  <div className="grid gap-2">
+                      <Label htmlFor="salary">Salário (R$)</Label>
+                      <Input id="salary" type="number" value={employeeFormData.salary} onChange={(e) => handleInputChange('salary', e.target.value)} placeholder="Ex: 1500.00" />
+                  </div>
+                )}
             </div>
           </div>
         </form>
-        <DialogFooter>
-          <Button type="submit" form="employee-form" disabled={isLoading}>{isEditing ? "Salvar Alterações" : "Salvar Funcionário"}</Button>
+        <DialogFooter className="mt-4">
+          <Button type="submit" form="employee-form" disabled={isLoading}>{isEditing ? "Salvar Alterações" : "Salvar Colaborador"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -410,7 +448,7 @@ export default function AccessControlPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação não pode ser desfeita. Isso excluirá permanentemente o funcionário <span className="font-semibold">{employeeToDelete?.name}</span> do sistema.
+              Esta ação não pode ser desfeita. Isso excluirá permanentemente o colaborador <span className="font-semibold">{employeeToDelete?.name}</span> do sistema.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -431,7 +469,7 @@ export default function AccessControlPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Pagamento de Salário</AlertDialogTitle>
             <AlertDialogDescription>
-              Você confirma o registro do pagamento de salário no valor de <span className="font-bold">{employeeToPay?.salary.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span> para o funcionário <span className="font-bold">{employeeToPay?.name}</span>?
+              Você confirma o registro do pagamento de salário no valor de <span className="font-bold">{employeeToPay?.salary.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span> para o colaborador <span className="font-bold">{employeeToPay?.name}</span>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
