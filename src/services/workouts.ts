@@ -130,3 +130,9 @@ export async function deleteWorkoutPlan(id: string): Promise<void> {
     workoutPlans = workoutPlans.filter(p => p.id !== id);
     return Promise.resolve();
 }
+
+export async function getWorkoutPlanById(id: string): Promise<WorkoutPlan | null> {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const plan = workoutPlans.find(p => p.id === id);
+    return Promise.resolve(plan ? JSON.parse(JSON.stringify(plan)) : null);
+}
