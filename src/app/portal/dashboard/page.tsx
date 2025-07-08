@@ -1,29 +1,37 @@
 "use client"
 
 import * as React from "react"
-import { format, parseISO } from "date-fns"
+import { format, parseISO, isSameDay } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { Loader2, Dumbbell, Bell, BarChart, CheckCircle, XCircle, AlertCircle } from "lucide-react"
+import { Loader2, Dumbbell, BarChart, CheckCircle, XCircle, AlertCircle, PartyPopper, MessageSquareWarning, CalendarX } from "lucide-react"
 
 import { getMemberById, type Member } from "@/services/members"
 import { getWorkoutPlanById, type WorkoutPlan } from "@/services/workouts"
-import { getNotificationsForAcademy, type Notification } from "@/services/notifications"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+
 
 const statusConfig = {
     Ativo: { icon: CheckCircle, color: "text-green-500", label: "Ativo" },
-    Atrasado: { icon: AlertCircle, color: "text-yellow-500", label: "Atrasado" },
+    Atrasado: { icon: AlertCircle, color: "text-yellow-500", label: "Pendente" },
     Inativo: { icon: XCircle, color: "text-red-500", label: "Inativo" },
+}
+
+type PersonalAlert = {
+    type: 'birthday' | 'payment' | 'absence' | 'none';
+    Icon: React.ElementType;
+    title: string;
+    message: string;
 }
 
 export default function StudentDashboardPage() {
     const [user, setUser] = React.useState<Member | null>(null)
     const [workoutPlan, setWorkoutPlan] = React.useState<WorkoutPlan | null>(null)
-    const [notifications, setNotifications] = React.useState<Notification[]>([])
+    const [personalAlert, setPersonalAlert] = React.useState<PersonalAlert | null>(null);
     const [isLoading, setIsLoading] = React.useState(true)
 
     React.useEffect(() => {
@@ -37,21 +45,42 @@ export default function StudentDashboardPage() {
 
         async function fetchData() {
             try {
-                // Assuming student's academy ID is 'gym-1' for demo purposes
-                const ACADEMY_ID = 'gym-1';
-
-                const [memberData, notificationsData] = await Promise.all([
-                    getMemberById(parsedUser.id),
-                    getNotificationsForAcademy(ACADEMY_ID),
-                ]);
-
+                const memberData = await getMemberById(parsedUser.id);
                 setUser(memberData);
-                setNotifications(notificationsData);
 
                 if (memberData?.assignedPlanId) {
                     const planData = await getWorkoutPlanById(memberData.assignedPlanId)
                     setWorkoutPlan(planData)
                 }
+
+                // --- Generate Personal Alert ---
+                if (memberData) {
+                    const today = new Date();
+                    const dob = parseISO(memberData.dob);
+                    if (isSameDay(today, dob)) {
+                         setPersonalAlert({
+                            type: 'birthday',
+                            Icon: PartyPopper,
+                            title: 'Feliz Aniversário!',
+                            message: `A equipe da Academia Exemplo deseja a você um dia incrível, cheio de alegrias e ótimos treinos!`
+                        });
+                    } else if (memberData.status === 'Atrasado') {
+                         setPersonalAlert({
+                            type: 'payment',
+                            Icon: MessageSquareWarning,
+                            title: 'Pagamento Pendente',
+                            message: 'Olá! Identificamos uma pendência no seu plano. Por favor, procure a recepção para regularizar sua situação.'
+                        });
+                    } else if (memberData.attendanceStatus === 'Faltante') {
+                        setPersonalAlert({
+                            type: 'absence',
+                            Icon: CalendarX,
+                            title: 'Sentimos sua falta!',
+                            message: 'Que tal voltar a treinar com a gente hoje? Estamos te esperando para manter o foco nos seus objetivos!'
+                        });
+                    }
+                }
+                // -----------------------------
 
             } catch (error) {
                 console.error("Failed to fetch student dashboard data:", error)
@@ -76,6 +105,17 @@ export default function StudentDashboardPage() {
     
     return (
         <div className="space-y-6">
+
+            {personalAlert && (
+                <Alert className="bg-primary/5 border-primary/20">
+                    <personalAlert.Icon className="h-4 w-4 text-primary" />
+                    <AlertTitle className="font-headline text-primary">{personalAlert.title}</AlertTitle>
+                    <AlertDescription>
+                        {personalAlert.message}
+                    </AlertDescription>
+                </Alert>
+            )}
+
             <h1 className="text-3xl font-bold font-headline">Bem-vindo(a) de volta, {user.name.split(' ')[0]}!</h1>
             
             <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
@@ -153,26 +193,6 @@ export default function StudentDashboardPage() {
                                     <span className={currentStatusColor}>{statusConfig[user.status].label}</span>
                                 </Badge>
                             </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><Bell className="text-primary"/> Avisos da Academia</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {notifications.length > 0 ? (
-                                <ul className="space-y-4">
-                                    {notifications.map(item => (
-                                        <li key={item.id} className="space-y-1">
-                                            <p className="font-semibold text-sm">{item.title}</p>
-                                            <p className="text-xs text-muted-foreground">{item.description}</p>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p className="text-sm text-center text-muted-foreground py-4">Nenhum aviso no momento.</p>
-                            )}
                         </CardContent>
                     </Card>
                 </div>
