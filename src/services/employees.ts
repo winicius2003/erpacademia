@@ -39,6 +39,7 @@ export async function getEmployeeByLogin(login: string): Promise<Employee | null
 }
 
 export async function getEmployeeByPin(pin: string): Promise<Employee | null> {
+    if (!pin) return Promise.resolve(null);
     const employee = employees.find(e => e.accessPin === pin);
     return Promise.resolve(employee || null);
 }

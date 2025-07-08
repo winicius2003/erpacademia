@@ -90,13 +90,14 @@ export async function getMemberById(id: string): Promise<Member | null> {
 
 export async function getMemberByPin(pin: string): Promise<Member | null> {
     await new Promise(resolve => setTimeout(resolve, 200));
-    const member = members.find(m => m.accessPin === pin);
-    if (!member) return null;
+    if (!pin) return Promise.resolve(null);
+    const memberData = members.find(m => m.accessPin === pin);
+    if (!memberData) return null;
     
     // Also apply dynamic status for single member fetch
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const expiresDate = parseISO(member.expires);
+    const expiresDate = parseISO(memberData.expires);
     const diff = differenceInDays(expiresDate, today);
 
     let status: Member['status'];
@@ -108,7 +109,7 @@ export async function getMemberByPin(pin: string): Promise<Member | null> {
         status = 'Inativo';
     }
     
-    return Promise.resolve({ ...member, status });
+    return Promise.resolve({ ...memberData, status });
 }
 
 export async function addMember(memberData: Omit<Member, 'id'>): Promise<Member> {
