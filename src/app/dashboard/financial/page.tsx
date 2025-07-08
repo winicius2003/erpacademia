@@ -5,13 +5,13 @@ import * as React from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { format, isToday, isSameDay, parseISO, parse } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { MoreHorizontal, PlusCircle, Download, Calendar as CalendarIcon, DollarSign, TrendingUp, Users, AlertCircle, Trash2, X, Target, Loader2, UsersRound, ArrowRightLeft, MinusCircle, ChevronsUpDown, Search, Upload } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Download, Calendar as CalendarIcon, DollarSign, TrendingUp, Users, AlertCircle, Trash2, X, Target, Loader2, UsersRound, ArrowRightLeft, MinusCircle, ChevronsUpDown, Search, Upload, RotateCcw } from "lucide-react"
 import Papa from "papaparse"
 import * as XLSX from "xlsx"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
   Card,
@@ -36,7 +36,18 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -71,7 +82,7 @@ import { InvoiceDialog } from "@/components/invoice-dialog"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { getMembers, type Member } from "@/services/members"
-import { getPayments, addPayment, type Payment, type PaymentMethod } from "@/services/payments"
+import { getPayments, addPayment, reversePayment, type Payment, type PaymentMethod, type PaymentStatus } from "@/services/payments"
 import { getExpenses, addExpense, type Expense, type ExpenseCategory } from "@/services/expenses"
 import { useSubscription } from "@/lib/subscription-context"
 import { getPlans } from "@/services/plans"
@@ -119,7 +130,6 @@ export default function FinancialPage() {
     const { status: subscriptionStatus } = useSubscription()
     const studentNameParam = searchParams.get('studentName')
 
-    // State to manage the post-creation payment trigger
     const [paymentAction, setPaymentAction] = React.useState<{studentId: string; studentName: string; planName: string; planPrice: string;} | null>(null);
     const [hasAttemptedRefetch, setHasAttemptedRefetch] = React.useState(false);
 
@@ -131,12 +141,10 @@ export default function FinancialPage() {
     const [isLoading, setIsLoading] = React.useState(true)
     const [availableProducts, setAvailableProducts] = React.useState<{ name: string, price: number }[]>([]);
     
-    // States for Cash Flow tab
     const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(new Date())
     const [dailyTransactions, setDailyTransactions] = React.useState<Transaction[]>([])
     const [dailySummary, setDailySummary] = React.useState({ inflow: 0, outflow: 0, balance: 0 })
     
-    // States for dialogs
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false)
     const [isExpenseDialogOpen, setIsExpenseDialogOpen] = React.useState(false)
     const [isInvoiceOpen, setIsInvoiceOpen] = React.useState(false)
@@ -144,8 +152,9 @@ export default function FinancialPage() {
     const [isStudentComboboxOpen, setIsStudentComboboxOpen] = React.useState(false)
     const [studentSearch, setStudentSearch] = React.useState("")
     const [paymentSearch, setPaymentSearch] = React.useState("");
+    const [paymentToReverse, setPaymentToReverse] = React.useState<Payment | null>(null)
+    const [isReverseAlertOpen, setIsReverseAlertOpen] = React.useState(false)
 
-    // States for payment import
     const [isImportDialogOpen, setIsImportDialogOpen] = React.useState(false)
     const [importFile, setImportFile] = React.useState<File | null>(null)
     const [importPreview, setImportPreview] = React.useState<ImportedPayment[]>([]);
@@ -154,7 +163,6 @@ export default function FinancialPage() {
     const [importStep, setImportStep] = React.useState(1)
 
 
-    // States for cashier closing
     const [todaySummary, setTodaySummary] = React.useState({ inflow: 0, outflow: 0, balance: 0 })
     const [cashierSummary, setCashierSummary] = React.useState<{ name: string, total: number, count: number }[]>([]);
 
@@ -195,7 +203,6 @@ export default function FinancialPage() {
         fetchData();
     }, [fetchData]);
     
-    // Part 1: Check for action on mount, store it in state, and clean the URL
     React.useEffect(() => {
         const action = searchParams.get('action');
         const studentId = searchParams.get('studentId');
@@ -205,18 +212,14 @@ export default function FinancialPage() {
 
         if (action === 'new_payment' && studentId && studentName && planName && planPrice) {
             setPaymentAction({ studentId, studentName, planName, planPrice });
-            // Clean up URL to prevent re-triggering
             router.replace('/dashboard/financial', { scroll: false });
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Run only once on mount to capture the params
+    }, []); 
 
-    // Part 2: Open dialog only when the trigger is set and the data is ready
      React.useEffect(() => {
         if (paymentAction && members.length > 0) {
             const studentExists = members.some(m => m.id === paymentAction.studentId);
             if (studentExists) {
-                // SUCCESS: Student found, open dialog.
                 setNewPaymentData(prev => ({
                     ...prev,
                     studentId: paymentAction.studentId,
@@ -227,16 +230,14 @@ export default function FinancialPage() {
                     title: "Primeiro Pagamento",
                     description: `Registre o pagamento inicial para ${paymentAction.studentName}.`,
                 });
-                setPaymentAction(null); // Reset action
+                setPaymentAction(null); 
             } else if (!hasAttemptedRefetch) {
-                // FAIL: Student not found, try to refetch data ONCE.
-                setHasAttemptedRefetch(true); // Mark that we've tried to refetch
-                fetchData(); // Call fetchData again, hopefully it gets the fresh list
+                setHasAttemptedRefetch(true); 
+                fetchData(); 
             }
         }
     }, [paymentAction, members, toast, fetchData, hasAttemptedRefetch]);
 
-    // Effect for Cash Flow Tab
     React.useEffect(() => {
         if (!selectedDate) {
             setDailyTransactions([]);
@@ -277,7 +278,6 @@ export default function FinancialPage() {
     }, [selectedDate, payments, expenses]);
 
 
-    // Effect for Cashier Closing Tab & other summaries
     React.useEffect(() => {
         const today = new Date();
         const todayPayments = payments.filter(p => isSameDay(parseISO(p.date), today));
@@ -307,7 +307,6 @@ export default function FinancialPage() {
         }
     }, [payments, expenses, user]);
 
-    // Payment Dialog Logic
     const [newPaymentData, setNewPaymentData] = React.useState(initialPaymentFormState);
     const totalAmount = newPaymentData.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
     const handleItemChange = (index, field, value) => setNewPaymentData(p => ({ ...p, items: p.items.map((it, i) => i === index ? {...it, [field]: value} : it) }));
@@ -330,7 +329,7 @@ export default function FinancialPage() {
         const newPayment = {
             studentId: newPaymentData.studentId, student: selectedMember.name, items: newPaymentData.items,
             amount: totalAmount.toFixed(2), date: format(newPaymentData.date, "yyyy-MM-dd"),
-            time: format(new Date(), "HH:mm"), status: "Pago", registeredById: user.id, registeredByName: user.name,
+            time: format(new Date(), "HH:mm"), status: "Pago" as const, registeredById: user.id, registeredByName: user.name,
             paymentMethod: newPaymentData.paymentMethod,
             transactionId: newPaymentData.transactionId
         };
@@ -349,7 +348,6 @@ export default function FinancialPage() {
         } finally { setIsLoading(false); }
     };
 
-    // Expense Dialog Logic
     const [newExpenseData, setNewExpenseData] = React.useState(initialExpenseFormState)
     const handleSaveExpense = async (e) => {
         e.preventDefault();
@@ -400,7 +398,6 @@ export default function FinancialPage() {
         );
     }, [payments, paymentSearch, studentNameParam]);
 
-    // --- Import Logic ---
     const resetImportDialog = () => {
       setImportFile(null);
       setImportPreview([]);
@@ -484,7 +481,29 @@ export default function FinancialPage() {
     const handleConfirmImport = async () => {
         toast({ title: "Importação de Pagamentos", description: "Esta funcionalidade ainda está em desenvolvimento." });
     }
-    // --- End Import Logic ---
+
+    const handleReverseClick = (payment: Payment) => {
+        setPaymentToReverse(payment);
+        setIsReverseAlertOpen(true);
+    };
+
+    const handleConfirmReverse = async () => {
+        if (!paymentToReverse || !user) return;
+
+        setIsLoading(true);
+        try {
+            await reversePayment(paymentToReverse.id, user.id, user.name);
+            toast({ title: "Pagamento Estornado", description: "A transação foi revertida com sucesso." });
+            fetchData();
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Não foi possível estornar o pagamento.";
+            toast({ title: "Erro ao Estornar", description: errorMessage, variant: "destructive" });
+        } finally {
+            setIsLoading(false);
+            setPaymentToReverse(null);
+            setIsReverseAlertOpen(false);
+        }
+    };
 
 
     if (isLoading && !user) return <div className="flex h-64 w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
@@ -682,7 +701,14 @@ export default function FinancialPage() {
                                         <TableCell className="font-mono text-xs text-muted-foreground">{payment.transactionId || payment.id}</TableCell>
                                         <TableCell>R$ {payment.amount}</TableCell>
                                         <TableCell className="hidden md:table-cell">{format(parseISO(payment.date), "dd/MM/yyyy")}</TableCell>
-                                        <TableCell><Badge variant={payment.status === 'Pago' ? 'secondary' : 'destructive'}>{payment.status}</Badge></TableCell>
+                                        <TableCell>
+                                            <Badge variant={
+                                                payment.status === 'Pago' ? 'secondary' :
+                                                payment.status === 'Vencida' ? 'destructive' : 'outline'
+                                            } className={cn(payment.status === 'Estornado' && 'border-yellow-500 text-yellow-600')}>
+                                                {payment.status}
+                                            </Badge>
+                                        </TableCell>
                                         <TableCell>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild><Button aria-haspopup="true" size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /><span className="sr-only">Menu</span></Button></DropdownMenuTrigger>
@@ -690,6 +716,11 @@ export default function FinancialPage() {
                                                     <DropdownMenuLabel>Ações</DropdownMenuLabel>
                                                     <DropdownMenuItem onClick={() => { setCurrentInvoice(payment); setIsInvoiceOpen(true); }}>Ver Fatura</DropdownMenuItem>
                                                     <DropdownMenuItem>Marcar como Pago</DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem onSelect={() => handleReverseClick(payment)} disabled={payment.status === 'Estornado'} className="text-destructive focus:text-destructive">
+                                                        <RotateCcw className="mr-2 h-4 w-4" />
+                                                        Estornar Pagamento
+                                                    </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
@@ -908,6 +939,28 @@ export default function FinancialPage() {
             </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={isReverseAlertOpen} onOpenChange={setIsReverseAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Estorno do Pagamento?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. O pagamento de <span className="font-bold">{paymentToReverse?.amount ? parseFloat(paymentToReverse.amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''}</span> será marcado como "Estornado".
+              Uma transação de saída correspondente será criada no fluxo de caixa para balancear as contas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              className={buttonVariants({ variant: "destructive" })}
+              onClick={handleConfirmReverse}
+              disabled={isLoading}
+            >
+              Confirmar Estorno
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

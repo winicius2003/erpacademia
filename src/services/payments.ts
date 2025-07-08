@@ -4,6 +4,7 @@
 import { format, addDays, isAfter, parseISO } from 'date-fns';
 import { getMemberById, updateMember } from './members';
 import { getPlans, type Plan } from './plans';
+import { addExpense } from './expenses';
 
 export type PaymentItem = {
     id: number;
@@ -13,6 +14,7 @@ export type PaymentItem = {
 };
 
 export type PaymentMethod = "Dinheiro" | "Pix" | "Cartão de Débito" | "Cartão de Crédito" | "Boleto";
+export type PaymentStatus = "Pago" | "Pendente" | "Vencida" | "Estornado";
 
 export type Payment = {
     id: string;
@@ -22,7 +24,7 @@ export type Payment = {
     amount: string;
     date: string; // "yyyy-MM-dd"
     time: string; // "HH:mm"
-    status: "Pago" | "Pendente" | "Vencida";
+    status: PaymentStatus;
     registeredById: string;
     registeredByName: string;
     paymentMethod: PaymentMethod;
@@ -117,4 +119,32 @@ export async function addPayment(paymentData: Omit<Payment, 'id'>): Promise<Paym
     // ------------------------------------
 
     return Promise.resolve(newPayment);
+}
+
+export async function reversePayment(paymentId: string, userId: string, userName: string): Promise<void> {
+    const paymentIndex = payments.findIndex(p => p.id === paymentId);
+    if (paymentIndex === -1) {
+        throw new Error("Pagamento não encontrado.");
+    }
+
+    const payment = payments[paymentIndex];
+    if (payment.status === 'Estornado') {
+        throw new Error("Este pagamento já foi estornado.");
+    }
+
+    // Mark the payment as reversed
+    payments[paymentIndex].status = 'Estornado';
+
+    // Create a corresponding expense for cash flow balance
+    await addExpense({
+        description: `Estorno do Pagamento #${payment.id} (Aluno: ${payment.student})`,
+        amount: parseFloat(payment.amount),
+        category: 'Outros',
+        date: format(new Date(), 'yyyy-MM-dd'),
+        time: format(new Date(), 'HH:mm'),
+        registeredById: userId,
+        registeredByName: userName,
+    });
+    
+    return Promise.resolve();
 }
