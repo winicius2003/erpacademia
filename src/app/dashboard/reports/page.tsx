@@ -10,8 +10,10 @@ import {
     FileClock,
     Tags,
     Spline,
-    Printer
+    Printer,
+    UserCog
 } from "lucide-react"
+import Papa from "papaparse"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -22,6 +24,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
+import { getMembers } from "@/services/members"
 
 export default function ReportsPage() {
   const { toast } = useToast()
@@ -38,6 +41,33 @@ export default function ReportsPage() {
       title: "Documento Gerado",
       description: `O documento "${docName}" foi gerado e está pronto para impressão.`,
     })
+  }
+
+  const handleGenerateFrequencyReport = async () => {
+    toast({
+      title: "Gerando Relatório de Frequência...",
+      description: "Isso pode levar alguns instantes.",
+    })
+    
+    const members = await getMembers();
+    
+    const reportData = members.map(member => ({
+        "Nome do Aluno": member.name,
+        "Status do Plano": member.status,
+        "Status de Presença": member.attendanceStatus,
+        "Último Vencimento": member.expires,
+        "Professor Responsável": member.professor,
+    }));
+
+    const csv = Papa.unparse(reportData);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `relatorio_frequencia_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   return (
@@ -123,6 +153,19 @@ export default function ReportsPage() {
              <Button className="w-full justify-start" variant="outline" onClick={() => handleGenerateDocument("Recibo Avulso")}>
               <Printer className="mr-2 h-4 w-4" />
               Recibo Avulso
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Relatórios Operacionais</CardTitle>
+            <CardDescription>Dados sobre a frequência e atividade dos alunos.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button className="w-full justify-start" variant="outline" onClick={handleGenerateFrequencyReport}>
+              <UserCog className="mr-2 h-4 w-4" />
+              Exportar Frequência de Alunos
             </Button>
           </CardContent>
         </Card>

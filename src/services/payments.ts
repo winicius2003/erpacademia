@@ -1,7 +1,9 @@
 
 'use server';
 
-import { format } from 'date-fns';
+import { format, addDays, isAfter, parseISO } from 'date-fns';
+import { getMemberById, updateMember } from './members';
+import { getPlans, type Plan } from './plans';
 
 export type PaymentItem = {
     id: number;
@@ -74,5 +76,45 @@ export async function addPayment(paymentData: Omit<Payment, 'id'>): Promise<Paym
         ...paymentData,
     };
     payments.unshift(newPayment); // Add to the beginning of the list
+
+    // --- Update Member Status and Expiry ---
+    try {
+        const member = await getMemberById(paymentData.studentId);
+        if (member) {
+            const allPlans = await getPlans();
+            let maxDuration = 0;
+            
+            // Find the plan with the longest duration in the purchase
+            paymentData.items.forEach(item => {
+                const purchasedPlan = allPlans.find(p => p.name === item.description);
+                if (purchasedPlan && purchasedPlan.durationDays > maxDuration) {
+                    maxDuration = purchasedPlan.durationDays;
+                }
+            });
+
+            if (maxDuration > 0) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                const currentExpires = parseISO(member.expires);
+                
+                // If current plan is still active, add days to the expiry date. Otherwise, add to today.
+                const startDateForRenewal = isAfter(currentExpires, today) ? currentExpires : today;
+                
+                const newExpiryDate = addDays(startDateForRenewal, maxDuration);
+
+                // Update member's expiry and set status to active
+                await updateMember(member.id, {
+                    expires: format(newExpiryDate, "yyyy-MM-dd"),
+                    status: 'Ativo' 
+                });
+            }
+        }
+    } catch (error) {
+        console.error("Failed to update member status after payment:", error);
+        // Don't block payment from being saved, but log the error.
+    }
+    // ------------------------------------
+
     return Promise.resolve(newPayment);
 }
