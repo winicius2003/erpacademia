@@ -118,9 +118,25 @@ npm run dev
 
 A aplicação estará disponível em [http://localhost:9002](http://localhost:9002).
 
+### 5. Testando como Aplicativo no Celular (PWA)
+
+O FitCore é um Progressive Web App (PWA), o que significa que você pode "instalá-lo" no seu celular para ter uma experiência de aplicativo. Para testar:
+
+1.  **Conecte seu celular na mesma rede Wi-Fi** que o seu computador.
+2.  **Descubra o endereço IP do seu computador** na rede local:
+    *   **No Windows:** Abra o `Prompt de Comando` e digite `ipconfig`. Procure pelo "Endereço IPv4". Geralmente começa com `192.168...`.
+    *   **No macOS ou Linux:** Abra o `Terminal` e digite `ifconfig`. Procure por `inet` na sua conexão de rede (ex: `en0`).
+3.  **Acesse no celular:** Abra o navegador do seu celular e digite a URL `http://<SEU_ENDERECO_IP>:9002`. Substitua `<SEU_ENDERECO_IP>` pelo IP que você encontrou.
+4.  **Adicione à Tela Inicial:**
+    *   **No Android (Chrome):** Toque nos três pontos no canto superior direito e selecione a opção **"Instalar aplicativo"** ou **"Adicionar à tela inicial"**.
+    *   **No iPhone (Safari):** Toque no ícone de compartilhamento (um quadrado com uma seta para cima) na barra inferior e selecione **"Adicionar à Tela de Início"**.
+
+Pronto! Um ícone do FitCore aparecerá na sua tela inicial.
+
 **Logins de Teste:**
 -   **Superadmin:** `superadmin@fitcore.com` / senha: `superadminpass`
 -   **Admin (Academia Exemplo):** `admin@admin` / senha: `uUmope5Z`
 -   **Gestor:** `carla` / senha: `123`
 -   **Professor:** `marcos` / senha: `123`
 -   **Recepção:** `juliana` / senha: `123`
+-   **Aluno:** `joao.silva@example.com` / senha: `123`
