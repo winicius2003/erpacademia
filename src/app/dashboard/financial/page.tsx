@@ -3,9 +3,11 @@
 
 import * as React from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { format, isToday, isSameDay, parseISO } from "date-fns"
+import { format, isToday, isSameDay, parseISO, parse } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { MoreHorizontal, PlusCircle, Download, Calendar as CalendarIcon, DollarSign, TrendingUp, Users, AlertCircle, Trash2, X, Target, Loader2, UsersRound, ArrowRightLeft, MinusCircle, ChevronsUpDown, Search } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Download, Calendar as CalendarIcon, DollarSign, TrendingUp, Users, AlertCircle, Trash2, X, Target, Loader2, UsersRound, ArrowRightLeft, MinusCircle, ChevronsUpDown, Search, Upload } from "lucide-react"
+import Papa from "papaparse"
+import * as XLSX from "xlsx"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -86,6 +88,16 @@ type Transaction = {
     originalDoc: Payment | Expense;
 }
 
+type ImportedPayment = {
+    nome: string,
+    email: string,
+    itemDescricao: string,
+    valor: string,
+    formaPagamento: PaymentMethod,
+    data: string, // YYYY-MM-DD
+    idTransacao?: string,
+}
+
 const initialExpenseFormState = {
     description: "",
     amount: 0,
@@ -132,6 +144,14 @@ export default function FinancialPage() {
     const [isStudentComboboxOpen, setIsStudentComboboxOpen] = React.useState(false)
     const [studentSearch, setStudentSearch] = React.useState("")
     const [paymentSearch, setPaymentSearch] = React.useState("");
+
+    // States for payment import
+    const [isImportDialogOpen, setIsImportDialogOpen] = React.useState(false)
+    const [importFile, setImportFile] = React.useState<File | null>(null)
+    const [importPreview, setImportPreview] = React.useState<ImportedPayment[]>([]);
+    const [importErrors, setImportErrors] = React.useState<string[]>([])
+    const [isImporting, setIsImporting] = React.useState(false)
+    const [importStep, setImportStep] = React.useState(1)
 
 
     // States for cashier closing
@@ -380,6 +400,92 @@ export default function FinancialPage() {
         );
     }, [payments, paymentSearch, studentNameParam]);
 
+    // --- Import Logic ---
+    const resetImportDialog = () => {
+      setImportFile(null);
+      setImportPreview([]);
+      setImportErrors([]);
+      setImportStep(1);
+      setIsImporting(false);
+    }
+  
+    const handleDownloadTemplate = () => {
+      const headers = `"Nome do Aluno","Email do Aluno","Item Descrição","Valor","Forma Pagamento (Dinheiro, Pix, Cartão de Débito, Cartão de Crédito, Boleto)","Data (YYYY-MM-DD)","ID Transação (Opcional)"`;
+      const sampleData = `\n"João da Silva","joao.silva@example.com","Plano Mensal","97.00","Cartão de Crédito","${format(new Date(), 'yyyy-MM-dd')}","12345ABC"`;
+      const csvContent = "data:text/csv;charset=utf-8," + headers + sampleData;
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "modelo_importacao_pagamentos.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    const handlePreviewImport = () => {
+        if (!importFile) return;
+        setIsImporting(true);
+        setImportErrors([]);
+        
+        const processData = (data: any[]) => {
+            const membersByName = new Map(members.map(m => [m.name.toLowerCase(), m]));
+            const membersByEmail = new Map(members.map(m => [m.email.toLowerCase(), m]));
+            let currentErrors: string[] = [];
+            
+            const mappedData = data.map((row, index) => {
+                 const normalizedRow: {[key: string]: any} = {};
+                 for (const key in row) {
+                    normalizedRow[key.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")] = row[key];
+                 }
+
+                 const payment: Partial<ImportedPayment> = {
+                     nome: normalizedRow['nome do aluno'],
+                     email: normalizedRow['email do aluno'],
+                     itemDescricao: normalizedRow['item descricao'],
+                     valor: normalizedRow['valor'],
+                     formaPagamento: normalizedRow['forma pagamento'],
+                     data: normalizedRow['data'],
+                     idTransacao: normalizedRow['id transacao'],
+                 };
+
+                 if (!payment.nome && !payment.email) { currentErrors.push(`Linha ${index + 2}: Nome ou E-mail do aluno é obrigatório.`); return null; }
+                 if (!payment.itemDescricao) { currentErrors.push(`Linha ${index + 2}: Descrição do item é obrigatória.`); return null; }
+                 if (!payment.valor || isNaN(parseFloat(payment.valor))) { currentErrors.push(`Linha ${index + 2}: Valor inválido.`); return null; }
+                 if (!payment.formaPagamento) { currentErrors.push(`Linha ${index + 2}: Forma de Pagamento é obrigatória.`); return null; }
+
+                 const studentExists = payment.email ? membersByEmail.has(payment.email.toLowerCase()) : membersByName.has(payment.nome!.toLowerCase());
+                 if (!studentExists) { currentErrors.push(`Linha ${index + 2}: Aluno "${payment.nome || payment.email}" não encontrado.`); }
+
+                 return payment;
+            }).filter((p): p is ImportedPayment => Boolean(p));
+
+            setImportPreview(mappedData as ImportedPayment[]);
+            setImportErrors(currentErrors);
+            setImportStep(2);
+            setIsImporting(false);
+        };
+
+        if (importFile.name.endsWith('.csv')) {
+            Papa.parse(importFile, { header: true, skipEmptyLines: true, complete: res => processData(res.data) });
+        } else {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target!.result as ArrayBuffer);
+                const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet);
+                processData(json);
+            };
+            reader.readAsArrayBuffer(importFile);
+        }
+    }
+
+    const handleConfirmImport = async () => {
+        toast({ title: "Importação de Pagamentos", description: "Esta funcionalidade ainda está em desenvolvimento." });
+    }
+    // --- End Import Logic ---
+
 
     if (isLoading && !user) return <div className="flex h-64 w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
 
@@ -548,6 +654,9 @@ export default function FinancialPage() {
                                     />
                                 </div>
                                 {studentNameParam && (<Button variant="outline" size="sm" onClick={clearFilter}><X className="mr-2 h-4 w-4" />Limpar filtro</Button>)}
+                                <Button variant="outline" onClick={() => { setIsImportDialogOpen(true); resetImportDialog(); }}>
+                                    <Upload className="mr-2 h-4 w-4" /> Importar Excel
+                                </Button>
                                 <Button onClick={() => setIsPaymentDialogOpen(true)} disabled={isSalesBlocked} title={isSalesBlocked ? "Bloqueado por pendência" : ""}>
                                     <PlusCircle className="mr-2 h-4 w-4" />Registrar Pagamento
                                 </Button>
@@ -713,6 +822,92 @@ export default function FinancialPage() {
                 <DialogFooter><Button type="submit" form="expense-form" disabled={isLoading}>Salvar Despesa</Button></DialogFooter>
             </DialogContent>
         </Dialog>
+
+         {/* Import Payments Dialog */}
+        <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+        <DialogContent className="sm:max-w-4xl">
+            <DialogHeader>
+                <DialogTitle>Importar Pagamentos</DialogTitle>
+                <DialogDescription>
+                  {importStep === 1 
+                    ? "Faça o upload de um arquivo CSV ou Excel. O sistema registrará os pagamentos para os alunos existentes."
+                    : "Confirme os dados para importação. Pagamentos com erros não serão importados."}
+                </DialogDescription>
+            </DialogHeader>
+
+            {importStep === 1 && (
+              <div className="space-y-4 py-4">
+                  <div className="grid gap-2">
+                      <Label htmlFor="csv-file">Arquivo CSV ou Excel</Label>
+                      <Input 
+                          id="csv-file" 
+                          type="file" 
+                          accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                          onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+                          disabled={isImporting}
+                      />
+                      <Button variant="link" size="sm" className="p-0 h-auto justify-start" onClick={handleDownloadTemplate}>
+                        Baixar modelo de exemplo (.csv)
+                      </Button>
+                  </div>
+              </div>
+            )}
+            
+            {importStep === 2 && (
+              <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
+                {importErrors.length > 0 && (
+                  <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
+                    <h3 className="font-bold mb-2">Erros Encontrados:</h3>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {importErrors.map((err, i) => <li key={i}>{err}</li>)}
+                    </ul>
+                  </div>
+                )}
+                <h3 className="font-bold">Pré-visualização ({importPreview.length} pagamentos):</h3>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Aluno</TableHead>
+                      <TableHead>Item</TableHead>
+                      <TableHead>Valor</TableHead>
+                      <TableHead>Forma Pgto.</TableHead>
+                      <TableHead>Data</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {importPreview.map((p, index) => (
+                      <TableRow key={index} className={importErrors.some(e => e.startsWith(`Linha ${index + 2}`)) ? 'bg-destructive/10' : ''}>
+                        <TableCell>{p.nome || p.email}</TableCell>
+                        <TableCell>{p.itemDescricao}</TableCell>
+                        <TableCell>{p.valor}</TableCell>
+                        <TableCell><Badge variant="outline">{p.formaPagamento}</Badge></TableCell>
+                        <TableCell>{p.data}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            <DialogFooter>
+                <Button variant="ghost" onClick={() => setIsImportDialogOpen(false)}>Cancelar</Button>
+                {importStep === 1 && (
+                  <Button onClick={handlePreviewImport} disabled={isImporting || !importFile}>
+                    {isImporting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Visualizar Importação
+                  </Button>
+                )}
+                 {importStep === 2 && (
+                   <div className="flex gap-2">
+                      <Button variant="outline" onClick={() => setImportStep(1)}>Voltar</Button>
+                      <Button onClick={handleConfirmImport} disabled={isImporting || importPreview.length === 0 || importErrors.length > 0}>
+                        {isImporting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Confirmar e Importar {importPreview.length} Pagamentos
+                      </Button>
+                   </div>
+                )}
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
