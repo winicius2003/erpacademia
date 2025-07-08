@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Eye, MoreHorizontal, PlusCircle, Trash2, Loader2, WalletCards, ShieldCheck } from "lucide-react"
+import { Eye, MoreHorizontal, PlusCircle, Trash2, Loader2, WalletCards, ShieldCheck, FileText } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -58,6 +58,7 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { getEmployees, addEmployee, updateEmployee, deleteEmployee, type Employee, type Role } from "@/services/employees"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Separator } from "@/components/ui/separator"
 
 export const allPermissions = ["Painel", "Alunos", "Treinos", "Agenda", "Financeiro (Geral)", "Financeiro (Pessoal)", "CRM", "Colaboradores", "Relatórios", "Configurações", "Assinatura", "Gympass", "Planos", "Produtos", "Avaliações", "Frequência"]
 
@@ -82,6 +83,13 @@ const initialEmployeeFormState = {
   cpf: "",
   cref: "",
   accessPin: "",
+  universityInfo: {
+    universityName: "",
+    course: "",
+    expectedGraduation: "",
+    contractStartDate: "",
+    contractEndDate: "",
+  },
 }
 
 type EmployeeFormData = typeof initialEmployeeFormState
@@ -162,6 +170,16 @@ export default function AccessControlPage() {
     setEmployeeFormData(prev => ({ ...prev, [field]: value }))
   }
 
+   const handleUniversityInfoChange = (field: keyof typeof initialEmployeeFormState.universityInfo, value: string) => {
+    setEmployeeFormData(prev => ({
+      ...prev,
+      universityInfo: {
+        ...prev.universityInfo,
+        [field]: value
+      }
+    }));
+  }
+
   const handleAddNewClick = () => {
     setIsEditing(false);
     setEmployeeFormData(initialEmployeeFormState);
@@ -182,6 +200,7 @@ export default function AccessControlPage() {
       cpf: employee.cpf,
       cref: employee.cref || '',
       accessPin: employee.accessPin || '',
+      universityInfo: employee.universityInfo || initialEmployeeFormState.universityInfo
     });
     setIsEmployeeDialogOpen(true);
   };
@@ -209,6 +228,7 @@ export default function AccessControlPage() {
         cpf: employeeFormData.cpf,
         cref: employeeFormData.cref,
         accessPin: employeeFormData.accessPin,
+        universityInfo: employeeFormData.role === 'Estagiário' ? employeeFormData.universityInfo : undefined,
     }
     
     if(employeeFormData.password) {
@@ -450,6 +470,45 @@ export default function AccessControlPage() {
                   </div>
                 )}
             </div>
+
+            {employeeFormData.role === 'Estagiário' && (
+              <>
+                <Separator className="my-2" />
+                <div className="space-y-4">
+                    <h4 className="font-medium text-foreground">Dados do Estágio</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="universityName">Nome da Faculdade</Label>
+                            <Input id="universityName" value={employeeFormData.universityInfo.universityName} onChange={(e) => handleUniversityInfoChange('universityName', e.target.value)} placeholder="Universidade Exemplo" />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="course">Curso</Label>
+                            <Input id="course" value={employeeFormData.universityInfo.course} onChange={(e) => handleUniversityInfoChange('course', e.target.value)} placeholder="Educação Física" />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="expectedGraduation">Previsão de Formatura</Label>
+                            <Input id="expectedGraduation" value={employeeFormData.universityInfo.expectedGraduation} onChange={(e) => handleUniversityInfoChange('expectedGraduation', e.target.value)} placeholder="MM/AAAA" />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="contractStartDate">Início do Contrato</Label>
+                            <Input id="contractStartDate" type="date" value={employeeFormData.universityInfo.contractStartDate} onChange={(e) => handleUniversityInfoChange('contractStartDate', e.target.value)} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="contractEndDate">Fim do Contrato</Label>
+                            <Input id="contractEndDate" type="date" value={employeeFormData.universityInfo.contractEndDate} onChange={(e) => handleUniversityInfoChange('contractEndDate', e.target.value)} />
+                        </div>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="contractFile" className="flex items-center gap-2"><FileText className="h-4 w-4" /> Cópia do Contrato</Label>
+                        <Input id="contractFile" type="file" disabled />
+                        <p className="text-xs text-muted-foreground">O upload de arquivos estará disponível em breve.</p>
+                    </div>
+                </div>
+              </>
+            )}
+
           </div>
         </form>
         <DialogFooter className="mt-4">

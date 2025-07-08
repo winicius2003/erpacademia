@@ -17,6 +17,13 @@ export type Employee = {
     cpf: string;
     cref?: string;
     accessPin?: string;
+    universityInfo?: {
+      universityName: string;
+      course: string;
+      expectedGraduation: string; // "MM/AAAA"
+      contractStartDate: string; // "yyyy-MM-dd"
+      contractEndDate: string; // "yyyy-MM-dd"
+    };
 };
 
 // --- In-Memory Database ---
@@ -26,7 +33,7 @@ let employees: Employee[] = [
     { id: '2', name: 'Marcos Rocha', email: 'marcos.rocha@fitcore.com', login: 'marcos', password: '123', role: 'Professor', status: 'Ativo', salary: 3500, workHours: '06:00 - 15:00', cpf: "222.222.222-22", cref: '12345-G/SP', accessPin: '9902' },
     { id: '3', name: 'Juliana Alves', email: 'juliana.alves@fitcore.com', login: 'juliana', password: '123', role: 'Recepção', status: 'Ativo', salary: 1800, workHours: '13:00 - 22:00', cpf: "333.333.333-33", accessPin: '9903' },
     { id: '4', name: 'Fernando Costa', email: 'fernando.costa@fitcore.com', login: 'fernando', password: '123', role: 'Professor', status: 'Inativo', salary: 3500, workHours: '15:00 - 23:00', cpf: "444.444.444-44", cref: '54321-G/RJ', accessPin: '' },
-    { id: '5', name: 'Beatriz Lima', email: 'beatriz.lima@fitcore.com', login: 'bia', password: '123', role: 'Estagiário', status: 'Ativo', salary: 900, workHours: '18:00 - 22:00', cpf: "555.555.555-55", cref: '123456-E/SP', accessPin: '9905' },
+    { id: '5', name: 'Beatriz Lima', email: 'beatriz.lima@fitcore.com', login: 'bia', password: '123', role: 'Estagiário', status: 'Ativo', salary: 900, workHours: '18:00 - 22:00', cpf: "555.555.555-55", cref: '123456-E/SP', accessPin: '9905', universityInfo: { universityName: 'Universidade Fictícia', course: 'Educação Física', expectedGraduation: '12/2025', contractStartDate: '2024-01-15', contractEndDate: '2024-12-15' } },
     { id: '6', name: 'Ricardo Mendes', email: 'ricardo.mendes@fitcore.com', login: 'ricardo', password: '123', role: 'Recepção', status: 'Ativo', salary: 1800, workHours: '07:00 - 16:00', cpf: "666.666.666-66", accessPin: '9906' },
 ];
 let nextId = employees.length + 1;
