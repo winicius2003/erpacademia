@@ -129,7 +129,7 @@ export default function MembersPage() {
 
   const [isImportDialogOpen, setIsImportDialogOpen] = React.useState(false)
   const [importFile, setImportFile] = React.useState<File | null>(null);
-  const [importPreview, setImportPreview] = React.useState<Partial<Member>[]>([]);
+  const [importPreview, setImportPreview] = React.useState<(Partial<Member> & {email: string})[]>([]);
   const [importErrors, setImportErrors] = React.useState<string[]>([]);
   const [isImporting, setIsImporting] = React.useState(false);
   const [importStep, setImportStep] = React.useState(1); // 1: Upload, 2: Confirm
@@ -339,7 +339,7 @@ export default function MembersPage() {
     setImportErrors([]);
     setImportPreview([]);
 
-    const normalizeHeader = (header: string) => header.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const normalizeHeader = (header: string) => header.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '');
 
     const processData = (data: any[]) => {
       let currentErrors: string[] = [];
@@ -349,56 +349,66 @@ export default function MembersPage() {
               normalizedRow[normalizeHeader(key)] = row[key];
           }
 
-          const member: Partial<Member> = {
+          const member: Partial<Member> & {email?: string, name?: string} = {
               name: normalizedRow['nome'],
-              email: normalizedRow['email'],
-              plan: normalizedRow['plano'] || 'Mensal',
-              status: normalizedRow['situacao'] === 'Ativo' ? 'Ativo' : 'Inativo',
-              expires: normalizedRow['vence'] || normalizedRow['vencimento'],
-              phone: normalizedRow['telefone'] || normalizedRow['celular'] || ''
+              email: normalizedRow['email'] || normalizedRow['e-mail'],
+              plan: normalizedRow['plano'] || undefined,
+              cpf: normalizedRow['documento'] || normalizedRow['cnpj'] || normalizedRow['cpf'],
+              rg: normalizedRow['rg'],
+              phone: normalizedRow['telefone'] || normalizedRow['celular'],
           };
+          
+          let expiresDateValue = normalizedRow['vence'] || normalizedRow['vencimento'];
+          let dobDateValue = normalizedRow['nascimento'];
 
+          const situacao = normalizedRow['situacao'];
+          if (situacao) {
+            const lowerSituacao = situacao.toString().toLowerCase();
+            if (lowerSituacao === 'ativo') member.status = 'Ativo';
+            else if (lowerSituacao === 'inativo') member.status = 'Inativo';
+            else if (lowerSituacao === 'atrasado') member.status = 'Atrasado';
+          }
+          
           if (!member.name || !member.email) {
               currentErrors.push(`Linha ${index + 2}: Nome e Email são obrigatórios.`);
               return null;
           }
 
-          if (member.expires) {
-            let dateToParse = member.expires;
+          const parseDateString = (dateStr: any, fieldName: string): string | null => {
+            if (!dateStr) return null;
+            
+            let dateToParse = dateStr;
             if (typeof dateToParse !== 'string') {
                 if (dateToParse instanceof Date && !isNaN(dateToParse.getTime())) {
-                    member.expires = format(dateToParse, 'yyyy-MM-dd');
+                    return format(dateToParse, 'yyyy-MM-dd');
                 } else {
-                     currentErrors.push(`Linha ${index + 2}: Valor de data inválido da planilha para "${member.expires}".`);
+                     currentErrors.push(`Linha ${index + 2}: Valor de data inválido para o campo ${fieldName}: "${dateStr}".`);
                      return null;
                 }
-            } else {
-                const firstDateStr = dateToParse.split('|')[0].trim();
-                let parsedDate: Date | null = null;
-                
-                if (/^\d{2}\/\d{2}\/\d{4}$/.test(firstDateStr)) {
-                    parsedDate = parse(firstDateStr, 'dd/MM/yyyy', new Date());
-                } else {
-                    try {
-                        parsedDate = parseISO(firstDateStr.replace(/\//g, '-'));
-                    } catch (e) {
-                        // ignore, will be caught by the next check
-                    }
-                }
-                
-                if (parsedDate && !isNaN(parsedDate.getTime())) {
-                    member.expires = format(parsedDate, 'yyyy-MM-dd');
-                } else {
-                    currentErrors.push(`Linha ${index + 2}: Formato de data inválido para "${member.expires}". Use YYYY-MM-DD.`);
-                    return null;
-                }
             }
-        } else {
-            member.expires = format(addMonths(new Date(), 1), 'yyyy-MM-dd');
-        }
+            
+            const firstDateStr = dateToParse.split('|')[0].trim();
+            let parsedDate: Date | null = null;
+            
+            if (/^\d{2}\/\d{2}\/\d{4}$/.test(firstDateStr)) {
+                parsedDate = parse(firstDateStr, 'dd/MM/yyyy', new Date());
+            } else if (/^\d{4}-\d{2}-\d{2}$/.test(firstDateStr)) {
+                parsedDate = parseISO(firstDateStr);
+            }
+            
+            if (parsedDate && !isNaN(parsedDate.getTime())) {
+                return format(parsedDate, 'yyyy-MM-dd');
+            } else {
+                currentErrors.push(`Linha ${index + 2}: Formato de data inválido para ${fieldName}: "${dateStr}". Use YYYY-MM-DD ou DD/MM/YYYY.`);
+                return null;
+            }
+          }
+          
+          member.dob = parseDateString(dobDateValue, 'Nascimento') ?? undefined;
+          member.expires = parseDateString(expiresDateValue, 'Vencimento') ?? undefined;
 
           return member;
-      }).filter(Boolean) as Partial<Member>[];
+      }).filter((m): m is Partial<Member> & {email: string; name: string} => Boolean(m));
 
       setImportPreview(mappedData);
       setImportErrors(currentErrors);
@@ -436,43 +446,79 @@ export default function MembersPage() {
   };
 
   const handleConfirmImport = async () => {
-      setIsImporting(true);
-      let successCount = 0;
-      let errorCount = 0;
+    setIsImporting(true);
+    let createdCount = 0;
+    let updatedCount = 0;
+    let errorCount = 0;
 
-      const importPromises = importPreview.map(async (member) => {
-          try {
-              const memberData = {
-                  ...member,
-                  cpf: "",
-                  rg: "",
-                  dob: new Date().toISOString().split('T')[0],
-                  professor: "Não atribuído",
-                  attendanceStatus: "Presente" as const,
-                  workoutStatus: "Pendente" as const,
-                  goal: "Importado via Planilha",
-                  notes: "",
-                  accessPin: "",
-                  fingerprintRegistered: false,
-              };
-              await addMember(memberData as Omit<Member, 'id'>);
-              successCount++;
-          } catch (e) {
-              errorCount++;
-          }
-      });
+    const existingMembersByEmail = new Map(members.map(m => [m.email.toLowerCase(), m]));
+
+    const importPromises = importPreview.map(async (memberData) => {
+        try {
+            if (!memberData.email) {
+                errorCount++;
+                return;
+            }
+            
+            const existingMember = existingMembersByEmail.get(memberData.email.toLowerCase());
+
+            if (existingMember) {
+                // UPDATE: Build a payload with only the new values
+                const updatePayload: Partial<Member> = {};
+                
+                if (memberData.name && memberData.name !== existingMember.name) updatePayload.name = memberData.name;
+                if (memberData.phone && memberData.phone !== existingMember.phone) updatePayload.phone = memberData.phone;
+                if (memberData.cpf && memberData.cpf !== existingMember.cpf) updatePayload.cpf = memberData.cpf;
+                if (memberData.rg && memberData.rg !== existingMember.rg) updatePayload.rg = memberData.rg;
+                if (memberData.dob && memberData.dob !== existingMember.dob) updatePayload.dob = memberData.dob;
+                if (memberData.plan && memberData.plan !== existingMember.plan) updatePayload.plan = memberData.plan;
+                if (memberData.expires && memberData.expires !== existingMember.expires) updatePayload.expires = memberData.expires;
+
+                if (Object.keys(updatePayload).length > 0) {
+                    await updateMember(existingMember.id, updatePayload);
+                    updatedCount++;
+                }
+            } else {
+                // CREATE: Build a full payload with defaults
+                const newMemberData = {
+                    name: memberData.name,
+                    email: memberData.email,
+                    phone: memberData.phone || '',
+                    cpf: memberData.cpf || '',
+                    rg: memberData.rg || '',
+                    dob: memberData.dob || format(new Date(1990, 0, 1), 'yyyy-MM-dd'),
+                    plan: memberData.plan || 'Mensal',
+                    expires: memberData.expires || format(addMonths(new Date(), 1), 'yyyy-MM-dd'),
+                    status: "Ativo" as const,
+                    professor: "Não atribuído",
+                    attendanceStatus: "Presente" as const,
+                    workoutStatus: "Pendente" as const,
+                    goal: "Importado via Planilha",
+                    notes: "",
+                    accessPin: "",
+                    fingerprintRegistered: false,
+                };
+                await addMember(newMemberData as Omit<Member, 'id'>);
+                createdCount++;
+            }
+        } catch (e) {
+            console.error("Error importing row:", memberData, e);
+            errorCount++;
+        }
+    });
       
-      await Promise.all(importPromises);
+    await Promise.all(importPromises);
 
-      toast({
-          title: "Importação Concluída",
-          description: `${successCount} alunos importados com sucesso. ${errorCount > 0 ? `${errorCount} falharam.` : ''}`,
-      });
+    toast({
+        title: "Importação Concluída",
+        description: `${createdCount} alunos criados, ${updatedCount} atualizados. ${errorCount > 0 ? `${errorCount} falharam.` : ''}`,
+    });
 
-      fetchData();
-      setIsImportDialogOpen(false);
-      resetImportDialog();
+    fetchData();
+    setIsImportDialogOpen(false);
+    resetImportDialog();
   };
+
 
   if (!user || isLoading) {
     return (
@@ -764,7 +810,7 @@ export default function MembersPage() {
                 <DialogTitle>Importar Alunos</DialogTitle>
                 <DialogDescription>
                   {importStep === 1 
-                    ? "Faça o upload de um arquivo CSV ou Excel para cadastrar múltiplos alunos. O sistema importará as colunas: Nome, Email, Plano, Vence e Situação."
+                    ? "Faça o upload de um arquivo CSV ou Excel. O sistema irá criar novos alunos ou atualizar existentes com base no e-mail."
                     : "Confirme os dados para importação. Alunos com erros não serão importados."}
                 </DialogDescription>
             </DialogHeader>
@@ -814,7 +860,7 @@ export default function MembersPage() {
                         <TableCell>{member.name}</TableCell>
                         <TableCell>{member.email}</TableCell>
                         <TableCell><Badge variant="outline">{member.plan}</Badge></TableCell>
-                        <TableCell>{member.expires}</TableCell>
+                        <TableCell>{member.expires ? format(parseISO(member.expires), 'dd/MM/yyyy') : 'N/A'}</TableCell>
                         <TableCell><Badge variant={member.status === 'Ativo' ? 'secondary' : 'destructive'}>{member.status}</Badge></TableCell>
                       </TableRow>
                     ))}
