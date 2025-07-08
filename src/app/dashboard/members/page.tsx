@@ -3,7 +3,7 @@
 
 import * as React from "react"
 import { format, addMonths, parseISO, parse } from "date-fns"
-import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Loader2, Search, Fingerprint, Upload } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Loader2, Search, Fingerprint, Upload, Copy, KeyRound } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Papa from "papaparse"
 import * as XLSX from "xlsx"
@@ -120,7 +120,7 @@ export default function MembersPage() {
   const [isLoading, setIsLoading] = React.useState(true)
   const [filteredMembers, setFilteredMembers] = React.useState<Member[]>([]);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+  const [isFormDialogOpen, setIsFormDialogOpen] = React.useState(false)
   const [isEditing, setIsEditing] = React.useState(false)
   const [memberFormData, setMemberFormData] = React.useState<MemberFormData>(initialMemberFormState)
   const [memberToDelete, setMemberToDelete] = React.useState<Member | null>(null)
@@ -133,6 +133,10 @@ export default function MembersPage() {
   const [importErrors, setImportErrors] = React.useState<string[]>([]);
   const [isImporting, setIsImporting] = React.useState(false);
   const [importStep, setImportStep] = React.useState(1); // 1: Upload, 2: Confirm
+  
+  const [newCredentials, setNewCredentials] = React.useState<{ email: string, password?: string } | null>(null);
+  const [isCredentialsDialogOpen, setIsCredentialsDialogOpen] = React.useState(false);
+
 
   const isAddingBlocked = subscriptionStatus === 'blocked';
 
@@ -201,7 +205,7 @@ export default function MembersPage() {
   const handleAddNewClick = () => {
     setIsEditing(false);
     setMemberFormData(initialMemberFormState);
-    setIsDialogOpen(true);
+    setIsFormDialogOpen(true);
   }
 
   const handleEditClick = (member: Member) => {
@@ -224,7 +228,7 @@ export default function MembersPage() {
       notes: member.notes || "",
       accessPin: member.accessPin || "",
     });
-    setIsDialogOpen(true);
+    setIsFormDialogOpen(true);
   };
 
   const handleSaveMember = async (e: React.FormEvent) => {
@@ -256,26 +260,20 @@ export default function MembersPage() {
             await updateMember(memberFormData.id, memberDataToSave);
             toast({ title: "Aluno Atualizado", description: "Os dados do aluno foram atualizados com sucesso." });
             fetchData();
-            setIsDialogOpen(false);
-            setIsLoading(false);
+            setIsFormDialogOpen(false);
         } else {
             const newMember = await addMember(memberDataToSave);
-            const selectedPlanData = plans.find(p => p.name === newMember.plan);
-            
-            toast({ title: "Aluno Adicionado", description: "Redirecionando para o primeiro pagamento." });
-
-            const query = new URLSearchParams({
-                action: 'new_payment',
-                studentId: newMember.id,
-                studentName: newMember.name,
-                planName: newMember.plan,
-                planPrice: selectedPlanData ? String(selectedPlanData.price) : "0",
-            });
-            
-            router.push(`/dashboard/financial?${query.toString()}`);
+            toast({ title: "Aluno Adicionado", description: "Credenciais de acesso foram geradas." });
+            fetchData();
+            setIsFormDialogOpen(false);
+            if (newMember.password) {
+                setNewCredentials({ email: newMember.email, password: newMember.password });
+                setIsCredentialsDialogOpen(true);
+            }
         }
     } catch (error) {
         toast({ title: "Erro", description: `Não foi possível salvar o aluno.`, variant: "destructive" });
+    } finally {
         setIsLoading(false);
     }
   }
@@ -358,7 +356,7 @@ export default function MembersPage() {
               phone: normalizedRow['telefone'] || normalizedRow['celular'],
           };
           
-          let expiresDateValue = normalizedRow['vence'] || normalizedRow['vencimento'];
+          let expiresDateValue = normalizedRow['vence'] || normalizedRow['vencimento'] || normalizedRow['data termino'];
           let dobDateValue = normalizedRow['nascimento'];
 
           const situacao = normalizedRow['situacao'];
@@ -390,13 +388,16 @@ export default function MembersPage() {
             const firstDateStr = dateToParse.split('|')[0].trim();
             let parsedDate: Date | null = null;
             
-            if (/^\d{2}\/\d{2}\/\d{4}$/.test(firstDateStr)) {
-                parsedDate = parse(firstDateStr, 'dd/MM/yyyy', new Date());
-            } else if (/^\d{4}-\d{2}-\d{2}$/.test(firstDateStr)) {
-                parsedDate = parseISO(firstDateStr);
+            const formatsToTry = ['dd/MM/yyyy', 'yyyy-MM-dd', 'MM/dd/yyyy'];
+            for (const fmt of formatsToTry) {
+                const parsed = parse(firstDateStr, fmt, new Date());
+                if (!isNaN(parsed.getTime())) {
+                    parsedDate = parsed;
+                    break;
+                }
             }
             
-            if (parsedDate && !isNaN(parsedDate.getTime())) {
+            if (parsedDate) {
                 return format(parsedDate, 'yyyy-MM-dd');
             } else {
                 currentErrors.push(`Linha ${index + 2}: Formato de data inválido para ${fieldName}: "${dateStr}". Use YYYY-MM-DD ou DD/MM/YYYY.`);
@@ -463,26 +464,22 @@ export default function MembersPage() {
             const existingMember = existingMembersByEmail.get(memberData.email.toLowerCase());
 
             if (existingMember) {
-                // UPDATE: Build a payload with only the new values
                 const updatePayload: Partial<Member> = {};
                 
-                if (memberData.name && memberData.name !== existingMember.name) updatePayload.name = memberData.name;
-                if (memberData.phone && memberData.phone !== existingMember.phone) updatePayload.phone = memberData.phone;
-                if (memberData.cpf && memberData.cpf !== existingMember.cpf) updatePayload.cpf = memberData.cpf;
-                if (memberData.rg && memberData.rg !== existingMember.rg) updatePayload.rg = memberData.rg;
-                if (memberData.dob && memberData.dob !== existingMember.dob) updatePayload.dob = memberData.dob;
-                if (memberData.plan && memberData.plan !== existingMember.plan) updatePayload.plan = memberData.plan;
-                if (memberData.expires && memberData.expires !== existingMember.expires) updatePayload.expires = memberData.expires;
+                Object.keys(memberData).forEach(key => {
+                    if (memberData[key] !== undefined && memberData[key] !== existingMember[key]) {
+                        updatePayload[key] = memberData[key];
+                    }
+                });
 
                 if (Object.keys(updatePayload).length > 0) {
                     await updateMember(existingMember.id, updatePayload);
                     updatedCount++;
                 }
             } else {
-                // CREATE: Build a full payload with defaults
                 const newMemberData = {
-                    name: memberData.name,
-                    email: memberData.email,
+                    name: memberData.name!,
+                    email: memberData.email!,
                     phone: memberData.phone || '',
                     cpf: memberData.cpf || '',
                     rg: memberData.rg || '',
@@ -555,7 +552,7 @@ export default function MembersPage() {
                   <Button variant="outline" onClick={() => { setIsImportDialogOpen(true); resetImportDialog(); }}>
                       <Upload className="mr-2 h-4 w-4" /> Importar Alunos
                   </Button>
-                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
                     <DialogTrigger asChild>
                       <Button onClick={handleAddNewClick} disabled={isAddingBlocked} title={isAddingBlocked ? "Funcionalidade bloqueada por pendência de assinatura" : ""}>
                         <PlusCircle className="mr-2 h-4 w-4" />Adicionar Aluno
@@ -729,7 +726,7 @@ export default function MembersPage() {
                       <DialogFooter>
                         <Button type="submit" form="add-member-form" disabled={isLoading}>
                             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            {isEditing ? 'Salvar Alterações' : 'Salvar e Ir para Pagamento'}
+                            {isEditing ? 'Salvar Alterações' : 'Salvar Aluno'}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
@@ -783,6 +780,37 @@ export default function MembersPage() {
           </Tabs>
         </CardContent>
       </Card>
+      
+      <AlertDialog open={isCredentialsDialogOpen} onOpenChange={setIsCredentialsDialogOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                    <KeyRound className="text-primary"/> Credenciais de Acesso Geradas
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                    Uma senha provisória foi gerada para o aluno. Compartilhe essas informações com ele. O aluno poderá alterar a senha em seu primeiro acesso ao portal.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="space-y-4 my-4 text-sm">
+                <div className="space-y-1">
+                    <Label>E-mail (Login)</Label>
+                    <p className="font-mono p-2 bg-muted rounded-md">{newCredentials?.email}</p>
+                </div>
+                 <div className="space-y-1">
+                    <Label>Senha Provisória</Label>
+                    <div className="flex items-center gap-2">
+                        <p className="w-full font-mono p-2 bg-muted rounded-md">{newCredentials?.password}</p>
+                        <Button variant="outline" size="icon" onClick={() => navigator.clipboard.writeText(newCredentials?.password || "")}>
+                            <Copy className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            </div>
+            <AlertDialogFooter>
+                <AlertDialogAction onClick={() => setIsCredentialsDialogOpen(false)}>Entendido</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
         <AlertDialogContent>

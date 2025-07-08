@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -18,6 +19,7 @@ import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/logo"
 import { useToast } from "@/hooks/use-toast"
 import { getEmployeeByLogin } from "@/services/employees"
+import { getMemberByEmail } from "@/services/members"
 import { initializeSubscription } from "@/services/subscription"
 
 export default function LoginPage() {
@@ -51,34 +53,47 @@ export default function LoginPage() {
       return;
     }
 
-    let userFound = null
-
+    // Master Admin check
     const isMasterAdminLogin =
       (login.toLowerCase() === "jwinicius.souza@gmail.com" || login.toLowerCase() === "admin@admin") &&
-      password === "uUmope5Z"
+      password === "uUmope5Z";
 
     if (isMasterAdminLogin) {
-      userFound = { id: "admin-master", name: "Administrador Master", role: "Admin", email: login }
-      // On first master login, ensure subscription exists
-      await initializeSubscription()
-    } else {
-      const employee = await getEmployeeByLogin(login)
-      if (employee && employee.password === password) {
-        userFound = { id: employee.id, name: employee.name, role: employee.role, email: employee.email }
-      }
+      const userFound = { id: "admin-master", name: "Administrador Master", role: "Admin", email: login };
+      sessionStorage.setItem("fitcore.user", JSON.stringify(userFound));
+      await initializeSubscription();
+      router.push("/dashboard");
+      setIsLoading(false);
+      return;
     }
 
-    if (userFound) {
-      sessionStorage.setItem("fitcore.user", JSON.stringify(userFound))
-      await initializeSubscription(); // Ensure subscription is initialized for any user
-      router.push("/dashboard")
-    } else {
-      toast({
+    // Employee check
+    const employee = await getEmployeeByLogin(login);
+    if (employee && employee.password === password) {
+        const userFound = { id: employee.id, name: employee.name, role: employee.role, email: employee.email };
+        sessionStorage.setItem("fitcore.user", JSON.stringify(userFound));
+        await initializeSubscription();
+        router.push("/dashboard");
+        setIsLoading(false);
+        return;
+    }
+
+    // Student check
+    const member = await getMemberByEmail(login);
+    if (member && member.password === password) {
+        const userFound = { id: member.id, name: member.name, role: "Aluno", email: member.email };
+        sessionStorage.setItem("fitcore.user", JSON.stringify(userFound));
+        router.push("/portal/dashboard");
+        setIsLoading(false);
+        return;
+    }
+
+    // If no user found
+    toast({
         title: "Credenciais inválidas",
         description: "Por favor, verifique seu login e senha e tente novamente.",
         variant: "destructive",
-      })
-    }
+    })
     setIsLoading(false)
   }
 
