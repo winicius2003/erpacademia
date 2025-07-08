@@ -94,6 +94,9 @@ export default function AccessControlPage() {
   
   const [isEmployeeDialogOpen, setIsEmployeeDialogOpen] = React.useState(false)
   const [isProfileDialogOpen, setIsProfileDialogOpen] = React.useState(false)
+  const [isCreateRoleDialogOpen, setIsCreateRoleDialogOpen] = React.useState(false);
+  const [newRoleName, setNewRoleName] = React.useState("");
+
   const [isEditing, setIsEditing] = React.useState(false)
   const [employeeFormData, setEmployeeFormData] = React.useState<EmployeeFormData>(initialEmployeeFormState)
   
@@ -487,14 +490,51 @@ export default function AccessControlPage() {
             <DialogFooter>
                  <Button 
                     variant="outline" 
-                    onClick={() => toast({ title: "Funcionalidade em desenvolvimento" })}
+                    onClick={() => {
+                        setNewRoleName("");
+                        setIsCreateRoleDialogOpen(true);
+                    }}
                  >
-                    <PlusCircle className="mr-2 h-4 w-4" /> Criar Novo Perfil
+                    <PlusCircle className="mr-2 h-4 w-4" /> Criar Nova Função
                 </Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
     
+    <Dialog open={isCreateRoleDialogOpen} onOpenChange={setIsCreateRoleDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+                <DialogTitle>Criar Nova Função</DialogTitle>
+                <DialogDescription>
+                    Defina um nome para a nova função. As permissões poderão ser configuradas em breve.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-2">
+                <Label htmlFor="role-name">Nome da Função</Label>
+                <Input 
+                    id="role-name" 
+                    value={newRoleName} 
+                    onChange={(e) => setNewRoleName(e.target.value)}
+                    placeholder="Ex: Vendedora, Auxiliar de Limpeza"
+                />
+            </div>
+            <DialogFooter>
+                <Button variant="ghost" onClick={() => setIsCreateRoleDialogOpen(false)}>Cancelar</Button>
+                <Button onClick={() => {
+                    if (!newRoleName.trim()) {
+                        toast({ title: "O nome da função não pode estar em branco.", variant: "destructive" });
+                        return;
+                    }
+                    toast({ 
+                        title: `Função "${newRoleName}" criada!`, 
+                        description: "A configuração de permissões para esta função estará disponível em breve." 
+                    });
+                    setIsCreateRoleDialogOpen(false);
+                }}>Salvar Função</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
     <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
