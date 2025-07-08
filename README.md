@@ -6,41 +6,55 @@ FitCore é um sistema SaaS (Software as a Service) completo, projetado para simp
 
 ### Para Gestores e Administradores
 
--   **Dashboard Analítico:** Visão geral da saúde do negócio com métricas de alunos ativos, receita, retenção e check-ins.
+-   **Dashboard Analítico:**
+    -   Visão geral da saúde do negócio com métricas de alunos ativos, inadimplentes e em grupo de risco (baixa frequência).
+    -   Gráficos visuais para receita realizada vs. projetada, novos alunos por mês e check-ins na semana.
 -   **Gestão Financeira Completa:**
-    -   Controle de fluxo de caixa (diário, semanal, mensal).
-    -   Ponto de Venda (PDV) para registro de pagamentos de planos e produtos.
-    -   Relatório de fechamento de caixa diário por funcionário.
-    -   Geração de faturas para alunos.
+    -   **Ponto de Venda (PDV):** Registro de pagamentos de planos e produtos com seleção de método (Dinheiro, Pix, Cartão, Boleto) e campo condicional para ID da transação.
+    -   **Fluxo de Caixa:** Acompanhamento diário de todas as entradas e saídas.
+    -   **Fechamento de Caixa:** Relatório diário de vendas consolidadas por funcionário.
+    -   **Histórico de Pagamentos:** Busca inteligente por aluno, ID do recibo ou código da transação do cartão.
+    -   **Geração de Faturas:** Emissão automática de recibos detalhados para impressão ou PDF.
 -   **Gestão de Alunos 360°:**
     -   Cadastro completo com dados pessoais, contato, endereço e ficha de emergência.
-    -   Histórico de pagamentos, avaliações físicas e treinos.
+    -   Ficha do aluno com histórico de pagamentos, treinos e avaliações físicas em abas organizadas (com pagamentos em primeiro lugar por padrão).
+    -   **Status do Aluno Automatizado:** O sistema classifica alunos como 'Ativo', 'Atrasado' (até 3 dias de atraso) ou 'Inativo' automaticamente. A reativação é automática ao registrar um pagamento.
+    -   **Importação Inteligente de Alunos:**
+        -   Suporte para arquivos `.csv` e `.xlsx`.
+        -   Mapeamento flexível de colunas que reconhece diferentes nomenclaturas (ex: "DOCUMENTO", "CPF").
+        -   **Atualização de Cadastros (Upsert):** Atualiza alunos existentes (via e-mail) com dados novos sem criar duplicatas.
 -   **Controle de Acesso Físico:**
     -   Página de configuração para integração com catracas e leitores biométricos.
     -   Cadastro de PIN e biometria por aluno e funcionário.
+    -   API (`/api/access/validate`) para validação de acesso em tempo real, bloqueando inadimplentes.
 -   **Gestão de Planos e Produtos:**
-    -   Crie e gerencie os planos de matrícula da academia.
-    -   Cadastre produtos para venda no PDV com controle de estoque.
+    -   Crie e gerencie os planos de matrícula e produtos vendidos no PDV, com controle de estoque.
 -   **CRM e Funil de Vendas:**
     -   Gerencie leads em um funil Kanban, desde o primeiro contato até a matrícula.
+    -   **Módulo de Relacionamento:** Listas automáticas para contatar aniversariantes do dia, alunos faltantes e inadimplentes, com atalho para enviar mensagem via WhatsApp.
 -   **Agenda de Aulas Coletivas:**
     -   Crie e visualize um calendário de aulas em grupo (ex: Fit Dance, Muay Thai).
 -   **Gerenciamento de Funcionários:**
     -   Cadastre funcionários com diferentes perfis de acesso (Gestor, Professor, Recepção).
--   **Gestão Multi-Unidades:**
-    -   Administre múltiplas filiais a partir de um único painel.
+-   **Relatórios e Documentos:**
+    -   Página centralizada para exportar relatórios essenciais.
+    -   **Exportação de Frequência:** Gera uma planilha `.csv` com o status de presença de todos os alunos.
 -   **Notificações e Suporte:**
-    -   Receba notificações importantes do sistema.
+    -   Receba notificações importantes da plataforma.
     -   Acesse uma central de ajuda com FAQ e formulário para abrir chamados.
 
 ### Para Professores e Instrutores
 
--   **Visão Focada nos Alunos:** Dashboard com acesso rápido aos alunos sob sua responsabilidade.
+-   **Visão Focada nos Alunos:** Dashboard com acesso rápido aos alunos sob sua responsabilidade, mostrando faltantes e treinos pendentes.
 -   **Criação de Planos de Treino:**
+    -   **Banco de Exercícios:** Ampla lista de exercícios pré-cadastrados, organizados por grupo muscular, para seleção rápida.
+    -   **Cadastro de Novos Exercícios:** Permite que o professor digite e adicione exercícios que não estão na lista.
     -   Crie modelos de treino (A, B, C) com exercícios, séries, repetições e descanso.
     -   Atribua planos de treino aos alunos (funcionalidade em desenvolvimento).
+-   **Gerador de Treino com IA:**
+    -   Ferramenta dedicada para gerar recomendações de treino personalizadas com base no histórico, metas e preferências do aluno.
 -   **Registro de Avaliações Físicas:**
-    -   Registre medidas antropométricas detalhadas e acompanhe a evolução dos alunos.
+    -   Registre medidas detalhadas de antropometria e bioimpedância para acompanhar a evolução dos alunos.
 
 ### Painel Superadmin (Controle da Plataforma)
 
@@ -52,8 +66,9 @@ FitCore é um sistema SaaS (Software as a Service) completo, projetado para simp
     -   Acompanhe o MRR (Receita Mensal Recorrente) e ARPA (Receita Média por Conta).
 -   **Comunicação Centralizada:**
     -   Envie mensagens (broadcast ou direcionadas) para os painéis de seus clientes.
--   **Automação de Assinaturas:**
+-   **Automação de Assinaturas (Stripe):**
     -   Integração com Stripe para permitir que novas academias assinem e sejam criadas automaticamente via webhook.
+    -   Página para simular diferentes cenários de assinatura (ativa, vencida, bloqueada) para testes.
 
 ## Rodando o Projeto Localmente
 
