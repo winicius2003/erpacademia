@@ -27,6 +27,7 @@ import {
   Info,
   MessageSquare,
   Handshake,
+  FileClock,
 } from "lucide-react"
 import { usePathname, useRouter } from 'next/navigation'
 import { differenceInDays } from 'date-fns'
@@ -79,6 +80,7 @@ const navItems = [
   { href: "/dashboard/schedule", icon: Calendar, label: "Agenda" },
   { href: "/dashboard/financial", icon: Wallet, label: "Financeiro" },
   { href: "/dashboard/crm", icon: HeartHandshake, label: "CRM" },
+  { href: "/dashboard/frequency", icon: FileClock, label: "Frequência" },
   { href: "/dashboard/access-control", icon: UsersRound, label: "Funcionários" },
   { href: "/dashboard/reports", icon: AreaChart, label: "Relatórios" },
   { href: "/dashboard/gympass", icon: Handshake, label: "Gympass" },
@@ -89,8 +91,8 @@ const navItems = [
 ]
 
 const navPermissions: Record<Role, string[]> = {
-  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro", "CRM", "Funcionários", "Relatórios", "Gympass", "Planos", "Produtos", "Assinatura", "Configurações"],
-  Gestor: ["Painel", "Alunos", "Avaliações", "Agenda", "Financeiro", "CRM", "Relatórios", "Gympass", "Planos", "Produtos", "Assinatura"],
+  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro", "CRM", "Frequência", "Funcionários", "Relatórios", "Gympass", "Planos", "Produtos", "Assinatura", "Configurações"],
+  Gestor: ["Painel", "Alunos", "Avaliações", "Agenda", "Financeiro", "CRM", "Frequência", "Relatórios", "Gympass", "Planos", "Produtos", "Assinatura"],
   Professor: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda"],
   Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Funcionários", "Produtos"],
   Estagiário: ["Alunos", "Agenda"],

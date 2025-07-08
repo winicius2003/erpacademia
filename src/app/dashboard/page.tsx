@@ -1,9 +1,10 @@
-
 "use client"
 
 import * as React from "react"
 import { Users, TrendingUp, BadgePercent, Loader2, UserX, ClipboardX, CalendarCheck, Target } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 import {
   Card,
@@ -12,11 +13,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { MonthlyGrowthChart } from "@/components/monthly-growth-chart"
 import { DailyPresenceChart } from "@/components/daily-presence-chart"
 import { ProjectedRevenueChart } from "@/components/projected-revenue-chart"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import type { Role } from "@/services/employees"
 import { getMembers, type Member } from "@/services/members"
+import { getRecentAccessLogs, type AccessLog } from "@/services/access-logs";
 
 
 const adminStatsTemplate = [
@@ -41,6 +44,7 @@ const projectedRevenueData = Array.from({ length: 30 }, (_, i) => {
 export default function Dashboard() {
   const [user, setUser] = React.useState<{ name: string; role: Role } | null>(null)
   const [members, setMembers] = React.useState<Member[]>([])
+  const [recentLogs, setRecentLogs] = React.useState<AccessLog[]>([]);
   const [isLoading, setIsLoading] = React.useState(true)
   const router = useRouter()
 
@@ -58,18 +62,22 @@ export default function Dashboard() {
   }, [router])
   
   React.useEffect(() => {
-    async function fetchMembers() {
+    async function fetchDashboardData() {
       setIsLoading(true)
       try {
-        const data = await getMembers()
-        setMembers(data)
+        const [membersData, logsData] = await Promise.all([
+            getMembers(),
+            getRecentAccessLogs(10)
+        ]);
+        setMembers(membersData);
+        setRecentLogs(logsData);
       } catch (error) {
-        console.error("Failed to fetch members", error)
+        console.error("Failed to fetch dashboard data", error)
       } finally {
         setIsLoading(false)
       }
     }
-    fetchMembers()
+    fetchDashboardData()
   }, [])
 
   if (!user || isLoading) {
@@ -152,11 +160,27 @@ export default function Dashboard() {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle className="font-headline">Novos Alunos (Mês)</CardTitle>
-              <CardDescription>Registros de novos alunos nos últimos 6 meses.</CardDescription>
+                <CardTitle className="font-headline">Últimos Acessos</CardTitle>
+                <CardDescription>
+                    Últimos 10 acessos registrados na catraca.
+                </CardDescription>
             </CardHeader>
-            <CardContent>
-              <MonthlyGrowthChart />
+            <CardContent className="max-h-[350px] overflow-y-auto">
+                <div className="space-y-4">
+                    {recentLogs.map((log) => (
+                        <div key={log.id} className="flex items-center">
+                            <Avatar className="h-9 w-9">
+                                <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint="person face" />
+                                <AvatarFallback>{log.userName.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div className="ml-4 space-y-1">
+                                <p className="text-sm font-medium leading-none">{log.userName}</p>
+                                <p className="text-sm text-muted-foreground">{new Date(log.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} - {log.userType}</p>
+                            </div>
+                            <Badge variant={log.status === 'Permitido' ? 'secondary' : 'destructive'} className="ml-auto">{log.status}</Badge>
+                        </div>
+                    ))}
+                </div>
             </CardContent>
           </Card>
           <Card className="xl:col-span-3">
