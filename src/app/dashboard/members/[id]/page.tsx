@@ -149,47 +149,13 @@ export default function MemberProfilePage() {
                 </div>
 
                 <div className="lg:col-span-2">
-                    <Tabs defaultValue="assessments">
+                    <Tabs defaultValue="payments">
                         <TabsList className="grid w-full grid-cols-3">
-                            <TabsTrigger value="assessments"><HeartPulse className="mr-2" /> Avaliações</TabsTrigger>
                             <TabsTrigger value="payments"><Receipt className="mr-2" /> Pagamentos</TabsTrigger>
+                            <TabsTrigger value="assessments"><HeartPulse className="mr-2" /> Avaliações</TabsTrigger>
                             <TabsTrigger value="workouts"><Dumbbell className="mr-2" /> Treino</TabsTrigger>
                         </TabsList>
-
-                        <TabsContent value="assessments" className="mt-4">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Histórico de Avaliações Físicas</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Data</TableHead>
-                                                <TableHead>Peso</TableHead>
-                                                <TableHead>% Gordura</TableHead>
-                                                <TableHead>M. Muscular</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {assessments.length > 0 ? assessments.map(item => (
-                                                <TableRow key={item.id}>
-                                                    <TableCell>{format(new Date(item.date.replace(/-/g, '/')), "dd/MM/yyyy")}</TableCell>
-                                                    <TableCell>{item.measures.weight.toFixed(1)} kg</TableCell>
-                                                    <TableCell>{item.measures.bodyFat.toFixed(1)} %</TableCell>
-                                                    <TableCell>{item.measures.muscleMass.toFixed(1)} kg</TableCell>
-                                                </TableRow>
-                                            )) : (
-                                                <TableRow>
-                                                    <TableCell colSpan={4} className="h-24 text-center">Nenhuma avaliação encontrada.</TableCell>
-                                                </TableRow>
-                                            )}
-                                        </TableBody>
-                                    </Table>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-
+                        
                         <TabsContent value="payments" className="mt-4">
                             <Card>
                                 <CardHeader>
@@ -224,6 +190,40 @@ export default function MemberProfilePage() {
                             </Card>
                         </TabsContent>
 
+                        <TabsContent value="assessments" className="mt-4">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Histórico de Avaliações Físicas</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Data</TableHead>
+                                                <TableHead>Peso</TableHead>
+                                                <TableHead>% Gordura</TableHead>
+                                                <TableHead>M. Muscular</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {assessments.length > 0 ? assessments.map(item => (
+                                                <TableRow key={item.id}>
+                                                    <TableCell>{format(new Date(item.date.replace(/-/g, '/')), "dd/MM/yyyy")}</TableCell>
+                                                    <TableCell>{item.measures.weight.toFixed(1)} kg</TableCell>
+                                                    <TableCell>{item.measures.bodyFat?.toFixed(1) || '-'} %</TableCell>
+                                                    <TableCell>{item.measures.muscleMass?.toFixed(1) || '-'} kg</TableCell>
+                                                </TableRow>
+                                            )) : (
+                                                <TableRow>
+                                                    <TableCell colSpan={4} className="h-24 text-center">Nenhuma avaliação encontrada.</TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
                         <TabsContent value="workouts" className="mt-4">
                             <Card>
                                 <CardHeader>
@@ -240,3 +240,4 @@ export default function MemberProfilePage() {
         </div>
     )
 }
+
