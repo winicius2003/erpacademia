@@ -1,17 +1,18 @@
-
 "use client"
 
 import * as React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, LogOut, User } from "lucide-react"
+import { LayoutDashboard, LogOut, Wallet, FileText, Settings } from "lucide-react"
 
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
 
 const navItems = [
-  { href: "/portal/dashboard", icon: LayoutDashboard, label: "Painel" },
-  { href: "/portal/profile", icon: User, label: "Meu Perfil" },
+  { href: "/portal/dashboard", icon: LayoutDashboard, label: "Meu Painel" },
+  { href: "/portal/profile", icon: FileText, label: "Minha Ficha" },
+  { href: "/portal/financial", icon: Wallet, label: "Meu Financeiro" },
+  { href: "/portal/settings", icon: Settings, label: "Configurações" },
 ]
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {

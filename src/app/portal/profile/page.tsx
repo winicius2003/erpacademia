@@ -1,100 +1,49 @@
 "use client"
 
 import * as React from "react"
-import { Loader2 } from "lucide-react"
+import { format, parseISO } from "date-fns"
+import { Loader2, UserCircle, FileSignature, CalendarDays } from "lucide-react"
 
-import { getMemberById, updateMember, type Member } from "@/services/members"
-import { useToast } from "@/hooks/use-toast"
-import { Button } from "@/components/ui/button"
+import { getMemberById, type Member } from "@/services/members"
+import { getAssessments, type Assessment } from "@/services/assessments"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-
-// Define a smaller type for the form state
-type ProfileFormData = {
-  name: string;
-  phone: string;
-  currentPassword?: string;
-  newPassword?: string;
-  confirmPassword?: string;
-}
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
 
 export default function StudentProfilePage() {
     const [user, setUser] = React.useState<Member | null>(null)
+    const [assessments, setAssessments] = React.useState<Assessment[]>([])
     const [isLoading, setIsLoading] = React.useState(true)
-    const [isSaving, setIsSaving] = React.useState(false)
-    const [formData, setFormData] = React.useState<ProfileFormData>({ name: "", phone: "" })
-    const { toast } = useToast()
-
-    const fetchUserData = React.useCallback(async () => {
-        setIsLoading(true);
-        const sessionUser = sessionStorage.getItem("fitcore.user")
-        if (sessionUser) {
-            const parsedUser = JSON.parse(sessionUser)
-            try {
-                const memberData = await getMemberById(parsedUser.id)
-                setUser(memberData)
-                if (memberData) {
-                    setFormData({
-                        name: memberData.name,
-                        phone: memberData.phone,
-                    })
-                }
-            } catch (error) {
-                toast({ title: "Erro ao buscar dados do perfil", variant: "destructive" })
-            }
-        }
-        setIsLoading(false)
-    }, [toast]);
 
     React.useEffect(() => {
-        fetchUserData()
-    }, [fetchUserData])
-    
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { id, value } = e.target;
-        setFormData(prev => ({...prev, [id]: value}));
-    }
-
-    const handleSaveChanges = async () => {
-        if (!user) return;
-        setIsSaving(true);
-        
-        try {
-            const updatePayload: Partial<Member> = {
-                name: formData.name,
-                phone: formData.phone,
-            };
-
-            // Password change logic
-            if (formData.newPassword) {
-                if (formData.newPassword !== formData.confirmPassword) {
-                    toast({ title: "As novas senhas não coincidem.", variant: "destructive" });
-                    setIsSaving(false);
-                    return;
-                }
-                if (user.password !== formData.currentPassword) {
-                    toast({ title: "A senha atual está incorreta.", variant: "destructive" });
-                    setIsSaving(false);
-                    return;
-                }
-                updatePayload.password = formData.newPassword;
-            }
-
-            await updateMember(user.id, updatePayload);
-            toast({ title: "Perfil Atualizado!", description: "Suas informações foram salvas com sucesso." });
-            
-            // Clear password fields after successful save
-            setFormData(prev => ({...prev, currentPassword: '', newPassword: '', confirmPassword: ''}));
-
-        } catch (error) {
-            toast({ title: "Erro ao salvar", variant: "destructive" });
-        } finally {
-            setIsSaving(false);
+        const sessionUser = sessionStorage.getItem("fitcore.user")
+        if (!sessionUser) {
+            setIsLoading(false)
+            return;
         }
-    }
+
+        const parsedUser = JSON.parse(sessionUser)
+
+        async function fetchData() {
+            try {
+                const [memberData, assessmentsData] = await Promise.all([
+                    getMemberById(parsedUser.id),
+                    getAssessments(parsedUser.id),
+                ]);
+                
+                setUser(memberData);
+                setAssessments(assessmentsData);
+
+            } catch (error) {
+                console.error("Failed to fetch student profile data:", error)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        
+        fetchData()
+    }, [])
 
     if (isLoading) {
         return <div className="flex h-64 w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
@@ -106,64 +55,88 @@ export default function StudentProfilePage() {
 
     return (
         <div className="space-y-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="font-headline">Meu Perfil</CardTitle>
-                    <CardDescription>Gerencie suas informações pessoais e de acesso.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-8">
-                    <div className="flex items-center gap-4">
-                        <Avatar className="h-20 w-20">
-                            <AvatarImage src={`https://placehold.co/80x80.png`} data-ai-hint="person face" />
-                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <Button variant="outline" size="sm">Trocar Foto</Button>
-                    </div>
-
-                    <div className="space-y-4">
-                        <h3 className="font-semibold text-lg">Dados Pessoais</h3>
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="name">Nome Completo</Label>
-                                <Input id="name" value={formData.name} onChange={handleInputChange} />
+            <h1 className="text-3xl font-bold font-headline">Minha Ficha</h1>
+            <div className="grid gap-6 lg:grid-cols-3">
+                <div className="lg:col-span-1 space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><UserCircle /> Informações Pessoais</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3 text-sm">
+                           <div className="flex justify-between">
+                                <span className="text-muted-foreground">Nome:</span>
+                                <span className="font-semibold">{user.name}</span>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Email (Login)</Label>
-                                <Input id="email" value={user.email} disabled />
+                           <div className="flex justify-between">
+                                <span className="text-muted-foreground">Email:</span>
+                                <span className="font-semibold">{user.email}</span>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="phone">Telefone</Label>
-                                <Input id="phone" value={formData.phone} onChange={handleInputChange} />
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Telefone:</span>
+                                <span className="font-semibold">{user.phone}</span>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <Separator />
-
-                    <div className="space-y-4">
-                        <h3 className="font-semibold text-lg">Alterar Senha</h3>
-                         <div className="grid md:grid-cols-3 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="currentPassword">Senha Atual</Label>
-                                <Input id="currentPassword" type="password" value={formData.currentPassword || ''} onChange={handleInputChange} />
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Nascimento:</span>
+                                <span className="font-semibold">{format(parseISO(user.dob), "dd/MM/yyyy")}</span>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="newPassword">Nova Senha</Label>
-                                <Input id="newPassword" type="password" value={formData.newPassword || ''} onChange={handleInputChange} />
+                             <div className="flex justify-between">
+                                <span className="text-muted-foreground">CPF:</span>
+                                <span className="font-semibold">{user.cpf}</span>
                             </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
-                                <Input id="confirmPassword" type="password" value={formData.confirmPassword || ''} onChange={handleInputChange} />
+                        </CardContent>
+                    </Card>
+                     <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><FileSignature /> Dados do Plano</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3 text-sm">
+                           <div className="flex justify-between">
+                                <span className="text-muted-foreground">Plano Atual:</span>
+                                <span className="font-semibold">{user.plan}</span>
                             </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-            <div className="flex justify-end">
-                <Button onClick={handleSaveChanges} disabled={isSaving}>
-                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Salvar Alterações
-                </Button>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Vencimento:</span>
+                                <span className="font-semibold">{format(parseISO(user.expires), "dd/MM/yyyy")}</span>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+                <div className="lg:col-span-2">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><CalendarDays /> Histórico de Avaliações</CardTitle>
+                            <CardDescription>Acompanhe sua evolução física ao longo do tempo.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                             <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Data</TableHead>
+                                        <TableHead>Peso</TableHead>
+                                        <TableHead>% Gordura</TableHead>
+                                        <TableHead>M. Muscular</TableHead>
+                                        <TableHead>Tipo</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {assessments.length > 0 ? assessments.map(item => (
+                                        <TableRow key={item.id}>
+                                            <TableCell>{format(new Date(item.date.replace(/-/g, '/')), "dd/MM/yyyy")}</TableCell>
+                                            <TableCell>{item.measures.weight.toFixed(1)} kg</TableCell>
+                                            <TableCell>{item.measures.bodyFat?.toFixed(1) || '-'} %</TableCell>
+                                            <TableCell>{item.measures.muscleMass?.toFixed(1) || '-'} kg</TableCell>
+                                            <TableCell><Badge variant="outline">{item.type}</Badge></TableCell>
+                                        </TableRow>
+                                    )) : (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="h-24 text-center">Nenhuma avaliação encontrada.</TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     )
