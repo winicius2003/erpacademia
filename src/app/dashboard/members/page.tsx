@@ -3,7 +3,7 @@
 
 import * as React from "react"
 import { format, addMonths, parseISO, parse } from "date-fns"
-import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Loader2, Search, Fingerprint, Upload, Copy, KeyRound } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Loader2, Search, Fingerprint, Upload, Copy, KeyRound, RefreshCw } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Papa from "papaparse"
 import * as XLSX from "xlsx"
@@ -78,6 +78,7 @@ import { useToast } from "@/hooks/use-toast"
 import { getMembers, addMember, updateMember, deleteMember, type Member } from "@/services/members"
 import { useSubscription } from "@/lib/subscription-context"
 import { getPlans, type Plan } from "@/services/plans"
+import { Separator } from "@/components/ui/separator"
 
 
 const initialMemberFormState = {
@@ -106,6 +107,7 @@ const initialMemberFormState = {
   goal: "",
   notes: "",
   accessPin: "",
+  password: "",
 }
 
 type MemberFormData = typeof initialMemberFormState;
@@ -227,6 +229,7 @@ export default function MembersPage() {
       goal: member.goal || "",
       notes: member.notes || "",
       accessPin: member.accessPin || "",
+      password: member.password || "",
     });
     setIsFormDialogOpen(true);
   };
@@ -235,42 +238,53 @@ export default function MembersPage() {
     e.preventDefault()
     if (!memberFormData.name || !memberFormData.plan || !memberFormData.expires || !memberFormData.email || !memberFormData.dob) return
 
-    const memberDataToSave = {
-        name: memberFormData.name,
-        email: memberFormData.email,
-        phone: memberFormData.phone,
-        cpf: memberFormData.cpf,
-        rg: memberFormData.rg,
-        dob: format(memberFormData.dob!, "yyyy-MM-dd"),
-        plan: memberFormData.plan,
-        expires: format(memberFormData.expires!, "yyyy-MM-dd"),
-        status: "Ativo" as const,
-        professor: "Não atribuído",
-        attendanceStatus: "Presente" as const,
-        workoutStatus: "Pendente" as const,
-        goal: memberFormData.goal,
-        notes: memberFormData.notes,
-        accessPin: memberFormData.accessPin,
-        fingerprintRegistered: false,
-    };
-
     setIsLoading(true);
     try {
         if (isEditing) {
-            await updateMember(memberFormData.id, memberDataToSave);
+            const updatePayload = {
+                name: memberFormData.name,
+                email: memberFormData.email,
+                phone: memberFormData.phone,
+                cpf: memberFormData.cpf,
+                rg: memberFormData.rg,
+                dob: format(memberFormData.dob, "yyyy-MM-dd"),
+                plan: memberFormData.plan,
+                expires: format(memberFormData.expires, "yyyy-MM-dd"),
+                goal: memberFormData.goal,
+                notes: memberFormData.notes,
+                accessPin: memberFormData.accessPin,
+                password: memberFormData.password,
+            };
+            await updateMember(memberFormData.id, updatePayload);
             toast({ title: "Aluno Atualizado", description: "Os dados do aluno foram atualizados com sucesso." });
-            fetchData();
-            setIsFormDialogOpen(false);
         } else {
-            const newMember = await addMember(memberDataToSave);
+            const addPayload = {
+                name: memberFormData.name,
+                email: memberFormData.email,
+                phone: memberFormData.phone,
+                cpf: memberFormData.cpf,
+                rg: memberFormData.rg,
+                dob: format(memberFormData.dob, "yyyy-MM-dd"),
+                plan: memberFormData.plan,
+                expires: format(memberFormData.expires, "yyyy-MM-dd"),
+                status: "Ativo" as const,
+                professor: "Não atribuído",
+                attendanceStatus: "Presente" as const,
+                workoutStatus: "Pendente" as const,
+                goal: memberFormData.goal,
+                notes: memberFormData.notes,
+                accessPin: memberFormData.accessPin,
+                fingerprintRegistered: false,
+            };
+            const newMember = await addMember(addPayload);
             toast({ title: "Aluno Adicionado", description: "Credenciais de acesso foram geradas." });
-            fetchData();
-            setIsFormDialogOpen(false);
             if (newMember.password) {
                 setNewCredentials({ email: newMember.email, password: newMember.password });
                 setIsCredentialsDialogOpen(true);
             }
         }
+        fetchData();
+        setIsFormDialogOpen(false);
     } catch (error) {
         toast({ title: "Erro", description: `Não foi possível salvar o aluno.`, variant: "destructive" });
     } finally {
@@ -356,7 +370,7 @@ export default function MembersPage() {
               phone: normalizedRow['telefone'] || normalizedRow['celular'],
           };
           
-          let expiresDateValue = normalizedRow['vence'] || normalizedRow['vencimento'] || normalizedRow['data termino'];
+          let expiresDateValue = normalizedRow['vence'] || normalizedRow['vencimento'] || normalizedRow['datatermino'];
           let dobDateValue = normalizedRow['nascimento'];
 
           const situacao = normalizedRow['situacao'];
@@ -653,6 +667,35 @@ export default function MembersPage() {
                                 <div className="grid gap-2 mt-4">
                                     <Label htmlFor="notes">Observações / Anamnese</Label>
                                     <Textarea id="notes" value={memberFormData.notes} onChange={(e) => handleInputChange('notes', e.target.value)} placeholder="Lesões pré-existentes, medicamentos, etc." />
+                                </div>
+                                <Separator className="my-6" />
+                                <div className="space-y-4">
+                                    <h3 className="font-medium flex items-center gap-2"><KeyRound className="h-4 w-4 text-muted-foreground"/> Credenciais do Portal</h3>
+                                    {isEditing ? (
+                                        <div className="grid md:grid-cols-2 gap-4 items-end">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="password">Senha do Portal</Label>
+                                                <div className="flex items-center gap-2">
+                                                    <Input id="password" type="text" value={memberFormData.password} readOnly className="font-mono bg-muted" />
+                                                </div>
+                                            </div>
+                                             <div className="grid gap-2">
+                                                 <Button 
+                                                    type="button" 
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        const newPass = Math.random().toString(36).slice(-8);
+                                                        handleInputChange('password', newPass);
+                                                        toast({ title: "Nova Senha Gerada", description: "Clique em salvar para confirmar a alteração."})
+                                                    }}
+                                                >
+                                                    <RefreshCw className="mr-2 h-4 w-4" /> Gerar Nova Senha
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground">A senha será gerada automaticamente ao salvar o novo aluno e exibida aqui ao editar.</p>
+                                    )}
                                 </div>
                           </TabsContent>
                            <TabsContent value="access" className="py-4">
