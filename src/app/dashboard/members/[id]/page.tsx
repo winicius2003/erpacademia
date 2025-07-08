@@ -152,8 +152,8 @@ export default function MemberProfilePage() {
                     <Tabs defaultValue="payments">
                         <TabsList className="grid w-full grid-cols-3">
                             <TabsTrigger value="payments"><Receipt className="mr-2" /> Pagamentos</TabsTrigger>
-                            <TabsTrigger value="assessments"><HeartPulse className="mr-2" /> Avaliações</TabsTrigger>
                             <TabsTrigger value="workouts"><Dumbbell className="mr-2" /> Treino</TabsTrigger>
+                            <TabsTrigger value="assessments"><HeartPulse className="mr-2" /> Avaliações</TabsTrigger>
                         </TabsList>
                         
                         <TabsContent value="payments" className="mt-4">
@@ -186,6 +186,17 @@ export default function MemberProfilePage() {
                                             )}
                                         </TableBody>
                                     </Table>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
+                        <TabsContent value="workouts" className="mt-4">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Plano de Treino Atual</CardTitle>
+                                </CardHeader>
+                                <CardContent className="h-48 flex items-center justify-center text-muted-foreground">
+                                    <p>Funcionalidade de atribuição de treinos em breve.</p>
                                 </CardContent>
                             </Card>
                         </TabsContent>
@@ -223,21 +234,9 @@ export default function MemberProfilePage() {
                                 </CardContent>
                             </Card>
                         </TabsContent>
-
-                        <TabsContent value="workouts" className="mt-4">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Plano de Treino Atual</CardTitle>
-                                </CardHeader>
-                                <CardContent className="h-48 flex items-center justify-center text-muted-foreground">
-                                    <p>Funcionalidade de atribuição de treinos em breve.</p>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
                     </Tabs>
                 </div>
             </div>
         </div>
     )
 }
-
