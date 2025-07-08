@@ -101,7 +101,7 @@ type Transaction = {
 
 type ImportedPayment = {
     nome: string,
-    email: string,
+    email?: string,
     itemDescricao: string,
     valor: string,
     formaPagamento: PaymentMethod,
@@ -426,37 +426,56 @@ export default function FinancialPage() {
         
         const processData = (data: any[]) => {
             const membersByName = new Map(members.map(m => [m.name.toLowerCase(), m]));
-            const membersByEmail = new Map(members.map(m => [m.email.toLowerCase(), m]));
             let currentErrors: string[] = [];
             
             const mappedData = data.map((row, index) => {
                  const normalizedRow: {[key: string]: any} = {};
+                 // Normalize headers to be lowercase and without accents/special chars for flexible matching
                  for (const key in row) {
-                    normalizedRow[key.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")] = row[key];
+                    const normalizedKey = key.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    normalizedRow[normalizedKey] = row[key];
                  }
 
-                 const payment: Partial<ImportedPayment> = {
-                     nome: normalizedRow['nome do aluno'],
-                     email: normalizedRow['email do aluno'],
-                     itemDescricao: normalizedRow['item descricao'],
-                     valor: normalizedRow['valor'],
-                     formaPagamento: normalizedRow['forma pagamento'],
-                     data: normalizedRow['data'],
-                     idTransacao: normalizedRow['id transacao'],
+                 // Prioritize 'Nome' as the key identifier for the student
+                 const studentName = normalizedRow['nome'];
+
+                 if (!studentName) {
+                     currentErrors.push(`Linha ${index + 2}: A coluna "Nome" do aluno é obrigatória e não foi encontrada na sua planilha.`);
+                     return null;
+                 }
+                 
+                 // Map other fields with fallbacks for different column names
+                 const itemDescricao = normalizedRow['plano'] || normalizedRow['produto'] || normalizedRow['item descricao'];
+                 const valor = String(normalizedRow['valor'] || '').replace(',', '.');
+                 const formaPagamento = normalizedRow['forma pagamento'] || normalizedRow['condicao pagamento'];
+                 const dataPagamento = normalizedRow['data lancamento'] || normalizedRow['data termino'] || normalizedRow['data de cadastro'] || normalizedRow['data'];
+
+                 // Validate required fields
+                 if (!itemDescricao) { currentErrors.push(`Linha ${index + 2}: Coluna 'Plano' ou 'Produto' não encontrada para o aluno "${studentName}".`); return null; }
+                 if (!valor || isNaN(parseFloat(valor))) { currentErrors.push(`Linha ${index + 2}: Valor inválido ou não encontrado para o aluno "${studentName}".`); return null; }
+                 if (!formaPagamento) { currentErrors.push(`Linha ${index + 2}: 'Forma Pagamento' não encontrada para o aluno "${studentName}".`); return null; }
+                 if (!dataPagamento) { currentErrors.push(`Linha ${index + 2}: Coluna de data ('Data Lançamento', 'Data Término' ou 'Data de Cadastro') não encontrada para o aluno "${studentName}".`); return null; }
+
+
+                 // Check if student exists in the system by name
+                 if (!membersByName.has(String(studentName).toLowerCase())) { 
+                     currentErrors.push(`Linha ${index + 2}: Aluno "${studentName}" não encontrado no sistema. Verifique se o nome na planilha corresponde exatamente ao do cadastro.`); 
+                 }
+                 
+                 const payment: ImportedPayment = {
+                     nome: studentName,
+                     email: normalizedRow['email'], // Email is optional
+                     itemDescricao: itemDescricao,
+                     valor: valor,
+                     formaPagamento: formaPagamento as PaymentMethod,
+                     data: String(dataPagamento),
+                     idTransacao: normalizedRow['id transacao'] || normalizedRow['no contrato'],
                  };
-
-                 if (!payment.nome && !payment.email) { currentErrors.push(`Linha ${index + 2}: Nome ou E-mail do aluno é obrigatório.`); return null; }
-                 if (!payment.itemDescricao) { currentErrors.push(`Linha ${index + 2}: Descrição do item é obrigatória.`); return null; }
-                 if (!payment.valor || isNaN(parseFloat(payment.valor))) { currentErrors.push(`Linha ${index + 2}: Valor inválido.`); return null; }
-                 if (!payment.formaPagamento) { currentErrors.push(`Linha ${index + 2}: Forma de Pagamento é obrigatória.`); return null; }
-
-                 const studentExists = payment.email ? membersByEmail.has(payment.email.toLowerCase()) : membersByName.has(payment.nome!.toLowerCase());
-                 if (!studentExists) { currentErrors.push(`Linha ${index + 2}: Aluno "${payment.nome || payment.email}" não encontrado.`); }
 
                  return payment;
             }).filter((p): p is ImportedPayment => Boolean(p));
 
-            setImportPreview(mappedData as ImportedPayment[]);
+            setImportPreview(mappedData);
             setImportErrors(currentErrors);
             setImportStep(2);
             setIsImporting(false);
@@ -468,11 +487,24 @@ export default function FinancialPage() {
             const reader = new FileReader();
             reader.onload = (e) => {
                 const data = new Uint8Array(e.target!.result as ArrayBuffer);
+                // For Excel, we might need to handle dates differently.
+                // sheet_to_json by default might convert dates to numbers.
                 const workbook = XLSX.read(data, { type: 'array', cellDates: true });
                 const sheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
                 const json = XLSX.utils.sheet_to_json(worksheet);
-                processData(json);
+
+                // Re-format dates from Excel if they are parsed as Date objects
+                const processedJson = json.map(row => {
+                    const newRow = {...row};
+                    for (const key in newRow) {
+                        if (newRow[key] instanceof Date) {
+                            newRow[key] = format(newRow[key] as Date, 'yyyy-MM-dd');
+                        }
+                    }
+                    return newRow;
+                });
+                processData(processedJson);
             };
             reader.readAsArrayBuffer(importFile);
         }
