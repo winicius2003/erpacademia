@@ -179,6 +179,34 @@ Muitas distribuições Linux, como o Ubuntu, usam o `ufw` (Uncomplicated Firewal
 
 Se mesmo após configurar o firewall o problema persistir, verifique se seu celular e computador estão conectados **exatamente na mesma rede Wi-Fi**. Algumas redes (especialmente corporativas ou públicas) possuem um "Isolamento de Clientes" que impede a comunicação entre dispositivos.
 
+### 7. Acessando de Fora da Rede Local (Avançado)
+
+Se você precisa que alguém fora da sua rede Wi-Fi acesse a aplicação rodando no seu computador, a forma mais robusta (porém mais complexa) é o **redirecionamento de portas** (port forwarding) no seu roteador.
+
+**Aviso de Segurança:** Abrir portas no seu roteador expõe um serviço da sua rede interna à internet. Faça isso apenas para testes temporários e desative a regra quando não precisar mais. Ferramentas como o `ngrok` são geralmente mais seguras para este fim.
+
+#### Passo a Passo para Redirecionamento de Portas
+
+1.  **Acesse seu Roteador:** Abra um navegador e digite o endereço de IP do seu roteador. Os mais comuns são `192.168.0.1` ou `192.168.1.1`. Você precisará do usuário e senha de administrador (geralmente encontrados na etiqueta do aparelho).
+
+2.  **Encontre a Seção Correta:** Procure por uma seção chamada **"Port Forwarding"**, "Redirecionamento de Portas", "Virtual Servers" ou algo semelhante. A localização varia muito entre os fabricantes.
+
+3.  **Crie uma Nova Regra:** Você precisará preencher os seguintes campos:
+    *   **Nome da Regra/Aplicação:** `FitCore Dev` (ou qualquer nome que preferir).
+    *   **Porta Externa (ou WAN Port):** `9002`.
+    *   **Porta Interna (ou LAN Port):** `9002`.
+    *   **Endereço IP Interno (ou LAN IP Address):** O endereço IP do seu computador na rede local (ex: `192.168.1.6`).
+    *   **Protocolo:** `TCP` (ou `TCP/UDP`).
+
+4.  **Salve e Aplique:** Salve a nova regra. O roteador pode precisar reiniciar.
+
+5.  **Descubra seu IP Público:** No seu computador, pesquise no Google por "qual meu IP". Anote o endereço que aparecer.
+
+6.  **Acesse de Fora:** Agora, qualquer pessoa (ou você mesmo, usando a rede 4G/5G do seu celular) pode acessar a aplicação digitando no navegador:
+    `http://<SEU_IP_PÚBLICO>:9002` (substitua `<SEU_IP_PÚBLICO>` pelo IP que você encontrou no passo 5).
+
+Se não funcionar, é provável que seu provedor de internet utilize uma tecnologia chamada **CGNAT**, que impede o redirecionamento de portas. Nesse caso, ferramentas como `ngrok` ou `Tailscale` são as únicas alternativas.
+
 **Logins de Teste:**
 -   **Superadmin:** `superadmin@fitcore.com` / senha: `superadminpass`
 -   **Admin (Academia Exemplo):** `admin@admin` / senha: `uUmope5Z`
