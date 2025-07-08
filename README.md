@@ -27,6 +27,9 @@ FitCore é um sistema SaaS (Software as a Service) completo, projetado para simp
     -   Página de configuração para integração com catracas e leitores biométricos.
     -   Cadastro de PIN e biometria por aluno e funcionário.
     -   API (`/api/access/validate`) para validação de acesso em tempo real, bloqueando inadimplentes.
+-   **Integração com Parceiros (Gympass):**
+    -   API (`/api/gympass/checkin`) para validação de check-ins de usuários de parceiros.
+    -   Relatório dedicado para visualização e controle do histórico de check-ins de parceiros.
 -   **Gestão de Planos e Produtos:**
     -   Crie e gerencie os planos de matrícula e produtos vendidos no PDV, com controle de estoque.
 -   **CRM e Funil de Vendas:**
