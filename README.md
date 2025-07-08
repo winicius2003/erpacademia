@@ -133,6 +133,35 @@ O FitCore é um Progressive Web App (PWA), o que significa que você pode "insta
 
 Pronto! Um ícone do FitCore aparecerá na sua tela inicial.
 
+### 6. Solução de Problemas de Acesso na Rede Local
+
+Se você seguiu os passos para testar no celular, mas a página não carrega (erro de "timeout" ou "demorou demais para responder"), o problema mais comum é o **firewall do seu computador** bloqueando a conexão.
+
+Siga os passos abaixo para permitir o acesso:
+
+#### No Windows (Firewall do Windows Defender)
+
+1.  Pressione a tecla **Windows** e digite "Firewall". Selecione **"Firewall do Windows Defender"**.
+2.  Clique em **"Permitir um aplicativo ou recurso através do Firewall do Windows Defender"** no menu à esquerda.
+3.  Clique em **"Alterar configurações"** (você precisará de permissão de administrador).
+4.  Procure na lista por itens relacionados a **"Node.js"** ou **"Node.js JavaScript Runtime"**.
+5.  Certifique-se de que as caixas de seleção **"Privada"** e **"Pública"** estejam marcadas para o Node.js.
+6.  Se o Node.js não estiver na lista, clique em **"Permitir outro aplicativo..."**, navegue até o local de instalação do Node.js (geralmente `C:\Program Files\nodejs\node.exe`) e adicione-o.
+7.  Clique em **OK** e tente acessar novamente pelo celular.
+
+#### No macOS
+
+1.  Abra as **"Preferências do Sistema"** (ou "Ajustes do Sistema").
+2.  Vá para **"Rede"** e depois **"Firewall"**.
+3.  Clique no cadeado para fazer alterações e digite sua senha.
+4.  Clique em **"Opções do Firewall..."**.
+5.  Clique no botão **"+"**.
+6.  Procure e adicione o aplicativo **"node"**. Ele pode estar em `/usr/local/bin/node`.
+7.  Certifique-se de que a opção ao lado de "node" esteja configurada como **"Permitir conexões de entrada"**.
+8.  Clique em **OK** e tente acessar novamente pelo celular.
+
+Se mesmo após configurar o firewall o problema persistir, verifique se seu celular e computador estão conectados **exatamente na mesma rede Wi-Fi**. Algumas redes (especialmente corporativas ou públicas) possuem um "Isolamento de Clientes" que impede a comunicação entre dispositivos.
+
 **Logins de Teste:**
 -   **Superadmin:** `superadmin@fitcore.com` / senha: `superadminpass`
 -   **Admin (Academia Exemplo):** `admin@admin` / senha: `uUmope5Z`
