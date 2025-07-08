@@ -90,14 +90,14 @@ const navItems = [
   { href: "/dashboard/subscription", icon: Gem, label: "Assinatura" },
 ]
 
-const navPermissions: Record<Role, string[]> = {
-  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro", "CRM", "Frequência", "Colaboradores", "Relatórios", "Gympass", "Planos", "Produtos", "Assinatura", "Configurações"],
+export const navPermissions: Record<Role, string[]> = {
+  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro", "CRM", "Colaboradores", "Relatórios", "Gympass", "Planos", "Produtos", "Assinatura", "Configurações"],
   Gerente: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Colaboradores"],
   Gestor: ["Painel", "Alunos", "Avaliações", "Agenda", "Financeiro", "CRM", "Frequência", "Relatórios", "Gympass", "Planos", "Produtos", "Assinatura"],
   Professor: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda"],
   Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Produtos"],
   Estagiário: ["Alunos", "Agenda"],
-}
+};
 
 export default function DashboardLayout({
   children,

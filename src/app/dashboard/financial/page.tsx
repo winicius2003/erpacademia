@@ -169,8 +169,11 @@ export default function FinancialPage() {
 
     const [todaySummary, setTodaySummary] = React.useState({ inflow: 0, outflow: 0, balance: 0 })
     const [cashierSummary, setCashierSummary] = React.useState<{ name: string, total: number, count: number }[]>([]);
+    const [personalCashierSummary, setPersonalCashierSummary] = React.useState<{ total: number; count: number } | null>(null);
+
 
     const isSalesBlocked = subscriptionStatus === 'overdue' || subscriptionStatus === 'blocked';
+    const hasFullAccess = user?.role === 'Admin' || user?.role === 'Gestor';
 
     const fetchData = React.useCallback(async () => {
         setIsLoading(true);
@@ -300,23 +303,30 @@ export default function FinancialPage() {
         const todayOutflow = todayExpenses.reduce((acc, e) => acc + e.amount, 0);
         setTodaySummary({ inflow: todayInflow, outflow: todayOutflow, balance: todayInflow - todayOutflow });
 
-        if (user && (user.role === 'Admin' || user.role === 'Gestor')) {
-            const summary = todayPayments.reduce((acc, payment) => {
-                const { registeredByName, amount } = payment;
-                if (!acc[registeredByName]) {
-                    acc[registeredByName] = { total: 0, count: 0 };
-                }
-                acc[registeredByName].total += parseFloat(amount);
-                acc[registeredByName].count += 1;
-                return acc;
-            }, {} as Record<string, { total: number; count: number }>);
-    
-            const summaryArray = Object.entries(summary).map(([name, data]) => ({
-                name,
-                ...data,
-            })).sort((a,b) => b.total - a.total);
-    
-            setCashierSummary(summaryArray);
+        if (user) {
+            if (user.role === 'Admin' || user.role === 'Gestor') {
+                const summary = todayPayments.reduce((acc, payment) => {
+                    const { registeredByName, amount } = payment;
+                    if (!acc[registeredByName]) {
+                        acc[registeredByName] = { total: 0, count: 0 };
+                    }
+                    acc[registeredByName].total += parseFloat(amount);
+                    acc[registeredByName].count += 1;
+                    return acc;
+                }, {} as Record<string, { total: number; count: number }>);
+        
+                const summaryArray = Object.entries(summary).map(([name, data]) => ({
+                    name,
+                    ...data,
+                })).sort((a,b) => b.total - a.total);
+        
+                setCashierSummary(summaryArray);
+            } else {
+                 // Personal summary logic for Gerente/Recepção
+                const mySales = todayPayments.filter(p => p.registeredById === user.id);
+                const myTotal = mySales.reduce((acc, p) => acc + parseFloat(p.amount), 0);
+                setPersonalCashierSummary({ total: myTotal, count: mySales.length });
+            }
         }
     }, [payments, expenses, user]);
 
@@ -391,7 +401,7 @@ export default function FinancialPage() {
     
     const clearFilter = () => router.push('/dashboard/financial');
     
-    const defaultTab = studentNameParam ? "payments" : "cashflow";
+    const defaultTab = hasFullAccess ? (studentNameParam ? "payments" : "cashflow") : "cashier_closing";
     
     const filteredPayments = React.useMemo(() => {
         const lowercasedSearch = paymentSearch.toLowerCase();
@@ -557,13 +567,14 @@ export default function FinancialPage() {
     <>
         <InvoiceDialog isOpen={isInvoiceOpen} onOpenChange={setIsInvoiceOpen} invoiceData={currentInvoice} />
         <Tabs defaultValue={defaultTab} className="flex-1">
-            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-4">
-                <TabsTrigger value="cashflow">Fluxo de Caixa</TabsTrigger>
+            <TabsList className={cn("grid w-full", hasFullAccess ? "grid-cols-4" : "grid-cols-3")}>
+                {hasFullAccess && <TabsTrigger value="cashflow">Fluxo de Caixa</TabsTrigger>}
                 <TabsTrigger value="cashier_closing">Fechamento de Caixa</TabsTrigger>
                 <TabsTrigger value="payments">Histórico de Pagamentos</TabsTrigger>
                 <TabsTrigger value="invoices">Faturas</TabsTrigger>
             </TabsList>
 
+            {hasFullAccess && (
             <TabsContent value="cashflow" className="mt-4">
                 <div className="grid grid-cols-1 gap-6">
                     <Card>
@@ -665,6 +676,7 @@ export default function FinancialPage() {
                     </Card>
                 </div>
             </TabsContent>
+            )}
             
             <TabsContent value="cashier_closing">
                 <Card className="mt-4">
@@ -687,32 +699,47 @@ export default function FinancialPage() {
                                 <CardContent><div className="text-2xl font-bold">{todaySummary.balance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div></CardContent>
                             </Card>
                         </div>
-                        {user && (user.role === 'Admin' || user.role === 'Gestor') && (
-                        <Card>
-                            <CardHeader><CardTitle className="text-base">Vendas por Funcionário</CardTitle></CardHeader>
-                            <CardContent>
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead><UsersRound className="inline-block mr-2" /> Funcionário</TableHead>
-                                            <TableHead className="text-center">Vendas Realizadas</TableHead>
-                                            <TableHead className="text-right">Total Arrecadado</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {cashierSummary.length > 0 ? cashierSummary.map(item => (
-                                            <TableRow key={item.name}>
-                                                <TableCell className="font-medium">{item.name}</TableCell>
-                                                <TableCell className="text-center">{item.count}</TableCell>
-                                                <TableCell className="text-right">{item.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
+                        
+                        {hasFullAccess ? (
+                            <Card>
+                                <CardHeader><CardTitle className="text-base">Vendas por Funcionário</CardTitle></CardHeader>
+                                <CardContent>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead><UsersRound className="inline-block mr-2" /> Funcionário</TableHead>
+                                                <TableHead className="text-center">Vendas Realizadas</TableHead>
+                                                <TableHead className="text-right">Total Arrecadado</TableHead>
                                             </TableRow>
-                                        )) : (
-                                            <TableRow><TableCell colSpan={3} className="h-24 text-center">Nenhuma venda registrada hoje.</TableCell></TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </CardContent>
-                        </Card>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {cashierSummary.length > 0 ? cashierSummary.map(item => (
+                                                <TableRow key={item.name}>
+                                                    <TableCell className="font-medium">{item.name}</TableCell>
+                                                    <TableCell className="text-center">{item.count}</TableCell>
+                                                    <TableCell className="text-right">{item.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
+                                                </TableRow>
+                                            )) : (
+                                                <TableRow><TableCell colSpan={3} className="h-24 text-center">Nenhuma venda registrada hoje.</TableCell></TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </CardContent>
+                            </Card>
+                        ) : personalCashierSummary && (
+                             <Card>
+                                <CardHeader><CardTitle className="text-base">Meu Resumo de Vendas de Hoje</CardTitle></CardHeader>
+                                <CardContent className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">Vendas Realizadas</p>
+                                        <p className="text-2xl font-bold">{personalCashierSummary.count}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">Total Arrecadado</p>
+                                        <p className="text-2xl font-bold">{personalCashierSummary.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
                         )}
                     </CardContent>
                     <CardFooter>

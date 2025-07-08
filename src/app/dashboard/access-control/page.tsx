@@ -59,14 +59,14 @@ import { useToast } from "@/hooks/use-toast"
 import { getEmployees, addEmployee, updateEmployee, deleteEmployee, type Employee, type Role } from "@/services/employees"
 import { Checkbox } from "@/components/ui/checkbox"
 
-export const allPermissions = ["Painel", "Alunos", "Treinos", "Agenda", "Financeiro", "CRM", "Colaboradores", "Relatórios", "Configurações", "Assinatura", "Gympass", "Planos", "Produtos", "Avaliações", "Frequência"]
+export const allPermissions = ["Painel", "Alunos", "Treinos", "Agenda", "Financeiro (Geral)", "Financeiro (Pessoal)", "CRM", "Colaboradores", "Relatórios", "Configurações", "Assinatura", "Gympass", "Planos", "Produtos", "Avaliações", "Frequência"]
 
 export const rolePermissions: Record<Role, string[]> = {
-  Admin: allPermissions,
-  Gerente: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Colaboradores"],
-  Gestor: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Relatórios", "Planos", "Produtos", "Avaliações", "Frequência"],
-  Professor: ["Painel", "Alunos", "Treinos", "Agenda", "Avaliações"],
-  Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Produtos"],
+  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro (Geral)", "CRM", "Colaboradores", "Relatórios", "Configurações", "Assinatura", "Gympass", "Planos", "Produtos", "Frequência"],
+  Gerente: ["Painel", "Alunos", "Agenda", "Financeiro (Pessoal)", "CRM", "Colaboradores"],
+  Gestor: ["Painel", "Alunos", "Avaliações", "Agenda", "Financeiro (Geral)", "CRM", "Relatórios", "Planos", "Produtos", "Assinatura", "Gympass", "Frequência"],
+  Professor: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda"],
+  Recepção: ["Alunos", "Agenda", "Financeiro (Pessoal)", "CRM", "Produtos"],
   Estagiário: ["Alunos", "Agenda", "Treinos"],
 }
 
