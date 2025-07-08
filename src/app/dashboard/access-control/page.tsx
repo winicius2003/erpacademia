@@ -59,11 +59,11 @@ import { useToast } from "@/hooks/use-toast"
 import { getEmployees, addEmployee, updateEmployee, deleteEmployee, type Employee, type Role } from "@/services/employees"
 
 export const rolePermissions: Record<Role, string[]> = {
-  Admin: ["Painel", "Alunos", "Treinos", "Agenda", "Financeiro", "CRM", "Colaboradores", "Relatórios", "Configurações"],
-  Gerente: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Colaboradores"],
+  Admin: ["Painel", "Alunos", "Treinos", "Agenda", "Financeiro", "CRM", "Controle de Acesso", "Relatórios", "Configurações"],
+  Gerente: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Controle de Acesso"],
   Gestor: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Relatórios"],
   Professor: ["Painel", "Alunos", "Treinos", "Agenda"],
-  Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Colaboradores"],
+  Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Controle de Acesso"],
   Estagiário: ["Alunos", "Agenda"],
 }
 
@@ -388,7 +388,7 @@ export default function AccessControlPage() {
             </div>
              {(employeeFormData.role === 'Professor' || employeeFormData.role === 'Estagiário') && (
                 <div className="grid gap-2">
-                    <Label htmlFor="cref">CREF</Label>
+                    <Label htmlFor="cref">CREF (Obrigatório para Professor/Estagiário)</Label>
                     <Input id="cref" value={employeeFormData.cref} onChange={(e) => handleInputChange('cref', e.target.value)} placeholder="000000-G/SP" />
                 </div>
             )}
