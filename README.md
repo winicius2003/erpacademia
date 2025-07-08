@@ -125,7 +125,7 @@ O FitCore é um Progressive Web App (PWA), o que significa que você pode "insta
 1.  **Conecte seu celular na mesma rede Wi-Fi** que o seu computador.
 2.  **Descubra o endereço IP do seu computador** na rede local:
     *   **No Windows:** Abra o `Prompt de Comando` e digite `ipconfig`. Procure pelo "Endereço IPv4". Geralmente começa com `192.168...`.
-    *   **No macOS ou Linux:** Abra o `Terminal` e digite `ifconfig`. Procure por `inet` na sua conexão de rede (ex: `en0`).
+    *   **No macOS ou Linux:** Abra o `Terminal` e digite `ifconfig` ou `ip a`. Procure por `inet` na sua conexão de rede (ex: `wlo1` ou `en0`).
 3.  **Acesse no celular:** Abra o navegador do seu celular e digite a URL `http://<SEU_ENDERECO_IP>:9002`. Substitua `<SEU_ENDERECO_IP>` pelo IP que você encontrou.
 4.  **Adicione à Tela Inicial:**
     *   **No Android (Chrome):** Toque nos três pontos no canto superior direito e selecione a opção **"Instalar aplicativo"** ou **"Adicionar à tela inicial"**.
@@ -159,6 +159,23 @@ Siga os passos abaixo para permitir o acesso:
 6.  Procure e adicione o aplicativo **"node"**. Ele pode estar em `/usr/local/bin/node`.
 7.  Certifique-se de que a opção ao lado de "node" esteja configurada como **"Permitir conexões de entrada"**.
 8.  Clique em **OK** e tente acessar novamente pelo celular.
+
+#### No Linux (usando ufw)
+
+Muitas distribuições Linux, como o Ubuntu, usam o `ufw` (Uncomplicated Firewall) como uma interface amigável para gerenciar as regras de firewall.
+
+1.  Abra o **Terminal**.
+2.  Primeiro, verifique se o `ufw` está ativo, digitando:
+    ```bash
+    sudo ufw status
+    ```
+3.  Se ele estiver `inativo`, você pode ativá-lo. **Cuidado:** Ativar o firewall pode bloquear o acesso SSH se você não tiver uma regra para permiti-lo. Se estiver em um computador local, é seguro prosseguir. Digite `sudo ufw enable`.
+4.  Adicione uma regra para permitir conexões na porta da aplicação (`9002`):
+    ```bash
+    sudo ufw allow 9002/tcp
+    ```
+5.  Você verá uma mensagem como "Rule added" ou "Regra adicionada".
+6.  Tente acessar novamente pelo celular.
 
 Se mesmo após configurar o firewall o problema persistir, verifique se seu celular e computador estão conectados **exatamente na mesma rede Wi-Fi**. Algumas redes (especialmente corporativas ou públicas) possuem um "Isolamento de Clientes" que impede a comunicação entre dispositivos.
 
