@@ -1,8 +1,8 @@
-
 "use client"
 
 import * as React from "react"
 import Link from "next/link"
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts"
 import { 
   PlusCircle, 
   MoreVertical, 
@@ -29,7 +29,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -63,6 +62,14 @@ import { getLeads, addLead, updateLead, deleteLead, type Lead, type LeadStatus }
 import { getMembers, type Member } from "@/services/members"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
+import { Progress } from "@/components/ui/progress"
+
 
 const statusOrder: LeadStatus[] = ["Novo Lead", "Contato Iniciado", "Negociação", "Vendido", "Perdido"];
 const statusLabels: Record<LeadStatus, string> = {
@@ -81,6 +88,18 @@ const initialFormState = {
   status: "Novo Lead" as LeadStatus,
 }
 type LeadFormData = typeof initialFormState;
+
+// Mock data for BI
+const performanceData = [
+    { employee: "Juliana Alves", leads: 40, sales: 12, conversion: 30, goal: 10 },
+    { employee: "Ricardo Mendes", leads: 35, sales: 9, conversion: 25.7, goal: 10 },
+    { employee: "Carla Silva", leads: 15, sales: 5, conversion: 33.3, goal: 4 },
+];
+
+const chartConfig = {
+    sales: { label: "Vendas", color: "hsl(var(--chart-1))" },
+    goal: { label: "Meta", color: "hsl(var(--chart-2))" },
+};
 
 export default function CrmPage() {
   const [leadsByStatus, setLeadsByStatus] = React.useState<Record<LeadStatus, Lead[]>>({
@@ -258,6 +277,11 @@ export default function CrmPage() {
   };
   
   const operationalStats = getOperationalStats();
+  const biStats = {
+      totalLeads: performanceData.reduce((acc, item) => acc + item.leads, 0),
+      totalSales: performanceData.reduce((acc, item) => acc + item.sales, 0),
+  }
+  const overallConversion = biStats.totalLeads > 0 ? (biStats.totalSales / biStats.totalLeads) * 100 : 0;
 
 
   return (
@@ -272,11 +296,13 @@ export default function CrmPage() {
         </Button>
       </div>
 
-      <Tabs defaultValue="funil">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="funil" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="funil">Funil de Vendas</TabsTrigger>
+            <TabsTrigger value="bi">Metas e Desempenho</TabsTrigger>
             <TabsTrigger value="relacionamento">Relacionamento com Aluno</TabsTrigger>
         </TabsList>
+
         <TabsContent value="funil" className="mt-4">
           {isLoading ? (
             <div className="flex justify-center items-center h-96">
@@ -291,46 +317,52 @@ export default function CrmPage() {
                   </h3>
                   <div className="space-y-3 min-h-[100px]">
                     {(leadsByStatus[status] || []).map(lead => (
-                      <Card key={lead.id} className="shadow-sm">
-                        <CardHeader className="p-3">
-                          <div className="flex justify-between items-start">
-                            <CardTitle className="text-base">{lead.name}</CardTitle>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6">
-                                        <MoreVertical className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                                    <DropdownMenuItem onSelect={() => handleEditClick(lead)}><Edit className="mr-2 h-4 w-4" /> Editar</DropdownMenuItem>
-                                    <DropdownMenuSub>
-                                        <DropdownMenuSubTrigger>Mover para</DropdownMenuSubTrigger>
-                                        <DropdownMenuPortal>
-                                            <DropdownMenuSubContent>
-                                                {statusOrder.map(s => (
-                                                    <DropdownMenuItem 
-                                                        key={s} 
-                                                        disabled={s === status} 
-                                                        onSelect={() => handleStatusChange(lead.id, s)}
-                                                    >
-                                                        {statusLabels[s]}
-                                                    </DropdownMenuItem>
-                                                ))}
-                                            </DropdownMenuSubContent>
-                                        </DropdownMenuPortal>
-                                    </DropdownMenuSub>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onSelect={() => handleDeleteClick(lead)} className="text-destructive focus:text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Excluir</DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="p-3 pt-0 text-sm text-muted-foreground">
-                          <p>{lead.contact}</p>
-                          <p>Origem: <Badge variant="outline">{lead.source}</Badge></p>
-                        </CardContent>
-                      </Card>
+                      <Collapsible key={lead.id} asChild>
+                         <Card className="shadow-sm">
+                            <div className="flex items-center p-3">
+                                <CollapsibleTrigger asChild>
+                                    <button className="flex-1 text-left">
+                                      <CardTitle className="text-base">{lead.name}</CardTitle>
+                                    </button>
+                                </CollapsibleTrigger>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                                            <MoreVertical className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                                        <DropdownMenuItem onSelect={() => handleEditClick(lead)}><Edit className="mr-2 h-4 w-4" /> Editar</DropdownMenuItem>
+                                        <DropdownMenuSub>
+                                            <DropdownMenuSubTrigger>Mover para</DropdownMenuSubTrigger>
+                                            <DropdownMenuPortal>
+                                                <DropdownMenuSubContent>
+                                                    {statusOrder.map(s => (
+                                                        <DropdownMenuItem 
+                                                            key={s} 
+                                                            disabled={s === status} 
+                                                            onSelect={() => handleStatusChange(lead.id, s)}
+                                                        >
+                                                            {statusLabels[s]}
+                                                        </DropdownMenuItem>
+                                                    ))}
+                                                </DropdownMenuSubContent>
+                                            </DropdownMenuPortal>
+                                        </DropdownMenuSub>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem onSelect={() => handleDeleteClick(lead)} className="text-destructive focus:text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Excluir</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                            <CollapsibleContent>
+                                <CardContent className="p-3 pt-0 text-sm text-muted-foreground">
+                                    <p>{lead.contact}</p>
+                                    <p>Origem: <Badge variant="outline">{lead.source}</Badge></p>
+                                </CardContent>
+                            </CollapsibleContent>
+                        </Card>
+                      </Collapsible>
                     ))}
                   </div>
                 </div>
@@ -338,6 +370,66 @@ export default function CrmPage() {
             </div>
           )}
         </TabsContent>
+
+        <TabsContent value="bi" className="mt-4">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <Card className="lg:col-span-1">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-base">Conversão Geral</CardTitle>
+                        <CardDescription>Este mês</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-4xl font-bold">{overallConversion.toFixed(1)}%</p>
+                    </CardContent>
+                    <CardFooter>
+                        <p className="text-xs text-muted-foreground">{biStats.totalSales} vendas de {biStats.totalLeads} leads.</p>
+                    </CardFooter>
+                </Card>
+                 <Card className="lg:col-span-3">
+                    <CardHeader>
+                        <CardTitle>Desempenho da Equipe</CardTitle>
+                        <CardDescription>Vendas vs. Meta Mensal</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ChartContainer config={chartConfig} className="h-40">
+                            <BarChart data={performanceData} margin={{ top: 20, right: 20, left: -10, bottom: 0 }}>
+                                <CartesianGrid vertical={false} />
+                                <XAxis dataKey="employee" tickLine={false} axisLine={false} />
+                                <YAxis tickLine={false} axisLine={false} />
+                                <Tooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                                <Bar dataKey="sales" name="Vendas" fill="var(--color-sales)" radius={4} />
+                                <Bar dataKey="goal" name="Meta" fill="var(--color-goal)" radius={4} />
+                            </BarChart>
+                        </ChartContainer>
+                    </CardContent>
+                </Card>
+            </div>
+            <Card className="mt-6">
+                <CardHeader>
+                    <CardTitle>Detalhes por Funcionário</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-6">
+                        {performanceData.map(item => (
+                            <div key={item.employee} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+                                <div className="md:col-span-1">
+                                    <p className="font-medium">{item.employee}</p>
+                                    <p className="text-sm text-muted-foreground">{item.leads} leads</p>
+                                </div>
+                                <div className="md:col-span-4">
+                                     <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                                        <span>{item.sales} vendas ({item.conversion.toFixed(1)}%)</span>
+                                        <span>Meta: {item.goal}</span>
+                                    </div>
+                                    <Progress value={(item.sales / item.goal) * 100} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+        </TabsContent>
+
         <TabsContent value="relacionamento" className="mt-4">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start">
                 <Card>
@@ -491,7 +583,8 @@ export default function CrmPage() {
               </div>
             </form>
             <DialogFooter>
-              <Button type="submit" form="lead-form" disabled={isLoading}>{isEditing ? "Salvar" : "Adicionar"}</Button>
+              <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+              <Button type="submit" form="lead-form" disabled={isLoading}>{isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}{isEditing ? "Salvar" : "Adicionar"}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -519,5 +612,3 @@ export default function CrmPage() {
     </>
   )
 }
-
-    
