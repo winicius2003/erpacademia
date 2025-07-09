@@ -40,7 +40,7 @@ let workoutPlans: WorkoutPlan[] = [
         name: 'Treino A: Superiores (Foco em Peito)',
         exercises: [
           { id: 'e1', name: 'Supino Reto com Barra', sets: '3', reps: '8-12', rest: '60s', imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Bench-Press.gif' },
-          { id: 'e14', name: 'Supino inclinado com barra', sets: '3', reps: '8-12', rest: '60s', imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Incline-Bench-Press.gif' },
+          { id: 'e14', name: 'Supino inclinado com barra', sets: '3', reps: '8-12', rest: '60s', imageUrl: 'https://www.hipertrofia.org/blog/wp-content/uploads/2023/09/barbell-incline-bench-press.gif' },
           { id: 'e2', name: 'Desenvolvimento com Halteres', sets: '3', reps: '8-12', rest: '60s', imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Shoulder-Press.gif' },
           { id: 'e3', name: 'Tríceps na Polia', sets: '3', reps: '10-15', rest: '45s' },
         ],
