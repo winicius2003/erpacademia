@@ -15,7 +15,7 @@ const exerciseList: ExerciseListItem[] = [
         group: 'Peito (Chest)',
         exercises: [
             { name: 'Supino reto com barra', imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Bench-Press.gif' },
-            { name: 'Supino inclinado com barra' },
+            { name: 'Supino inclinado com barra', imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Incline-Bench-Press.gif' },
             { name: 'Supino declinado com barra' },
             { name: 'Supino reto com halteres' },
             { name: 'Supino inclinado com halteres' },
