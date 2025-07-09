@@ -71,7 +71,6 @@ export default function PrintWorkoutPage() {
     const [filteredMembers, setFilteredMembers] = React.useState<Member[]>([]);
     
     const [selectedMember, setSelectedMember] = React.useState<Member | null>(null)
-    const [selectedPlan, setSelectedPlan] = React.useState<WorkoutPlan | null>(null);
     const [selectedWorkout, setSelectedWorkout] = React.useState<WorkoutPlan['workouts'][0] | null>(null);
     
     const [isLoading, setIsLoading] = React.useState(true);
@@ -111,21 +110,38 @@ export default function PrintWorkoutPage() {
 
 
     const handleSelectMember = (member: Member) => {
+        setSearchQuery("");
+        setFilteredMembers([]);
         setSelectedMember(member);
-        setSearchQuery(""); // Clear search
-        setFilteredMembers([]); // Hide results list
         
         if (member.assignedPlanId) {
             const plan = allWorkoutPlans.find(p => p.id === member.assignedPlanId);
-            setSelectedPlan(plan || null);
+            
+            if (plan && plan.workouts.length > 0) {
+                // Workout rotation logic
+                const now = new Date();
+                const start = new Date(now.getFullYear(), 0, 0);
+                const diff = now.getTime() - start.getTime();
+                const oneDay = 1000 * 60 * 60 * 24;
+                const dayOfYear = Math.floor(diff / oneDay);
+
+                const numWorkouts = plan.workouts.length;
+                const workoutIndex = (dayOfYear - 1) % numWorkouts; // -1 to make it 0-indexed
+
+                const recommendedWorkout = plan.workouts[workoutIndex];
+                
+                setSelectedWorkout(recommendedWorkout);
+                setIsPreviewOpen(true);
+            } else {
+                setSelectedWorkout(null);
+            }
         } else {
-            setSelectedPlan(null);
+            setSelectedWorkout(null);
         }
     };
 
     const handleReset = () => {
         setSelectedMember(null);
-        setSelectedPlan(null);
         setSelectedWorkout(null);
         setSearchQuery("");
     };
@@ -135,18 +151,14 @@ export default function PrintWorkoutPage() {
         setIsPreviewOpen(false);
     }
     
-    const handleOpenPreview = () => {
-        setIsPreviewOpen(true);
-    }
-
     return (
         <>
             <Card className="w-full max-w-lg">
                 <CardHeader>
                     <CardTitle className="font-headline">Imprimir Treino do Dia</CardTitle>
-                    <CardDescription>Pesquise pelo aluno, selecione o treino e imprima o cupom para a musculação.</CardDescription>
+                    <CardDescription>Pesquise pelo aluno para gerar o cupom de treino recomendado para hoje.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6 min-h-[300px]">
+                <CardContent className="space-y-6 min-h-[200px]">
                     {!selectedMember ? (
                         <div className="space-y-4">
                             <div className="relative">
@@ -164,17 +176,17 @@ export default function PrintWorkoutPage() {
                             {filteredMembers.length > 0 && (
                                 <div className="border rounded-md max-h-64 overflow-y-auto">
                                     {filteredMembers.map(member => (
-                                        <button 
-                                            key={member.id} 
-                                            className="w-full text-left flex items-center gap-3 p-3 hover:bg-muted first:rounded-t-md last:rounded-b-md"
+                                        <div
+                                            key={member.id}
                                             onClick={() => handleSelectMember(member)}
+                                            className="w-full text-left flex items-center gap-3 p-3 hover:bg-muted first:rounded-t-md last:rounded-b-md cursor-pointer"
                                         >
                                             <Avatar>
                                                 <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint="person face" />
                                                 <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                             <span className="font-medium">{member.name}</span>
-                                        </button>
+                                        </div>
                                     ))}
                                 </div>
                             )}
@@ -191,33 +203,13 @@ export default function PrintWorkoutPage() {
                                 </Button>
                             </div>
                             
-                            {selectedPlan ? (
-                                <div className="space-y-2 pt-4">
-                                    <label className="text-sm font-medium text-muted-foreground">Selecione o Treino para Imprimir:</label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {selectedPlan.workouts.map(workoutDay => (
-                                            <Button 
-                                                key={workoutDay.id} 
-                                                variant={selectedWorkout?.id === workoutDay.id ? "default" : "secondary"} 
-                                                onClick={() => setSelectedWorkout(workoutDay)}
-                                            >
-                                                {workoutDay.name.split(':')[0] || workoutDay.name}
-                                            </Button>
-                                        ))}
-                                    </div>
-                                </div>
-                            ) : (
-                                <p className="text-center text-muted-foreground py-6">Este aluno não possui um treino atribuído.</p>
-                            )}
+                            <div className="text-center text-muted-foreground py-6">
+                                <p>O treino recomendado para hoje foi carregado.</p>
+                                <p className="text-sm">Clique em "Trocar Aluno" para buscar outra pessoa.</p>
+                            </div>
                         </div>
                     )}
                 </CardContent>
-                <CardFooter>
-                    <Button className="w-full" onClick={handleOpenPreview} disabled={!selectedWorkout}>
-                        <Printer className="mr-2" />
-                        Imprimir Treino Selecionado
-                    </Button>
-                </CardFooter>
             </Card>
 
             {/* Hidden div for printing */}
@@ -231,7 +223,7 @@ export default function PrintWorkoutPage() {
                     <DialogHeader>
                         <DialogTitle>Pré-visualização da Impressão</DialogTitle>
                         <DialogDescription>
-                            É assim que o cupom de treino será impresso.
+                            Este é o treino recomendado para hoje. Confirme para imprimir.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="border rounded-md p-4 my-4 bg-gray-100 dark:bg-gray-800 flex justify-center">
@@ -241,7 +233,7 @@ export default function PrintWorkoutPage() {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsPreviewOpen(false)}>Cancelar</Button>
-                        <Button onClick={handlePrint}>Confirmar e Imprimir</Button>
+                        <Button onClick={handlePrint}><Printer className="mr-2 h-4 w-4"/>Confirmar e Imprimir</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
