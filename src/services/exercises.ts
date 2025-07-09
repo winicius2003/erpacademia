@@ -114,11 +114,11 @@ const exerciseList: ExerciseListItem[] = [
     {
         group: 'Pernas (Quadríceps e glúteos)',
         exercises: [
-            { name: 'Agachamento livre com barra' },
+            { name: 'Agachamento livre com barra', imageUrl: 'https://www.hipertrofia.org/blog/wp-content/uploads/2023/07/bodyweight-squat.gif' },
             { name: 'Agachamento frontal' },
             { name: 'Agachamento sumô' },
             { name: 'Agachamento hack' },
-            { name: 'Leg press 45º' },
+            { name: 'Leg press 45º', imageUrl: 'https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/pernas-leg-press-45-com-joelhos-no-peito.gif' },
             { name: 'Leg press horizontal' },
             { name: 'Avanço (lunge) com barra' },
             { name: 'Avanço com halteres' },
@@ -129,6 +129,7 @@ const exerciseList: ExerciseListItem[] = [
             { name: 'Step-up com halter' },
             { name: 'Agachamento pistol (1 perna)' },
             { name: 'Agachamento no TRX' },
+            { name: 'Cadeira extensora', imageUrl: 'https://media.tenor.com/bqKtsSuqilQAAAAM/gym.gif' },
         ]
     },
     {

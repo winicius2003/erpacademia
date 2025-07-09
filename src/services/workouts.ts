@@ -58,9 +58,9 @@ let workoutPlans: WorkoutPlan[] = [
         id: 'd3',
         name: 'Treino C: Inferiores',
         exercises: [
-          { id: 'e7', name: 'Agachamento Livre', sets: '3', reps: '8-12', rest: '90s' },
-          { id: 'e8', name: 'Leg Press 45', sets: '3', reps: '10-15', rest: '60s' },
-          { id: 'e9', name: 'Cadeira Extensora', sets: '3', reps: '12-15', rest: '45s' },
+          { id: 'e7', name: 'Agachamento Livre', sets: '3', reps: '8-12', rest: '90s', imageUrl: 'https://www.hipertrofia.org/blog/wp-content/uploads/2023/07/bodyweight-squat.gif' },
+          { id: 'e8', name: 'Leg Press 45', sets: '3', reps: '10-15', rest: '60s', imageUrl: 'https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/pernas-leg-press-45-com-joelhos-no-peito.gif' },
+          { id: 'e9', name: 'Cadeira Extensora', sets: '3', reps: '12-15', rest: '45s', imageUrl: 'https://media.tenor.com/bqKtsSuqilQAAAAM/gym.gif' },
         ],
       },
     ],
