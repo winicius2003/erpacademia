@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -11,6 +12,56 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+
+
+function PrintableView({ member, workout }: { member: Member | null, workout: WorkoutPlan['workouts'][0] | null }) {
+    if (!workout || !member) return null;
+
+    return (
+        <div id="printable-area" className="printable-workout">
+            <div className="text-center space-y-1">
+                <h3 className="font-bold text-lg">Academia Exemplo</h3>
+                <p><strong>Aluno(a):</strong> {member?.name}</p>
+                <p><strong>Data:</strong> {format(new Date(), 'dd/MM/yyyy')}</p>
+            </div>
+            <hr />
+            <div className="space-y-2">
+                <h4 className="font-bold text-center uppercase">{workout.name}</h4>
+                <table className="w-full text-xs">
+                    <thead>
+                        <tr>
+                            <th className="text-left">Exercício</th>
+                            <th className="text-center">Séries</th>
+                            <th className="text-center">Reps</th>
+                            <th className="text-right">Desc.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {workout.exercises.map(ex => (
+                        <tr key={ex.id}>
+                            <td>{ex.name}</td>
+                            <td className="text-center">{ex.sets}</td>
+                            <td className="text-center">{ex.reps}</td>
+                            <td className="text-right">{ex.rest}</td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+            </div>
+            <hr />
+            <p className="text-center text-xs font-semibold">Bons treinos!</p>
+        </div>
+    );
+}
+
 
 export default function PrintWorkoutPage() {
     const [allMembers, setAllMembers] = React.useState<Member[]>([]);
@@ -24,6 +75,7 @@ export default function PrintWorkoutPage() {
     const [selectedWorkout, setSelectedWorkout] = React.useState<WorkoutPlan['workouts'][0] | null>(null);
     
     const [isLoading, setIsLoading] = React.useState(true);
+    const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
 
     // Fetch initial data
     React.useEffect(() => {
@@ -80,6 +132,11 @@ export default function PrintWorkoutPage() {
     
     const handlePrint = () => {
         window.print();
+        setIsPreviewOpen(false);
+    }
+    
+    const handleOpenPreview = () => {
+        setIsPreviewOpen(true);
     }
 
     return (
@@ -156,7 +213,7 @@ export default function PrintWorkoutPage() {
                     )}
                 </CardContent>
                 <CardFooter>
-                    <Button className="w-full" onClick={handlePrint} disabled={!selectedWorkout}>
+                    <Button className="w-full" onClick={handleOpenPreview} disabled={!selectedWorkout}>
                         <Printer className="mr-2" />
                         Imprimir Treino Selecionado
                     </Button>
@@ -165,42 +222,29 @@ export default function PrintWorkoutPage() {
 
             {/* Hidden div for printing */}
             <div className="hidden">
-                {selectedWorkout && selectedMember && (
-                    <div id="printable-area" className="printable-workout">
-                        <div className="text-center space-y-1">
-                            <h3 className="font-bold text-lg">Academia Exemplo</h3>
-                            <p><strong>Aluno(a):</strong> {selectedMember?.name}</p>
-                            <p><strong>Data:</strong> {format(new Date(), 'dd/MM/yyyy')}</p>
-                        </div>
-                        <hr />
-                        <div className="space-y-2">
-                            <h4 className="font-bold text-center uppercase">{selectedWorkout.name}</h4>
-                            <table className="w-full text-xs">
-                                <thead>
-                                    <tr>
-                                        <th className="text-left">Exercício</th>
-                                        <th className="text-center">Séries</th>
-                                        <th className="text-center">Reps</th>
-                                        <th className="text-right">Desc.</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                {selectedWorkout.exercises.map(ex => (
-                                    <tr key={ex.id}>
-                                        <td>{ex.name}</td>
-                                        <td className="text-center">{ex.sets}</td>
-                                        <td className="text-center">{ex.reps}</td>
-                                        <td className="text-right">{ex.rest}</td>
-                                    </tr>
-                                ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        <hr />
-                        <p className="text-center text-xs font-semibold">Bons treinos!</p>
-                    </div>
-                )}
+                <PrintableView member={selectedMember} workout={selectedWorkout} />
             </div>
+            
+            {/* Print Preview Dialog */}
+            <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Pré-visualização da Impressão</DialogTitle>
+                        <DialogDescription>
+                            É assim que o cupom de treino será impresso.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="border rounded-md p-4 my-4 bg-gray-100 dark:bg-gray-800 flex justify-center">
+                       <div className="w-[302px] bg-white p-2 shadow-lg"> {/* Simulate 80mm receipt paper */}
+                           <PrintableView member={selectedMember} workout={selectedWorkout} />
+                       </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsPreviewOpen(false)}>Cancelar</Button>
+                        <Button onClick={handlePrint}>Confirmar e Imprimir</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
