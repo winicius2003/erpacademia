@@ -40,7 +40,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
-import { getExercises, type ExerciseListItem } from "@/services/exercises"
+import { getExercises, type ExerciseListItem, type Exercise } from "@/services/exercises"
 
 const initialFormState = {
   name: "",
@@ -83,12 +83,12 @@ export function ExerciseLibrary() {
     setIsDialogOpen(true)
   }
   
-  const handleEditClick = (exercise: { name: string, group: string }) => {
+  const handleEditClick = (exercise: Exercise & { group: string }) => {
     setIsEditing(true)
     setExerciseFormData({
       name: exercise.name,
       group: exercise.group,
-      imageUrl: "" // Assuming we don't store the URL, so it's fresh for edit
+      imageUrl: exercise.imageUrl || ""
     })
     setIsDialogOpen(true)
   }
@@ -164,22 +164,22 @@ export function ExerciseLibrary() {
                   <AccordionContent className="p-4 bg-background">
                     <div className="space-y-2">
                       {group.exercises.map((exercise) => (
-                        <div key={exercise} className="group flex items-center gap-4 p-2 rounded-md hover:bg-muted/50">
+                        <div key={exercise.name} className="group flex items-center gap-4 p-2 rounded-md hover:bg-muted/50">
                           <div className="relative w-24 h-16 flex-shrink-0">
                             <Image
-                              src={`https://placehold.co/400x300.png`}
-                              alt={exercise}
+                              src={exercise.imageUrl || `https://placehold.co/400x300.png`}
+                              alt={exercise.name}
                               fill
                               className="rounded-md object-cover"
-                              data-ai-hint={exercise.split(' ').slice(0, 2).join(' ').toLowerCase()}
+                              data-ai-hint={exercise.name.split(' ').slice(0, 2).join(' ').toLowerCase()}
                             />
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-medium">{exercise}</h4>
+                            <h4 className="font-medium">{exercise.name}</h4>
                           </div>
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleEditClick({ name: exercise, group: group.group })}><Edit className="h-4 w-4" /></Button>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDeleteClick(group.group, exercise)}><Trash2 className="h-4 w-4" /></Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleEditClick({ ...exercise, group: group.group })}><Edit className="h-4 w-4" /></Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDeleteClick(group.group, exercise.name)}><Trash2 className="h-4 w-4" /></Button>
                           </div>
                         </div>
                       ))}
