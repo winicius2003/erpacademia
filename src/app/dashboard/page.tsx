@@ -1,8 +1,10 @@
+
 "use client"
 
 import * as React from "react"
 import { Users, TrendingUp, BadgePercent, Loader2, UserX, ClipboardX, CalendarCheck, Target } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { format, parseISO } from "date-fns"
 
 import {
   Card,
@@ -171,7 +173,7 @@ export default function Dashboard() {
             <DialogHeader>
               <DialogTitle>Alunos em Grupo de Risco</DialogTitle>
               <DialogDescription>
-                Estes são alunos ativos que não frequentam a academia há algum tempo. É recomendado entrar em contato.
+                Estes são alunos ativos que não frequentam a academia há mais de 4 dias. É recomendado entrar em contato.
               </DialogDescription>
             </DialogHeader>
             <div className="max-h-[60vh] overflow-y-auto">
@@ -179,6 +181,7 @@ export default function Dashboard() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Aluno</TableHead>
+                    <TableHead>Última Frequência</TableHead>
                     <TableHead>Motivo</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -186,6 +189,7 @@ export default function Dashboard() {
                   {riskGroupMembers.map(member => (
                     <TableRow key={member.id}>
                       <TableCell className="font-medium">{member.name}</TableCell>
+                      <TableCell>{format(parseISO(member.lastSeen), "dd/MM/yyyy")}</TableCell>
                       <TableCell>Baixa frequência</TableCell>
                     </TableRow>
                   ))}

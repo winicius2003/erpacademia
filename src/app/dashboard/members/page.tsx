@@ -272,7 +272,7 @@ export default function MembersPage() {
 
     setIsLoading(true);
     try {
-        const payload = {
+        const payload: Partial<Omit<Member, 'id' | 'status' | 'attendanceStatus'>> = {
             name: memberFormData.name,
             email: memberFormData.email,
             phone: memberFormData.phone,
@@ -298,13 +298,12 @@ export default function MembersPage() {
         } else {
             const addPayload = {
                 ...payload,
-                status: "Ativo" as const,
                 professor: "Não atribuído",
-                attendanceStatus: "Presente" as const,
                 workoutStatus: "Pendente" as const,
                 fingerprintRegistered: false,
+                lastSeen: format(new Date(), 'yyyy-MM-dd')
             };
-            const newMember = await addMember(addPayload as Omit<Member, 'id'>);
+            const newMember = await addMember(addPayload as Omit<Member, 'id' | 'password' | 'loginMethod' | 'status' | 'attendanceStatus'>);
             
             const planDetails = plans.find(p => p.name === newMember.plan);
             const planPrice = planDetails ? planDetails.price : 0;
@@ -530,16 +529,15 @@ export default function MembersPage() {
                     dob: memberData.dob || format(new Date(1990, 0, 1), 'yyyy-MM-dd'),
                     plan: memberData.plan || 'Mensal',
                     expires: memberData.expires || format(addMonths(new Date(), 1), 'yyyy-MM-dd'),
-                    status: "Ativo" as const,
                     professor: "Não atribuído",
-                    attendanceStatus: "Presente" as const,
+                    lastSeen: format(new Date(), 'yyyy-MM-dd'),
                     workoutStatus: "Pendente" as const,
                     goal: "Importado via Planilha",
                     notes: "",
                     accessPin: "",
                     fingerprintRegistered: false,
                 };
-                await addMember(newMemberData as Omit<Member, 'id'>);
+                await addMember(newMemberData as Omit<Member, 'id' | 'password' | 'loginMethod' | 'status' | 'attendanceStatus'>);
                 createdCount++;
             }
         } catch (e) {
