@@ -35,11 +35,13 @@ export default function StudentProfilePage() {
             try {
                 const [memberData, assessmentsData] = await Promise.all([
                     getMemberById(parsedUser.id),
-                    getAssessments(parsedUser.id),
+                    getAssessments(),
                 ]);
                 
                 setUser(memberData);
-                setAssessments(assessmentsData);
+                if (memberData) {
+                    setAssessments(assessmentsData.filter(a => a.studentId === memberData.id));
+                }
 
             } catch (error) {
                 console.error("Failed to fetch student profile data:", error)

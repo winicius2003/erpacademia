@@ -4,7 +4,7 @@ import * as React from "react"
 import { format, parseISO } from "date-fns"
 import { Loader2, Wallet } from "lucide-react"
 
-import { getPaymentsByStudentId, type Payment } from "@/services/payments"
+import { getPayments, type Payment } from "@/services/payments"
 import { getPlans } from "@/services/plans"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -25,13 +25,15 @@ export default function StudentFinancialPage() {
 
         async function fetchData() {
             try {
-                const [paymentsData, plansData] = await Promise.all([
-                    getPaymentsByStudentId(parsedUser.id),
+                const [allPayments, plansData] = await Promise.all([
+                    getPayments(),
                     getPlans()
                 ]);
 
+                const studentPayments = allPayments.filter(p => p.studentId === parsedUser.id);
+
                 // Filter payments to only include those that contain a plan name in their item descriptions.
-                const planPayments = paymentsData.filter(payment => 
+                const planPayments = studentPayments.filter(payment => 
                     payment.items.some(item => 
                         plansData.some(plan => item.description.includes(plan.name))
                     )
