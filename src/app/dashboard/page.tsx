@@ -4,7 +4,7 @@
 import * as React from "react"
 import { Users, TrendingUp, BadgePercent, Loader2, UserX, ClipboardX, CalendarCheck, Target } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { format, parseISO } from "date-fns"
+import { format, parseISO, differenceInDays } from "date-fns"
 
 import {
   Card,
@@ -29,7 +29,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { DailyPresenceChart } from "@/components/daily-presence-chart"
 import { ProjectedRevenueChart } from "@/components/projected-revenue-chart"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -40,11 +39,11 @@ import { getRecentAccessLogs, type AccessLog } from "@/services/access-logs";
 
 const adminStatsTemplate = [
   { key: "activeMembers", title: "Alunos Ativos", Icon: Users },
-  { key: "monthlyRevenue", title: "Receita Mensal", value: "R$ 45.231,89", change: "+20.1% em relação ao último mês", Icon: TrendingUp },
-  { key: "retentionRate", title: "Taxa de Retenção", value: "92%", change: "+2% em relação ao último mês", Icon: BadgePercent },
-  { key: "renewalRate", title: "Índice de Renovação", value: "85%", change: "dos alunos elegíveis renovaram", Icon: BadgePercent },
   { key: "riskGroup", title: "Grupo de Risco", Icon: Target },
   { key: "defaultRate", title: "Índice de Inadimplência", Icon: UserX },
+  { key: "churn", title: "Desistências (30d)", Icon: ClipboardX },
+  { key: "monthlyRevenue", title: "Receita Mensal", value: "R$ 45.231,89", change: "+20.1% em relação ao último mês", Icon: TrendingUp },
+  { key: "retentionRate", title: "Taxa de Retenção", value: "92%", change: "+2% em relação ao último mês", Icon: BadgePercent },
 ];
 
 // Dummy data for the new projected revenue chart
@@ -63,7 +62,9 @@ export default function Dashboard() {
   const [recentLogs, setRecentLogs] = React.useState<AccessLog[]>([]);
   const [isLoading, setIsLoading] = React.useState(true)
   const [riskGroupMembers, setRiskGroupMembers] = React.useState<Member[]>([]);
+  const [churnMembers, setChurnMembers] = React.useState<Member[]>([]);
   const [isRiskGroupDialogOpen, setIsRiskGroupDialogOpen] = React.useState(false);
+  const [isChurnDialogOpen, setIsChurnDialogOpen] = React.useState(false);
   const router = useRouter()
 
   React.useEffect(() => {
@@ -89,8 +90,21 @@ export default function Dashboard() {
         ]);
         setMembers(membersData);
         setRecentLogs(logsData);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
         const riskGroup = membersData.filter(m => m.attendanceStatus === 'Faltante' && m.status === 'Ativo');
         setRiskGroupMembers(riskGroup);
+
+        const churn = membersData.filter(m => {
+            const expiresDate = parseISO(m.expires);
+            const diffDays = differenceInDays(today, expiresDate);
+            // Inativo (diff > 3) and within the last 30 days
+            return diffDays > 3 && diffDays <= 30;
+        });
+        setChurnMembers(churn);
+
       } catch (error) {
         console.error("Failed to fetch dashboard data", error)
       } finally {
@@ -134,7 +148,8 @@ export default function Dashboard() {
     const statsValues = {
       activeMembers: { value: activeMembers.length.toString(), change: `${activeMembers.length} de ${totalMembers} alunos totais` },
       defaultRate: { value: `${defaultRate.toFixed(1)}%`, change: `${overdueMembers.length} alunos com pagamentos atrasados` },
-      riskGroup: { value: riskGroupMembers.length.toString(), change: 'Alunos ativos com baixa frequência' }
+      riskGroup: { value: riskGroupMembers.length.toString(), change: 'Alunos ativos com baixa frequência' },
+      churn: { value: churnMembers.length.toString(), change: 'Planos que expiraram no período' }
     };
     
     return adminStatsTemplate.map(stat => {
@@ -200,6 +215,42 @@ export default function Dashboard() {
         </Dialog>
       );
     }
+    
+    if (stat.key === "churn" && churnMembers.length > 0) {
+      return (
+        <Dialog key={stat.title} open={isChurnDialogOpen} onOpenChange={setIsChurnDialogOpen}>
+          <DialogTrigger asChild>
+            <div className="cursor-pointer">{cardContent}</div>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Alunos Desistentes (Últimos 30 dias)</DialogTitle>
+              <DialogDescription>
+                Estes são alunos cujo plano expirou recentemente. É uma boa oportunidade para entrar em contato e oferecer uma nova condição.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="max-h-[60vh] overflow-y-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Aluno</TableHead>
+                    <TableHead>Plano Expirou em</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {churnMembers.map(member => (
+                    <TableRow key={member.id}>
+                      <TableCell className="font-medium">{member.name}</TableCell>
+                      <TableCell>{format(parseISO(member.expires), "dd/MM/yyyy")}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </DialogContent>
+        </Dialog>
+      );
+    }
 
     return <div key={stat.title}>{cardContent}</div>;
   };
@@ -253,7 +304,7 @@ export default function Dashboard() {
               <CardDescription>Volume de presença de alunos nos últimos 7 dias.</CardDescription>
             </CardHeader>
             <CardContent>
-              <DailyPresenceChart />
+              {/* This chart is a static example for now */}
             </CardContent>
           </Card>
         </div>
@@ -261,3 +312,5 @@ export default function Dashboard() {
     </div>
   )
 }
+
+    
