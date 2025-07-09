@@ -110,28 +110,26 @@ export function ExerciseLibrary() {
                     {group.group}
                   </AccordionTrigger>
                   <AccordionContent className="p-4 bg-background">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
                       {group.exercises.map((exercise) => (
-                        <Card key={exercise} className="group overflow-hidden">
-                          <CardContent className="p-0">
-                            <div className="relative aspect-video">
-                              <Image
-                                src={`https://placehold.co/400x300.png`}
-                                alt={exercise}
-                                fill
-                                className="object-cover transition-transform duration-300 group-hover:scale-105"
-                                data-ai-hint={exercise.split(' ').slice(0, 2).join(' ').toLowerCase()}
-                              />
-                               <div className="absolute top-2 right-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button size="icon" variant="secondary" className="h-7 w-7"><Edit className="h-4 w-4" /></Button>
-                                <Button size="icon" variant="destructive" className="h-7 w-7"><Trash2 className="h-4 w-4" /></Button>
-                               </div>
-                            </div>
-                            <div className="p-3">
-                              <h4 className="font-semibold truncate">{exercise}</h4>
-                            </div>
-                          </CardContent>
-                        </Card>
+                        <div key={exercise} className="group flex items-center gap-4 p-2 rounded-md hover:bg-muted/50">
+                          <div className="relative w-24 h-16 flex-shrink-0">
+                            <Image
+                              src={`https://placehold.co/400x300.png`}
+                              alt={exercise}
+                              fill
+                              className="rounded-md object-cover"
+                              data-ai-hint={exercise.split(' ').slice(0, 2).join(' ').toLowerCase()}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-medium">{exercise}</h4>
+                          </div>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button size="icon" variant="ghost" className="h-8 w-8"><Edit className="h-4 w-4" /></Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </AccordionContent>
