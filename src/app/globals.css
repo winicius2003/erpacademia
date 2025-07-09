@@ -91,14 +91,35 @@ body {
   body * {
     visibility: hidden;
   }
-  .printable-invoice, .printable-invoice * {
+  .printable-invoice, .printable-invoice *,
+  .printable-workout, .printable-workout * {
     visibility: visible;
   }
-  .printable-invoice {
+  .printable-invoice, .printable-workout {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
+  }
+  .printable-workout {
+    font-family: 'Courier New', monospace !important;
+    font-size: 9pt;
+    max-width: 80mm;
+    padding: 0;
+    color: #000;
+  }
+  .printable-workout h3, .printable-workout p {
+    margin: 0;
+  }
+  .printable-workout table {
+    width: 100%;
+  }
+  .printable-workout th, .printable-workout td {
+    padding: 2px 4px;
+  }
+  .printable-workout hr {
+    border-top: 1px dashed #000;
+    margin: 8px 0;
   }
   .no-print {
     display: none !important;

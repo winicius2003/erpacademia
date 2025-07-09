@@ -102,6 +102,7 @@ export const navPermissions: Record<Role, string[]> = {
   "Personal Trainer Externo": ["Painel", "Alunos", "Treinos", "Avaliações"],
   Recepção: ["Alunos", "Agenda", "Financeiro (Pessoal)", "CRM", "Produtos"],
   Estagiário: ["Alunos", "Agenda"],
+  Impressão: [],
 };
 
 export default function DashboardLayout({

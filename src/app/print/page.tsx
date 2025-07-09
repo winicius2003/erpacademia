@@ -1,0 +1,162 @@
+
+"use client"
+
+import * as React from "react"
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
+import { User, Printer, Loader2, Search, Dumbbell, Check } from "lucide-react"
+
+import { getMembers, type Member } from "@/services/members"
+import { getWorkoutPlanById, type WorkoutPlan } from "@/services/workouts"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { cn } from "@/lib/utils"
+
+export default function PrintWorkoutPage() {
+    const [members, setMembers] = React.useState<Member[]>([])
+    const [workoutPlans, setWorkoutPlans] = React.useState<WorkoutPlan[]>([])
+    const [selectedMember, setSelectedMember] = React.useState<Member | null>(null)
+    const [memberWorkout, setMemberWorkout] = React.useState<WorkoutPlan['workouts'][0] | null>(null)
+    const [isLoading, setIsLoading] = React.useState(true)
+    const [open, setOpen] = React.useState(false)
+
+    React.useEffect(() => {
+        async function fetchData() {
+            setIsLoading(true);
+            try {
+                const [membersData, plansData] = await Promise.all([
+                    getMembers(),
+                    Promise.all((await getMembers()).map(m => m.assignedPlanId ? getWorkoutPlanById(m.assignedPlanId) : null))
+                ]);
+                setMembers(membersData);
+                setWorkoutPlans(plansData.filter(Boolean) as WorkoutPlan[]);
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchData();
+    }, []);
+
+    const handleSelectMember = (memberId: string) => {
+        setOpen(false)
+        const member = members.find(m => m.id === memberId);
+        if (!member) return;
+
+        setSelectedMember(member);
+        
+        if (member.assignedPlanId) {
+            const plan = workoutPlans.find(p => p.id === member.assignedPlanId);
+            // For simplicity, we get the workout for the current day of the week, or the first one if not found.
+            const dayOfWeek = format(new Date(), 'eeee', { locale: ptBR });
+            const todayWorkout = plan?.workouts.find(w => w.name.toLowerCase().includes(dayOfWeek.toLowerCase().split('-')[0])) || plan?.workouts[0];
+            setMemberWorkout(todayWorkout || null);
+        } else {
+            setMemberWorkout(null);
+        }
+    };
+    
+    const handlePrint = () => {
+        window.print();
+    }
+
+    return (
+        <Card className="w-full max-w-lg">
+            <CardHeader>
+                <CardTitle className="font-headline">Imprimir Treino do Dia</CardTitle>
+                <CardDescription>Pesquise pelo aluno e imprima o treino para ele levar para a musculação.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">Aluno</label>
+                     <Popover open={open} onOpenChange={setOpen}>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={open}
+                                className="w-full justify-between"
+                            >
+                                {selectedMember
+                                    ? selectedMember.name
+                                    : "Selecione um aluno..."}
+                                <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width)] p-0">
+                            <Command>
+                                <CommandInput placeholder="Pesquisar aluno..." />
+                                <CommandList>
+                                    <CommandEmpty>Nenhum aluno encontrado.</CommandEmpty>
+                                    <CommandGroup>
+                                        {members.map((member) => (
+                                            <CommandItem
+                                                key={member.id}
+                                                value={member.id}
+                                                onSelect={(currentValue) => handleSelectMember(currentValue)}
+                                            >
+                                                <Check className={cn("mr-2 h-4 w-4", selectedMember?.id === member.id ? "opacity-100" : "opacity-0")} />
+                                                {member.name}
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
+                </div>
+                
+                {selectedMember && (
+                    <div id="printable-area" className="printable-workout border-t pt-4">
+                        <div className="text-center space-y-1">
+                            <h3 className="font-bold text-lg">Academia Exemplo</h3>
+                            <p><strong>Aluno(a):</strong> {selectedMember.name}</p>
+                            <p><strong>Data:</strong> {format(new Date(), 'dd/MM/yyyy')}</p>
+                        </div>
+                        <hr />
+                         {memberWorkout ? (
+                            <div className="space-y-2">
+                                <h4 className="font-bold text-center uppercase">{memberWorkout.name}</h4>
+                                <table className="w-full text-xs">
+                                    <thead>
+                                        <tr>
+                                            <th className="text-left">Exercício</th>
+                                            <th className="text-center">Séries</th>
+                                            <th className="text-center">Reps</th>
+                                            <th className="text-right">Desc.</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    {memberWorkout.exercises.map(ex => (
+                                        <tr key={ex.id}>
+                                            <td>{ex.name}</td>
+                                            <td className="text-center">{ex.sets}</td>
+                                            <td className="text-center">{ex.reps}</td>
+                                            <td className="text-right">{ex.rest}</td>
+                                        </tr>
+                                    ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                         ) : (
+                            <p className="text-center text-muted-foreground py-4">Este aluno não possui um treino atribuído.</p>
+                         )}
+                         <hr />
+                         <p className="text-center text-xs font-semibold">Bons treinos!</p>
+                    </div>
+                )}
+
+            </CardContent>
+            <CardFooter>
+                <Button className="w-full" onClick={handlePrint} disabled={!selectedMember || !memberWorkout}>
+                    <Printer className="mr-2" />
+                    Imprimir
+                </Button>
+            </CardFooter>
+        </Card>
+    );
+}

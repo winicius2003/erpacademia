@@ -2,7 +2,7 @@
 
 import { format } from 'date-fns';
 
-export type Role = "Admin" | "Gerente" | "Gestor" | "Professor" | "Recepção" | "Estagiário" | "Personal Trainer Externo";
+export type Role = "Admin" | "Gerente" | "Gestor" | "Professor" | "Recepção" | "Estagiário" | "Personal Trainer Externo" | "Impressão";
 
 export type Address = {
     street: string;
@@ -51,6 +51,7 @@ let employees: Employee[] = [
     { id: '4', name: 'Fernando Costa', email: 'fernando.costa@fitcore.com', phone: '(11) 99999-0004', address: defaultAddress, login: 'fernando', password: '123', role: 'Professor', status: 'Inativo', salary: 3500, workHours: '15:00 - 23:00', cpf: "444.444.444-44", cref: '54321-G/RJ', accessPin: '' },
     { id: '5', name: 'Beatriz Lima', email: 'beatriz.lima@fitcore.com', phone: '(11) 99999-0005', address: defaultAddress, login: 'bia', password: '123', role: 'Estagiário', status: 'Ativo', salary: 900, workHours: '18:00 - 22:00', cpf: "555.555.555-55", cref: '123456-E/SP', accessPin: '9905', universityInfo: { universityName: 'Universidade Fictícia', course: 'Educação Física', expectedGraduation: '12/2025', contractStartDate: '2024-01-15', contractEndDate: '2024-12-15' } },
     { id: '6', name: 'Ricardo Mendes', email: 'ricardo.mendes@fitcore.com', phone: '(11) 99999-0006', address: defaultAddress, login: 'ricardo', password: '123', role: 'Recepção', status: 'Ativo', salary: 1800, workHours: '07:00 - 16:00', cpf: "666.666.666-66", accessPin: '9906' },
+    { id: '7', name: 'Impressão de Treinos', email: 'treino@fitcore.com', phone: '(11) 99999-0007', address: defaultAddress, login: 'treino', password: '123', role: 'Impressão', status: 'Ativo', salary: 0, workHours: 'N/A', cpf: "777.777.777-77" },
 ];
 let nextId = employees.length + 1;
 // -------------------------

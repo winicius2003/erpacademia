@@ -72,8 +72,14 @@ export default function LoginPage() {
     if (employee && employee.password === password) {
         const userFound = { id: employee.id, name: employee.name, role: employee.role, email: employee.email };
         sessionStorage.setItem("fitcore.user", JSON.stringify(userFound));
-        await initializeSubscription();
-        router.push("/dashboard");
+        
+        if (employee.role === 'Impressão') {
+            router.push("/print");
+        } else {
+            await initializeSubscription();
+            router.push("/dashboard");
+        }
+        
         setIsLoading(false);
         return;
     }
