@@ -54,6 +54,7 @@ export function ExerciseLibrary() {
   const [exerciseGroups, setExerciseGroups] = React.useState<ExerciseListItem[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+  const [isEditing, setIsEditing] = React.useState(false)
   const [exerciseFormData, setExerciseFormData] = React.useState<ExerciseFormData>(initialFormState)
   const { toast } = useToast()
 
@@ -77,16 +78,36 @@ export function ExerciseLibrary() {
   }, [fetchExercises])
 
   const handleAddNew = () => {
+    setIsEditing(false)
     setExerciseFormData(initialFormState)
+    setIsDialogOpen(true)
+  }
+  
+  const handleEditClick = (exercise: { name: string, group: string }) => {
+    setIsEditing(true)
+    setExerciseFormData({
+      name: exercise.name,
+      group: exercise.group,
+      imageUrl: "" // Assuming we don't store the URL, so it's fresh for edit
+    })
     setIsDialogOpen(true)
   }
   
   const handleSaveExercise = async (e: React.FormEvent) => {
     e.preventDefault()
-    toast({
-      title: "Exercício Salvo!",
-      description: `O exercício "${exerciseFormData.name}" foi salvo (simulação).`,
-    })
+    
+    if (isEditing) {
+       toast({
+        title: "Exercício Atualizado!",
+        description: `O exercício "${exerciseFormData.name}" foi atualizado (simulação).`,
+      })
+    } else {
+      toast({
+        title: "Exercício Salvo!",
+        description: `O exercício "${exerciseFormData.name}" foi salvo (simulação).`,
+      })
+    }
+    
     setIsDialogOpen(false)
   }
   
@@ -157,7 +178,7 @@ export function ExerciseLibrary() {
                             <h4 className="font-medium">{exercise}</h4>
                           </div>
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button size="icon" variant="ghost" className="h-8 w-8"><Edit className="h-4 w-4" /></Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleEditClick({ name: exercise, group: group.group })}><Edit className="h-4 w-4" /></Button>
                             <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDeleteClick(group.group, exercise)}><Trash2 className="h-4 w-4" /></Button>
                           </div>
                         </div>
@@ -174,9 +195,9 @@ export function ExerciseLibrary() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Adicionar Novo Exercício</DialogTitle>
+              <DialogTitle>{isEditing ? "Editar Exercício" : "Adicionar Novo Exercício"}</DialogTitle>
               <DialogDescription>
-                Preencha os detalhes para adicionar um novo exercício ao banco.
+                {isEditing ? "Altere os dados do exercício." : "Preencha os detalhes para adicionar um novo exercício ao banco."}
               </DialogDescription>
             </DialogHeader>
             <form id="exercise-form" onSubmit={handleSaveExercise}>
@@ -209,7 +230,7 @@ export function ExerciseLibrary() {
             </form>
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
-              <Button type="submit" form="exercise-form">Salvar Exercício</Button>
+              <Button type="submit" form="exercise-form">{isEditing ? "Salvar Alterações" : "Salvar Exercício"}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
