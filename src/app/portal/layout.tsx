@@ -3,10 +3,30 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Dumbbell, User, LogOut, Wallet, Settings } from "lucide-react"
+import { Dumbbell, User, LogOut, Wallet, Settings, Loader2 } from "lucide-react"
 
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 const navItems = [
   { href: "/portal/dashboard", icon: Dumbbell, label: "Meu Treino" },
@@ -18,9 +38,8 @@ const navItems = [
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const [user, setUser] = React.useState(null)
+  const [user, setUser] = React.useState<{ name: string; role: string } | null>(null)
   const [isLoading, setIsLoading] = React.useState(true);
-
 
   React.useEffect(() => {
     try {
@@ -38,7 +57,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     } catch (error) {
       router.replace("/login")
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   }, [router])
 
@@ -47,44 +66,87 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     router.push("/login")
   }
   
+  const activeItem = navItems
+    .slice()
+    .sort((a, b) => b.href.length - a.href.length)
+    .find((item) => pathname.startsWith(item.href));
+  
   if (isLoading || !user) {
-    return <div className="flex h-screen w-full items-center justify-center">Carregando...</div>
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
   }
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="w-64 flex-shrink-0 border-r bg-muted/40 flex flex-col">
-        <div className="flex h-16 items-center border-b px-6">
-          <Link href="/portal/dashboard" className="flex items-center gap-2 font-semibold">
-            <Logo className="h-6 w-6" />
-            <span>Portal do Aluno</span>
-          </Link>
-        </div>
-        <nav className="flex-1 p-4">
-          <ul className="space-y-2">
-            {navItems.map((item) => (
-              <li key={item.href}>
-                <Button
-                  variant={pathname.startsWith(item.href) ? "secondary" : "ghost"}
-                  className="w-full justify-start"
-                  asChild
-                >
+    <SidebarProvider>
+      <div className="flex flex-1">
+        <Sidebar>
+          <SidebarHeader>
+            <div className="flex items-center gap-2">
+              <Logo className="w-6 h-6 text-sidebar-primary" />
+              <div className="flex flex-col">
+                  <span className="font-bold text-lg font-headline leading-none">FitCore</span>
+                  <span className="text-xs text-sidebar-foreground/70 leading-none">Portal do Aluno</span>
+              </div>
+            </div>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarMenu>
+              {navItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
                   <Link href={item.href}>
-                    <item.icon className="mr-2 h-4 w-4" />
-                    {item.label}
+                    <SidebarMenuButton
+                      isActive={item.href === '/portal/dashboard' ? pathname === item.href : pathname.startsWith(item.href)}
+                      tooltip={item.label}
+                    >
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </SidebarMenuButton>
                   </Link>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarContent>
+        </Sidebar>
+        <SidebarInset>
+          <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6">
+            <SidebarTrigger className="md:hidden" />
+            <div className="flex-1">
+               <h1 className="font-semibold text-lg">{activeItem?.label}</h1>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="secondary" size="icon" className="rounded-full">
+                  <Avatar>
+                    <AvatarImage src="https://placehold.co/40x40.png" alt={user.name} data-ai-hint="person face" />
+                    <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <span className="sr-only">Toggle user menu</span>
                 </Button>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <div className="p-4 mt-auto border-t">
-            <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" /> Sair
-            </Button>
-        </div>
-      </aside>
-      <main className="flex-1 p-6">{children}</main>
-    </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <Link href="/portal/profile">
+                  <DropdownMenuItem>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Meu Perfil</span>
+                  </DropdownMenuItem>
+                </Link>
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sair</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </header>
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+            {children}
+          </div>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   )
 }
