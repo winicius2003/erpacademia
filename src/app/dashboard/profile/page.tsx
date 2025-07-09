@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Loader2, Trash2, PlusCircle, Fingerprint, Network } from "lucide-react"
+import { useTheme } from "next-themes"
+import { Loader2, Trash2, PlusCircle, Fingerprint, Network, Palette } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -13,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { Switch } from "@/components/ui/switch"
+import { getEmployeeByLogin, updateEmployee, type Employee } from "@/services/employees"
+
 
 type Unit = {
   name: string;
@@ -20,7 +23,9 @@ type Unit = {
 }
 
 export default function SettingsPage() {
-  const [user, setUser] = React.useState<{ name: string; role: string } | null>(null)
+  const { theme, setTheme } = useTheme()
+  const [user, setUser] = React.useState<Employee | null>(null)
+  const [isLoading, setIsLoading] = React.useState(true)
   const router = useRouter()
   const { toast } = useToast()
 
@@ -51,18 +56,37 @@ export default function SettingsPage() {
     const newUnits = units.filter((_, i) => i !== index);
     setUnits(newUnits);
   }
-
-
+  
   React.useEffect(() => {
     const userData = sessionStorage.getItem("fitcore.user")
     if (userData) {
-      setUser(JSON.parse(userData))
+      const parsedUser = JSON.parse(userData);
+      // In a real app, you'd fetch the full user object from the server
+      // For this demo, we'll use the login to get the employee details
+      getEmployeeByLogin(parsedUser.login).then(employee => {
+        setUser(employee);
+        setIsLoading(false);
+      });
     } else {
       router.push("/login")
     }
-  }, [router])
+  }, [router]);
+  
+  const handleThemeChange = async (checked: boolean) => {
+    const newTheme = checked ? 'dark' : 'light';
+    setTheme(newTheme);
+    if (user) {
+      try {
+        await updateEmployee(user.id, { theme: newTheme });
+        toast({ title: "Tema atualizado!" });
+      } catch {
+        toast({ title: "Erro ao salvar o tema.", variant: "destructive" });
+      }
+    }
+  };
 
-  if (!user) {
+
+  if (isLoading || !user) {
     return (
       <div className="flex h-64 w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -89,7 +113,7 @@ export default function SettingsPage() {
                 </Avatar>
                 <div className="grid gap-1">
                     <h3 className="text-lg font-bold">{user.name}</h3>
-                    <p className="text-sm text-muted-foreground">{user.name.toLowerCase().replace(" ", ".")}@fitcore.com</p>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
                     <Button variant="outline" size="sm" className="mt-2">Enviar Foto</Button>
                 </div>
             </div>
@@ -100,11 +124,11 @@ export default function SettingsPage() {
                 </div>
                  <div className="grid gap-2">
                     <Label htmlFor="email">E-mail</Label>
-                    <Input id="email" type="email" defaultValue={`${user.name.toLowerCase().replace(" ", ".")}@fitcore.com`} />
+                    <Input id="email" type="email" defaultValue={user.email} />
                 </div>
                 <div className="grid gap-2">
                     <Label htmlFor="phone">Telefone Pessoal</Label>
-                    <Input id="phone" type="tel" defaultValue="+55 (11) 99999-9999" />
+                    <Input id="phone" type="tel" defaultValue={user.phone} />
                 </div>
                 <div className="grid gap-2">
                     <Label htmlFor="role">Cargo</Label>
@@ -124,6 +148,26 @@ export default function SettingsPage() {
         </div>
 
         <Separator />
+        
+        {/* Preferences Section */}
+        <div className="space-y-4">
+            <h3 className="font-semibold text-lg">Preferências</h3>
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                    <Label className="text-base flex items-center gap-2"><Palette/> Modo Escuro</Label>
+                    <p className="text-sm text-muted-foreground">
+                        Ative o tema escuro para uma visualização mais confortável à noite.
+                    </p>
+                </div>
+                <Switch
+                    checked={theme === 'dark'}
+                    onCheckedChange={handleThemeChange}
+                  />
+            </div>
+        </div>
+
+
+        <Separator />
 
         {/* Company Details Section */}
         <div className="space-y-4">
@@ -141,7 +185,7 @@ export default function SettingsPage() {
             </div>
             <div className="grid md:grid-cols-2 gap-6">
                 <div className="grid gap-2">
-                    <Label htmlFor="company-name">Nome da Empresa</Label>
+                    <Label htmlFor="company-name">Nome da Academia</Label>
                     <Input id="company-name" placeholder="Sua Academia" defaultValue="Academia Exemplo" />
                 </div>
                 <div className="grid gap-2">

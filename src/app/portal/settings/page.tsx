@@ -42,13 +42,17 @@ export default function StudentSettingsPage() {
                         name: memberData.name,
                         phone: memberData.phone,
                     })
+                    // Apply saved theme
+                    if (memberData.theme) {
+                      setTheme(memberData.theme);
+                    }
                 }
             } catch (error) {
                 toast({ title: "Erro ao buscar dados do perfil", variant: "destructive" })
             }
         }
         setIsLoading(false)
-    }, [toast]);
+    }, [toast, setTheme])
 
     React.useEffect(() => {
         fetchUserData()
@@ -58,6 +62,18 @@ export default function StudentSettingsPage() {
         const { id, value } = e.target;
         setFormData(prev => ({...prev, [id]: value}));
     }
+
+    const handleThemeChange = async (checked: boolean) => {
+        if (!user) return;
+        const newTheme = checked ? 'dark' : 'light';
+        setTheme(newTheme);
+        try {
+            await updateMember(user.id, { theme: newTheme });
+            toast({ title: "Tema atualizado!" });
+        } catch {
+            toast({ title: "Erro ao salvar o tema.", variant: "destructive" });
+        }
+    };
 
     const handleSaveChanges = async () => {
         if (!user) return;
@@ -164,7 +180,7 @@ export default function StudentSettingsPage() {
                             </div>
                             <Switch
                                 checked={theme === 'dark'}
-                                onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                                onCheckedChange={handleThemeChange}
                              />
                         </div>
                     </div>
