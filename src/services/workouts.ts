@@ -7,6 +7,7 @@ export type Exercise = {
   reps: string;
   rest: string;
   notes?: string;
+  imageUrl?: string;
 };
 
 export type WorkoutDay = {
@@ -38,7 +39,7 @@ let workoutPlans: WorkoutPlan[] = [
         id: 'd1',
         name: 'Treino A: Superiores (Foco em Peito)',
         exercises: [
-          { id: 'e1', name: 'Supino Reto com Barra', sets: '3', reps: '8-12', rest: '60s' },
+          { id: 'e1', name: 'Supino Reto com Barra', sets: '3', reps: '8-12', rest: '60s', imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Bench-Press.gif' },
           { id: 'e2', name: 'Desenvolvimento com Halteres', sets: '3', reps: '8-12', rest: '60s' },
           { id: 'e3', name: 'Tríceps na Polia', sets: '3', reps: '10-15', rest: '45s' },
         ],

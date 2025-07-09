@@ -3,6 +3,7 @@
 import * as React from "react"
 import { format, parseISO, isSameDay } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import Image from "next/image"
 import { Loader2, Dumbbell, BarChart, CheckCircle, XCircle, AlertCircle, PartyPopper, MessageSquareWarning, CalendarX } from "lucide-react"
 
 import { getMemberById, type Member } from "@/services/members"
@@ -10,7 +11,6 @@ import { getWorkoutPlanById, type WorkoutPlan } from "@/services/workouts"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 
@@ -138,26 +138,38 @@ export default function StudentDashboardPage() {
                                         <AccordionItem value={day.id} key={day.id}>
                                             <AccordionTrigger className="font-semibold">{day.name}</AccordionTrigger>
                                             <AccordionContent>
-                                                <Table>
-                                                    <TableHeader>
-                                                        <TableRow>
-                                                            <TableHead>Exercício</TableHead>
-                                                            <TableHead className="text-center">Séries</TableHead>
-                                                            <TableHead className="text-center">Reps</TableHead>
-                                                            <TableHead className="text-center">Descanso</TableHead>
-                                                        </TableRow>
-                                                    </TableHeader>
-                                                    <TableBody>
-                                                        {day.exercises.map(ex => (
-                                                            <TableRow key={ex.id}>
-                                                                <TableCell className="font-medium">{ex.name}</TableCell>
-                                                                <TableCell className="text-center">{ex.sets}</TableCell>
-                                                                <TableCell className="text-center">{ex.reps}</TableCell>
-                                                                <TableCell className="text-center">{ex.rest}</TableCell>
-                                                            </TableRow>
-                                                        ))}
-                                                    </TableBody>
-                                                </Table>
+                                                <div className="space-y-4">
+                                                    {day.exercises.map(ex => (
+                                                        <div key={ex.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
+                                                            <div className="relative w-24 h-20 flex-shrink-0">
+                                                                <Image
+                                                                    src={ex.imageUrl || `https://placehold.co/400x300.png`}
+                                                                    alt={ex.name}
+                                                                    fill
+                                                                    className="rounded-md object-cover"
+                                                                    data-ai-hint={ex.name.split(' ').slice(0, 2).join(' ').toLowerCase()}
+                                                                />
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <p className="font-semibold text-foreground">{ex.name}</p>
+                                                            </div>
+                                                            <div className="flex gap-4 text-center">
+                                                                <div>
+                                                                    <p className="text-xs text-muted-foreground">Séries</p>
+                                                                    <p className="font-bold">{ex.sets}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-xs text-muted-foreground">Reps</p>
+                                                                    <p className="font-bold">{ex.reps}</p>
+                                                                </div>
+                                                                 <div>
+                                                                    <p className="text-xs text-muted-foreground">Descanso</p>
+                                                                    <p className="font-bold">{ex.rest}</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </AccordionContent>
                                         </AccordionItem>
                                     ))}
