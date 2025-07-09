@@ -1,7 +1,9 @@
+
 "use client"
 
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import {
   Users,
   Wallet,
@@ -363,8 +365,32 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Image Section */}
+        <section className="container">
+           <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.3 }}>
+             <div className="rounded-lg border bg-background shadow-lg overflow-hidden">
+                <div className="h-11 flex items-center px-4 border-b">
+                    <div className="flex items-center gap-1.5">
+                        <span className="w-3 h-3 rounded-full bg-red-500"></span>
+                        <span className="w-3 h-3 rounded-full bg-yellow-400"></span>
+                        <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                    </div>
+                </div>
+                <Image
+                    src="https://i.imgur.com/k91Bv4U.png"
+                    alt="Dashboard do FitCore"
+                    width={1200}
+                    height={675}
+                    className="w-full h-auto"
+                    data-ai-hint="dashboard app"
+                    priority
+                />
+            </div>
+          </motion.div>
+        </section>
+
         {/* Features Section */}
-        <section id="features" className="container py-20 md:py-24 bg-muted/50 dark:bg-card">
+        <section id="features" className="container py-20 md:py-24 bg-muted/50 dark:bg-card mt-20">
           <div className="mx-auto grid max-w-5xl place-items-center gap-6 text-center">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl font-headline">{t.features.title}</h2>
             <p className="text-muted-foreground md:text-lg">{t.features.subtitle}</p>
