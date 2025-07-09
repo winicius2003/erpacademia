@@ -87,7 +87,7 @@ export default function PrintWorkoutPage() {
                                 <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width)] p-0">
+                        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
                             <Command>
                                 <CommandInput placeholder="Pesquisar aluno..." />
                                 <CommandList>
@@ -96,8 +96,8 @@ export default function PrintWorkoutPage() {
                                         {members.map((member) => (
                                             <CommandItem
                                                 key={member.id}
-                                                value={member.id}
-                                                onSelect={(currentValue) => handleSelectMember(currentValue)}
+                                                value={member.name}
+                                                onSelect={() => handleSelectMember(member.id)}
                                             >
                                                 <Check className={cn("mr-2 h-4 w-4", selectedMember?.id === member.id ? "opacity-100" : "opacity-0")} />
                                                 {member.name}
