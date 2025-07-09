@@ -100,7 +100,7 @@ export default function PrintWorkoutPage() {
                                             <CommandItem
                                                 key={member.id}
                                                 value={member.name}
-                                                onSelect={handleSelectMember}
+                                                onSelect={() => handleSelectMember(member.name)}
                                             >
                                                 <Check className={cn("mr-2 h-4 w-4", selectedMember?.id === member.id ? "opacity-100" : "opacity-0")} />
                                                 {member.name}
