@@ -3,8 +3,6 @@
 import * as React from "react"
 import { Users, TrendingUp, BadgePercent, Loader2, UserX, ClipboardX, CalendarCheck, Target } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 import {
   Card,
@@ -13,6 +11,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { DailyPresenceChart } from "@/components/daily-presence-chart"
 import { ProjectedRevenueChart } from "@/components/projected-revenue-chart"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -46,6 +60,8 @@ export default function Dashboard() {
   const [members, setMembers] = React.useState<Member[]>([])
   const [recentLogs, setRecentLogs] = React.useState<AccessLog[]>([]);
   const [isLoading, setIsLoading] = React.useState(true)
+  const [riskGroupMembers, setRiskGroupMembers] = React.useState<Member[]>([]);
+  const [isRiskGroupDialogOpen, setIsRiskGroupDialogOpen] = React.useState(false);
   const router = useRouter()
 
   React.useEffect(() => {
@@ -71,6 +87,8 @@ export default function Dashboard() {
         ]);
         setMembers(membersData);
         setRecentLogs(logsData);
+        const riskGroup = membersData.filter(m => m.attendanceStatus === 'Faltante' && m.status === 'Ativo');
+        setRiskGroupMembers(riskGroup);
       } catch (error) {
         console.error("Failed to fetch dashboard data", error)
       } finally {
@@ -108,8 +126,7 @@ export default function Dashboard() {
 
     const activeMembers = members.filter(m => m.status === 'Ativo');
     const overdueMembers = members.filter(m => m.status === 'Atrasado');
-    const riskGroupMembers = members.filter(m => m.attendanceStatus === 'Faltante' && m.status === 'Ativo');
-
+    
     const defaultRate = activeMembers.length > 0 ? (overdueMembers.length / activeMembers.length) * 100 : 0;
 
     const statsValues = {
@@ -130,21 +147,64 @@ export default function Dashboard() {
 
   const stats = user.role === 'Professor' ? getProfessorStats() : getAdminStats();
 
+  const renderStatsCard = (stat: any) => {
+    const cardContent = (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+          <stat.Icon className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stat.value}</div>
+          <p className="text-xs text-muted-foreground">{stat.change}</p>
+        </CardContent>
+      </Card>
+    );
+
+    if (stat.key === "riskGroup" && riskGroupMembers.length > 0) {
+      return (
+        <Dialog key={stat.title} open={isRiskGroupDialogOpen} onOpenChange={setIsRiskGroupDialogOpen}>
+          <DialogTrigger asChild>
+            <div className="cursor-pointer">{cardContent}</div>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Alunos em Grupo de Risco</DialogTitle>
+              <DialogDescription>
+                Estes são alunos ativos que não frequentam a academia há algum tempo. É recomendado entrar em contato.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="max-h-[60vh] overflow-y-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Aluno</TableHead>
+                    <TableHead>Motivo</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {riskGroupMembers.map(member => (
+                    <TableRow key={member.id}>
+                      <TableCell className="font-medium">{member.name}</TableCell>
+                      <TableCell>Baixa frequência</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </DialogContent>
+        </Dialog>
+      );
+    }
+
+    return <div key={stat.title}>{cardContent}</div>;
+  };
+
+
   return (
     <div className="grid gap-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.Icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">{stat.change}</p>
-            </CardContent>
-          </Card>
-        ))}
+        {stats.map((stat) => renderStatsCard(stat))}
       </div>
 
       {user.role !== 'Professor' && (
