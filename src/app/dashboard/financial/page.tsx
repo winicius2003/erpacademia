@@ -174,6 +174,15 @@ export default function FinancialPage() {
 
     const isSalesBlocked = subscriptionStatus === 'overdue' || subscriptionStatus === 'blocked';
     const hasFullAccess = user?.role === 'Admin' || user?.role === 'Gestor';
+    
+    const defaultTab = hasFullAccess ? (studentNameParam ? "payments" : "cashflow") : "cashier_closing";
+    const [activeTab, setActiveTab] = React.useState(defaultTab);
+    
+    React.useEffect(() => {
+        const newDefaultTab = hasFullAccess ? (studentNameParam ? "payments" : "cashflow") : "cashier_closing";
+        setActiveTab(newDefaultTab);
+    }, [studentNameParam, hasFullAccess]);
+
 
     const fetchData = React.useCallback(async () => {
         setIsLoading(true);
@@ -359,13 +368,16 @@ export default function FinancialPage() {
 
         setIsLoading(true);
         try {
-            const savedPayment = await addPayment(newPayment as Omit<Payment, 'id'>);
-            setPayments(prev => [savedPayment, ...prev]);
-            setCurrentInvoice(savedPayment);
+            await addPayment(newPayment as Omit<Payment, 'id'>);
+            fetchData();
             setIsPaymentDialogOpen(false);
-            setIsInvoiceOpen(true);
+            if (hasFullAccess) {
+                setActiveTab('cashflow');
+            } else {
+                setActiveTab('cashier_closing');
+            }
             setNewPaymentData(initialPaymentFormState);
-            toast({ title: "Pagamento Registrado" });
+            toast({ title: "Pagamento Registrado", description: "A transação foi adicionada ao fluxo de caixa." });
         } catch (error) {
             toast({ title: "Erro ao salvar", variant: "destructive" });
         } finally { setIsLoading(false); }
@@ -400,8 +412,6 @@ export default function FinancialPage() {
     };
     
     const clearFilter = () => router.push('/dashboard/financial');
-    
-    const defaultTab = hasFullAccess ? (studentNameParam ? "payments" : "cashflow") : "cashier_closing";
     
     const filteredPayments = React.useMemo(() => {
         const lowercasedSearch = paymentSearch.toLowerCase();
@@ -566,7 +576,7 @@ export default function FinancialPage() {
     return (
     <>
         <InvoiceDialog isOpen={isInvoiceOpen} onOpenChange={setIsInvoiceOpen} invoiceData={currentInvoice} />
-        <Tabs defaultValue={defaultTab} className="flex-1">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
             <TabsList className={cn("grid w-full", hasFullAccess ? "grid-cols-4" : "grid-cols-3")}>
                 {hasFullAccess && <TabsTrigger value="cashflow">Fluxo de Caixa</TabsTrigger>}
                 <TabsTrigger value="cashier_closing">Fechamento de Caixa</TabsTrigger>
