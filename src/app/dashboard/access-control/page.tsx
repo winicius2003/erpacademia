@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Eye, MoreHorizontal, PlusCircle, Trash2, Loader2, WalletCards, ShieldCheck, FileText, UserCog, Check } from "lucide-react"
+import { Eye, MoreHorizontal, PlusCircle, Trash2, Loader2, WalletCards, ShieldCheck, FileText, UserCog, Check, XIcon, UserCircle, Briefcase, KeyRound } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -450,7 +450,7 @@ export default function AccessControlPage() {
     </Card>
 
     <Dialog open={isEmployeeDialogOpen} onOpenChange={setIsEmployeeDialogOpen}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Editar Colaborador" : "Adicionar Novo Colaborador"}</DialogTitle>
           <DialogDescription>
@@ -458,130 +458,142 @@ export default function AccessControlPage() {
           </DialogDescription>
         </DialogHeader>
         <form id="employee-form" onSubmit={handleSaveEmployee}>
-          <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-2">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Nome Completo</Label>
-              <Input id="name" value={employeeFormData.name} onChange={(e) => handleInputChange('name', e.target.value)} placeholder="Nome completo" />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input id="email" type="email" value={employeeFormData.email} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="email@exemplo.com" />
-            </div>
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="grid gap-2">
-                    <Label htmlFor="cpf">CPF</Label>
-                    <Input id="cpf" value={employeeFormData.cpf} onChange={(e) => handleInputChange('cpf', e.target.value)} placeholder="000.000.000-00" />
-                </div>
-                 <div className="grid gap-2">
-                    <Label htmlFor="rg">RG</Label>
-                    <Input id="rg" value={employeeFormData.rg} onChange={(e) => handleInputChange('rg', e.target.value)} placeholder="00.000.000-0" />
-                </div>
-                 <div className="grid gap-2">
-                    <Label htmlFor="rgIssuer">Órgão Emissor</Label>
-                    <Input id="rgIssuer" value={employeeFormData.rgIssuer} onChange={(e) => handleInputChange('rgIssuer', e.target.value)} placeholder="SSP/SP" />
-                </div>
-            </div>
-            <div className="grid gap-2">
-                <Label htmlFor="role">Função</Label>
-                <Select value={employeeFormData.role} onValueChange={(v: Role) => handleInputChange('role', v)}>
-                    <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma função" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Gerente">Gerente</SelectItem>
-                        <SelectItem value="Gestor">Gestor</SelectItem>
-                        <SelectItem value="Professor">Professor</SelectItem>
-                        <SelectItem value="Personal Trainer Externo">Personal Trainer Externo</SelectItem>
-                        <SelectItem value="Recepção">Recepção</SelectItem>
-                        <SelectItem value="Estagiário">Estagiário</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-             {(employeeFormData.role === 'Professor' || employeeFormData.role === 'Estagiário' || employeeFormData.role === 'Personal Trainer Externo') && (
-                <div className="grid gap-2">
-                    <Label htmlFor="cref">CREF (Obrigatório para Profissionais de Ed. Física)</Label>
-                    <Input id="cref" value={employeeFormData.cref} onChange={(e) => handleInputChange('cref', e.target.value)} placeholder="000000-G/SP" required />
-                </div>
-            )}
-             <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                    <Label htmlFor="phone">Telefone de Contato</Label>
-                    <Input id="phone" value={employeeFormData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} placeholder="(99) 99999-9999" />
-                </div>
-                 <div className="grid gap-2">
-                    <Label htmlFor="address">Endereço</Label>
-                    <Input id="address" value={employeeFormData.address} onChange={(e) => handleInputChange('address', e.target.value)} placeholder="Rua, Nº, Bairro" />
-                </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="login">Login</Label>
-                <Input id="login" value={employeeFormData.login} onChange={(e) => handleInputChange('login', e.target.value)} placeholder="ex: wini" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="password">Senha</Label>
-                <Input id="password" type="password" value={employeeFormData.password} onChange={(e) => handleInputChange('password', e.target.value)} placeholder={isEditing ? 'Deixe em branco para não alterar' : '••••••••'} />
-              </div>
-            </div>
-             <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                    <Label htmlFor="accessPin">PIN de Acesso (Catraca)</Label>
-                    <Input id="accessPin" value={employeeFormData.accessPin} onChange={(e) => handleInputChange('accessPin', e.target.value)} placeholder="4 a 6 dígitos" />
-                </div>
-                <div className="grid gap-2">
-                    <Label htmlFor="workHours">Horário de Trabalho</Label>
-                    <Input id="workHours" value={employeeFormData.workHours} onChange={(e) => handleInputChange('workHours', e.target.value)} placeholder="Ex: 08:00 - 17:00" />
-                </div>
-            </div>
-            {user?.role === 'Admin' && (
-              <div className="grid gap-2">
-                  <Label htmlFor="salary">Salário (R$)</Label>
-                  <Input id="salary" type="number" value={employeeFormData.salary} onChange={(e) => handleInputChange('salary', e.target.value)} placeholder="Ex: 1500.00" />
-              </div>
-            )}
-
-            {employeeFormData.role === 'Estagiário' && (
-              <>
-                <Separator className="my-2" />
-                <div className="space-y-4">
-                    <h4 className="font-medium text-foreground">Dados do Estágio</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Tabs defaultValue="personal" className="max-h-[70vh] flex flex-col">
+                <TabsList className="grid w-full grid-cols-3 shrink-0">
+                    <TabsTrigger value="personal"><UserCircle className="mr-2" /> Dados Pessoais</TabsTrigger>
+                    <TabsTrigger value="professional"><Briefcase className="mr-2"/> Dados Profissionais</TabsTrigger>
+                    <TabsTrigger value="access"><KeyRound className="mr-2"/> Acesso</TabsTrigger>
+                </TabsList>
+                <div className="flex-1 overflow-y-auto pt-4 px-1 -mx-1">
+                    <TabsContent value="personal" className="mt-0 space-y-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="universityName">Nome da Faculdade</Label>
-                            <Input id="universityName" value={employeeFormData.universityInfo.universityName} onChange={(e) => handleUniversityInfoChange('universityName', e.target.value)} placeholder="Universidade Exemplo" />
+                            <Label htmlFor="name">Nome Completo</Label>
+                            <Input id="name" value={employeeFormData.name} onChange={(e) => handleInputChange('name', e.target.value)} placeholder="Nome completo" />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="course">Curso</Label>
-                            <Input id="course" value={employeeFormData.universityInfo.course} onChange={(e) => handleUniversityInfoChange('course', e.target.value)} placeholder="Educação Física" />
+                            <Label htmlFor="email">E-mail</Label>
+                            <Input id="email" type="email" value={employeeFormData.email} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="email@exemplo.com" />
                         </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="cpf">CPF</Label>
+                                <Input id="cpf" value={employeeFormData.cpf} onChange={(e) => handleInputChange('cpf', e.target.value)} placeholder="000.000.000-00" />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="rg">RG</Label>
+                                <Input id="rg" value={employeeFormData.rg} onChange={(e) => handleInputChange('rg', e.target.value)} placeholder="00.000.000-0" />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="rgIssuer">Órgão Emissor</Label>
+                                <Input id="rgIssuer" value={employeeFormData.rgIssuer} onChange={(e) => handleInputChange('rgIssuer', e.target.value)} placeholder="SSP/SP" />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="phone">Telefone de Contato</Label>
+                                <Input id="phone" value={employeeFormData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} placeholder="(99) 99999-9999" />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="address">Endereço</Label>
+                                <Input id="address" value={employeeFormData.address} onChange={(e) => handleInputChange('address', e.target.value)} placeholder="Rua, Nº, Bairro" />
+                            </div>
+                        </div>
+                    </TabsContent>
+                    <TabsContent value="professional" className="mt-0 space-y-4">
+                         <div className="grid gap-2">
+                            <Label htmlFor="role">Função</Label>
+                            <Select value={employeeFormData.role} onValueChange={(v: Role) => handleInputChange('role', v)}>
+                                <SelectTrigger>
+                                <SelectValue placeholder="Selecione uma função" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Gerente">Gerente</SelectItem>
+                                    <SelectItem value="Gestor">Gestor</SelectItem>
+                                    <SelectItem value="Professor">Professor</SelectItem>
+                                    <SelectItem value="Personal Trainer Externo">Personal Trainer Externo</SelectItem>
+                                    <SelectItem value="Recepção">Recepção</SelectItem>
+                                    <SelectItem value="Estagiário">Estagiário</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {(employeeFormData.role === 'Professor' || employeeFormData.role === 'Estagiário' || employeeFormData.role === 'Personal Trainer Externo') && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="cref">CREF (Obrigatório para Profissionais de Ed. Física)</Label>
+                                <Input id="cref" value={employeeFormData.cref} onChange={(e) => handleInputChange('cref', e.target.value)} placeholder="000000-G/SP" required />
+                            </div>
+                        )}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="workHours">Horário de Trabalho</Label>
+                                <Input id="workHours" value={employeeFormData.workHours} onChange={(e) => handleInputChange('workHours', e.target.value)} placeholder="Ex: 08:00 - 17:00" />
+                            </div>
+                            {user?.role === 'Admin' && (
+                                <div className="grid gap-2">
+                                    <Label htmlFor="salary">Salário (R$)</Label>
+                                    <Input id="salary" type="number" value={employeeFormData.salary} onChange={(e) => handleInputChange('salary', e.target.value)} placeholder="Ex: 1500.00" />
+                                </div>
+                            )}
+                        </div>
+                        {employeeFormData.role === 'Estagiário' && (
+                        <>
+                            <Separator className="my-2" />
+                            <div className="space-y-4">
+                                <h4 className="font-medium text-foreground">Dados do Estágio</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="universityName">Nome da Faculdade</Label>
+                                        <Input id="universityName" value={employeeFormData.universityInfo.universityName} onChange={(e) => handleUniversityInfoChange('universityName', e.target.value)} placeholder="Universidade Exemplo" />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="course">Curso</Label>
+                                        <Input id="course" value={employeeFormData.universityInfo.course} onChange={(e) => handleUniversityInfoChange('course', e.target.value)} placeholder="Educação Física" />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="expectedGraduation">Previsão de Formatura</Label>
+                                        <Input id="expectedGraduation" value={employeeFormData.universityInfo.expectedGraduation} onChange={(e) => handleUniversityInfoChange('expectedGraduation', e.target.value)} placeholder="MM/AAAA" />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="contractStartDate">Início do Contrato</Label>
+                                        <Input id="contractStartDate" type="date" value={employeeFormData.universityInfo.contractStartDate} onChange={(e) => handleUniversityInfoChange('contractStartDate', e.target.value)} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="contractEndDate">Fim do Contrato</Label>
+                                        <Input id="contractEndDate" type="date" value={employeeFormData.universityInfo.contractEndDate} onChange={(e) => handleUniversityInfoChange('contractEndDate', e.target.value)} />
+                                    </div>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="contractFile" className="flex items-center gap-2"><FileText className="h-4 w-4" /> Cópia do Contrato</Label>
+                                    <Input id="contractFile" type="file" disabled />
+                                    <p className="text-xs text-muted-foreground">O upload de arquivos estará disponível em breve.</p>
+                                </div>
+                            </div>
+                        </>
+                        )}
+                    </TabsContent>
+                    <TabsContent value="access" className="mt-0 space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="login">Login</Label>
+                                <Input id="login" value={employeeFormData.login} onChange={(e) => handleInputChange('login', e.target.value)} placeholder="ex: wini" />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="password">Senha</Label>
+                                <Input id="password" type="password" value={employeeFormData.password} onChange={(e) => handleInputChange('password', e.target.value)} placeholder={isEditing ? 'Deixe em branco para não alterar' : '••••••••'} />
+                            </div>
+                        </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="expectedGraduation">Previsão de Formatura</Label>
-                            <Input id="expectedGraduation" value={employeeFormData.universityInfo.expectedGraduation} onChange={(e) => handleUniversityInfoChange('expectedGraduation', e.target.value)} placeholder="MM/AAAA" />
+                            <Label htmlFor="accessPin">PIN de Acesso (Catraca)</Label>
+                            <Input id="accessPin" value={employeeFormData.accessPin} onChange={(e) => handleInputChange('accessPin', e.target.value)} placeholder="4 a 6 dígitos" />
                         </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="contractStartDate">Início do Contrato</Label>
-                            <Input id="contractStartDate" type="date" value={employeeFormData.universityInfo.contractStartDate} onChange={(e) => handleUniversityInfoChange('contractStartDate', e.target.value)} />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="contractEndDate">Fim do Contrato</Label>
-                            <Input id="contractEndDate" type="date" value={employeeFormData.universityInfo.contractEndDate} onChange={(e) => handleUniversityInfoChange('contractEndDate', e.target.value)} />
-                        </div>
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="contractFile" className="flex items-center gap-2"><FileText className="h-4 w-4" /> Cópia do Contrato</Label>
-                        <Input id="contractFile" type="file" disabled />
-                        <p className="text-xs text-muted-foreground">O upload de arquivos estará disponível em breve.</p>
-                    </div>
+                    </TabsContent>
                 </div>
-              </>
-            )}
-
-          </div>
+            </Tabs>
         </form>
-        <DialogFooter className="mt-4">
-          <Button type="submit" form="employee-form" disabled={isLoading}>{isEditing ? "Salvar Alterações" : "Salvar Colaborador"}</Button>
+        <DialogFooter className="mt-0 pt-4 border-t">
+          <Button type="button" variant="ghost" onClick={() => setIsEmployeeDialogOpen(false)}>Cancelar</Button>
+          <Button type="submit" form="employee-form" disabled={isLoading}>{isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}{isEditing ? "Salvar Alterações" : "Salvar Colaborador"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
