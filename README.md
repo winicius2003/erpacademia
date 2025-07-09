@@ -207,7 +207,32 @@ Se você precisa que alguém fora da sua rede Wi-Fi acesse a aplicação rodando
 
 Se não funcionar, é provável que seu provedor de internet utilize uma tecnologia chamada **CGNAT**, que impede o redirecionamento de portas. Nesse caso, ferramentas como `ngrok` ou `Tailscale` são as únicas alternativas.
 
-**Logins de Teste:**
+## Banco de Dados e Persistência de Dados
+
+**Importante:** Este projeto utiliza um **banco de dados em memória** para simplificar a demonstração e o desenvolvimento local. Isso significa que toda a informação (alunos, pagamentos, treinos, etc.) é carregada a partir de arquivos internos e **qualquer alteração feita durante o uso será perdida quando o servidor de desenvolvimento for reiniciado**.
+
+### Onde os Dados Estão Armazenados?
+
+Os dados iniciais da aplicação estão localizados diretamente no código-fonte, dentro da pasta `src/services/`. Cada arquivo corresponde a uma "tabela" do nosso banco de dados simulado:
+
+-   `src/services/members.ts`: Contém a lista inicial de alunos.
+-   `src/services/employees.ts`: Lista de funcionários e seus perfis.
+-   `src/services/payments.ts`: Histórico de pagamentos.
+-   `src/services/workouts.ts`: Modelos de planos de treino.
+-   `src/services/exercises.ts`: O banco de exercícios.
+-   E assim por diante para os demais arquivos na pasta.
+
+### Como Fazer um "Backup"?
+
+Como os dados são parte do código, fazer um backup do estado inicial é simples:
+
+1.  **Backup da Estrutura Inicial:** Simplesmente copie toda a pasta `src/services/` para um local seguro. Se você personalizou os dados iniciais nesses arquivos, este será o seu backup.
+2.  **Restaurando o Backup:** Para restaurar, basta substituir a pasta `src/services/` do projeto pela sua cópia de backup.
+
+Este método garante que você possa experimentar, fazer alterações e, se necessário, retornar facilmente ao estado original que você configurou.
+
+## Logins de Teste
+
 -   **Superadmin:** `superadmin@fitcore.com` / senha: `superadminpass`
 -   **Admin (Academia Exemplo):** `admin@admin` / senha: `uUmope5Z`
 -   **Gestor:** `carla` / senha: `123`
