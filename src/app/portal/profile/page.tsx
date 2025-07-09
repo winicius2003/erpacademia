@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { format, parseISO } from "date-fns"
-import { Loader2, User, FileSignature, CalendarDays } from "lucide-react"
+import { Loader2, User, FileSignature, CalendarDays, CheckCircle, AlertCircle, XCircle } from "lucide-react"
 
 import { getMemberById, type Member } from "@/services/members"
 import { getAssessments, type Assessment } from "@/services/assessments"
@@ -10,6 +10,12 @@ import { getAssessments, type Assessment } from "@/services/assessments"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+
+const statusConfig = {
+    Ativo: { icon: CheckCircle, color: "text-green-500", label: "Ativo" },
+    Atrasado: { icon: AlertCircle, color: "text-yellow-500", label: "Pendente" },
+    Inativo: { icon: XCircle, color: "text-red-500", label: "Inativo" },
+}
 
 export default function StudentProfilePage() {
     const [user, setUser] = React.useState<Member | null>(null)
@@ -53,10 +59,13 @@ export default function StudentProfilePage() {
         return <div className="text-center">Não foi possível carregar seus dados. Tente fazer login novamente.</div>
     }
 
+    const CurrentStatusIcon = statusConfig[user.status].icon
+    const currentStatusColor = statusConfig[user.status].color
+
     return (
         <div className="space-y-6">
             <h1 className="text-3xl font-bold font-headline">Meu Perfil</h1>
-            <div className="grid gap-6 lg:grid-cols-3">
+            <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
                 <div className="lg:col-span-1 space-y-6">
                     <Card>
                         <CardHeader>
@@ -90,13 +99,20 @@ export default function StudentProfilePage() {
                             <CardTitle className="flex items-center gap-2"><FileSignature /> Dados do Plano</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3 text-sm">
-                           <div className="flex justify-between">
+                           <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground">Plano Atual:</span>
                                 <span className="font-semibold">{user.plan}</span>
                             </div>
-                            <div className="flex justify-between">
+                            <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground">Vencimento:</span>
                                 <span className="font-semibold">{format(parseISO(user.expires), "dd/MM/yyyy")}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">Status:</span>
+                                <Badge variant={user.status === 'Ativo' ? 'secondary' : 'destructive'} className="gap-1">
+                                    <CurrentStatusIcon className={`h-3 w-3 ${currentStatusColor}`} />
+                                    <span className={currentStatusColor}>{statusConfig[user.status].label}</span>
+                                </Badge>
                             </div>
                         </CardContent>
                     </Card>

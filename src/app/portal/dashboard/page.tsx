@@ -4,22 +4,15 @@ import * as React from "react"
 import { format, parseISO, isSameDay } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import Image from "next/image"
-import { Loader2, Dumbbell, BarChart, CheckCircle, XCircle, AlertCircle, PartyPopper, MessageSquareWarning, CalendarX } from "lucide-react"
+import { Loader2, Dumbbell, PartyPopper, MessageSquareWarning, CalendarX } from "lucide-react"
 
 import { getMemberById, type Member } from "@/services/members"
 import { getWorkoutPlanById, type WorkoutPlan } from "@/services/workouts"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 
-
-const statusConfig = {
-    Ativo: { icon: CheckCircle, color: "text-green-500", label: "Ativo" },
-    Atrasado: { icon: AlertCircle, color: "text-yellow-500", label: "Pendente" },
-    Inativo: { icon: XCircle, color: "text-red-500", label: "Inativo" },
-}
 
 type PersonalAlert = {
     type: 'birthday' | 'payment' | 'absence' | 'none';
@@ -99,9 +92,6 @@ export default function StudentDashboardPage() {
     if (!user) {
         return <div className="text-center">Não foi possível carregar seus dados. Tente fazer login novamente.</div>
     }
-
-    const CurrentStatusIcon = statusConfig[user.status].icon
-    const currentStatusColor = statusConfig[user.status].color
     
     return (
         <div className="space-y-6">
@@ -121,96 +111,67 @@ export default function StudentDashboardPage() {
                 {user && <p className="text-muted-foreground">Bem-vindo(a) de volta, {user.name.split(' ')[0]}!</p>}
             </div>
             
-            <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
-                {/* Main content: Workout Plan */}
-                <div className="lg:col-span-2 space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><Dumbbell className="text-primary"/> Seu Treino da Semana</CardTitle>
-                            <CardDescription>
-                                {workoutPlan 
-                                    ? `Plano: ${workoutPlan.name} | Objetivo: ${workoutPlan.goal}` 
-                                    : "Você ainda não tem um plano de treino atribuído."
-                                }
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {workoutPlan ? (
-                                <Accordion type="single" collapsible defaultValue={workoutPlan.workouts[0]?.id}>
-                                    {workoutPlan.workouts.map(day => (
-                                        <AccordionItem value={day.id} key={day.id}>
-                                            <AccordionTrigger className="font-semibold">{day.name}</AccordionTrigger>
-                                            <AccordionContent>
-                                                <div className="space-y-4">
-                                                    {day.exercises.map(ex => (
-                                                        <div key={ex.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
-                                                            <div className="relative w-24 h-20 flex-shrink-0">
-                                                                <Image
-                                                                    src={ex.imageUrl || `https://placehold.co/400x300.png`}
-                                                                    alt={ex.name}
-                                                                    fill
-                                                                    className="rounded-md object-cover"
-                                                                    data-ai-hint={ex.name.split(' ').slice(0, 2).join(' ').toLowerCase()}
-                                                                />
+            <div className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Dumbbell className="text-primary"/> Seu Treino da Semana</CardTitle>
+                        <CardDescription>
+                            {workoutPlan 
+                                ? `Plano: ${workoutPlan.name} | Objetivo: ${workoutPlan.goal}` 
+                                : "Você ainda não tem um plano de treino atribuído."
+                            }
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {workoutPlan ? (
+                            <Accordion type="single" collapsible defaultValue={workoutPlan.workouts[0]?.id}>
+                                {workoutPlan.workouts.map(day => (
+                                    <AccordionItem value={day.id} key={day.id}>
+                                        <AccordionTrigger className="font-semibold">{day.name}</AccordionTrigger>
+                                        <AccordionContent>
+                                            <div className="space-y-4">
+                                                {day.exercises.map(ex => (
+                                                    <div key={ex.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
+                                                        <div className="relative w-24 h-20 flex-shrink-0">
+                                                            <Image
+                                                                src={ex.imageUrl || `https://placehold.co/400x300.png`}
+                                                                alt={ex.name}
+                                                                fill
+                                                                className="rounded-md object-cover"
+                                                                data-ai-hint={ex.name.split(' ').slice(0, 2).join(' ').toLowerCase()}
+                                                            />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <p className="font-semibold text-foreground">{ex.name}</p>
+                                                        </div>
+                                                        <div className="flex gap-4 text-center">
+                                                            <div>
+                                                                <p className="text-xs text-muted-foreground">Séries</p>
+                                                                <p className="font-bold">{ex.sets}</p>
                                                             </div>
-                                                            <div className="flex-1">
-                                                                <p className="font-semibold text-foreground">{ex.name}</p>
+                                                            <div>
+                                                                <p className="text-xs text-muted-foreground">Reps</p>
+                                                                <p className="font-bold">{ex.reps}</p>
                                                             </div>
-                                                            <div className="flex gap-4 text-center">
-                                                                <div>
-                                                                    <p className="text-xs text-muted-foreground">Séries</p>
-                                                                    <p className="font-bold">{ex.sets}</p>
-                                                                </div>
-                                                                <div>
-                                                                    <p className="text-xs text-muted-foreground">Reps</p>
-                                                                    <p className="font-bold">{ex.reps}</p>
-                                                                </div>
-                                                                 <div>
-                                                                    <p className="text-xs text-muted-foreground">Descanso</p>
-                                                                    <p className="font-bold">{ex.rest}</p>
-                                                                </div>
+                                                             <div>
+                                                                <p className="text-xs text-muted-foreground">Descanso</p>
+                                                                <p className="font-bold">{ex.rest}</p>
                                                             </div>
                                                         </div>
-                                                    ))}
-                                                </div>
-                                            </AccordionContent>
-                                        </AccordionItem>
-                                    ))}
-                                </Accordion>
-                            ) : (
-                                <div className="text-center text-muted-foreground py-10">
-                                    <p>Converse com seu professor para que ele monte um plano de treino para você.</p>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Sidebar: Status and Notifications */}
-                <div className="space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><BarChart /> Meu Plano</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3 text-sm">
-                           <div className="flex items-center justify-between">
-                                <span className="text-muted-foreground">Plano Atual:</span>
-                                <span className="font-semibold">{user.plan}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
+                        ) : (
+                            <div className="text-center text-muted-foreground py-10">
+                                <p>Converse com seu professor para que ele monte um plano de treino para você.</p>
                             </div>
-                             <div className="flex items-center justify-between">
-                                <span className="text-muted-foreground">Vencimento:</span>
-                                <span className="font-semibold">{format(parseISO(user.expires), "dd/MM/yyyy")}</span>
-                            </div>
-                             <div className="flex items-center justify-between">
-                                <span className="text-muted-foreground">Status:</span>
-                                <Badge variant={user.status === 'Ativo' ? 'secondary' : 'destructive'} className="gap-1">
-                                    <CurrentStatusIcon className={`h-3 w-3 ${currentStatusColor}`} />
-                                    <span className={currentStatusColor}>{statusConfig[user.status].label}</span>
-                                </Badge>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
         </div>
     )
