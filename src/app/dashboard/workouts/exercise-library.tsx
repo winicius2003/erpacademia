@@ -10,7 +10,17 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { Button } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -47,6 +57,9 @@ export function ExerciseLibrary() {
   const [exerciseFormData, setExerciseFormData] = React.useState<ExerciseFormData>(initialFormState)
   const { toast } = useToast()
 
+  const [exerciseToDelete, setExerciseToDelete] = React.useState<{group: string, name: string} | null>(null)
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false)
+
   const fetchExercises = React.useCallback(async () => {
     setIsLoading(true)
     try {
@@ -67,7 +80,7 @@ export function ExerciseLibrary() {
     setExerciseFormData(initialFormState)
     setIsDialogOpen(true)
   }
-
+  
   const handleSaveExercise = async (e: React.FormEvent) => {
     e.preventDefault()
     toast({
@@ -79,6 +92,24 @@ export function ExerciseLibrary() {
   
   const handleInputChange = (field: keyof ExerciseFormData, value: string) => {
     setExerciseFormData(prev => ({...prev, [field]: value}));
+  }
+  
+  const handleDeleteClick = (group: string, exerciseName: string) => {
+    setExerciseToDelete({group: group, name: exerciseName});
+    setIsDeleteAlertOpen(true);
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!exerciseToDelete) return;
+    // In a real app, you would call an API to delete the exercise
+    toast({
+        title: "Exercício Excluído (Simulação)",
+        description: `O exercício "${exerciseToDelete.name}" foi removido.`,
+        variant: "destructive",
+    })
+    setIsDeleteAlertOpen(false);
+    setExerciseToDelete(null);
+    // In a real app, you would call fetchExercises() here to refresh the list.
   }
 
   return (
@@ -127,7 +158,7 @@ export function ExerciseLibrary() {
                           </div>
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Button size="icon" variant="ghost" className="h-8 w-8"><Edit className="h-4 w-4" /></Button>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDeleteClick(group.group, exercise)}><Trash2 className="h-4 w-4" /></Button>
                           </div>
                         </div>
                       ))}
@@ -164,9 +195,15 @@ export function ExerciseLibrary() {
                     </Select>
                  </div>
                  <div className="grid gap-2">
-                  <Label htmlFor="imageUrl">Imagem ou GIF</Label>
-                  <Input id="imageUrl" type="file" disabled />
-                  <p className="text-xs text-muted-foreground">O upload de arquivos estará disponível em breve. Use um link externo por enquanto.</p>
+                  <Label htmlFor="imageUrl">URL da Imagem ou GIF</Label>
+                  <Input 
+                    id="imageUrl" 
+                    type="text" 
+                    value={exerciseFormData.imageUrl} 
+                    onChange={e => handleInputChange('imageUrl', e.target.value)} 
+                    placeholder="Cole o link da imagem aqui" 
+                  />
+                  <p className="text-xs text-muted-foreground">Cole um link de uma imagem ou GIF para representar o exercício.</p>
                 </div>
               </div>
             </form>
@@ -176,6 +213,26 @@ export function ExerciseLibrary() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Isso excluirá permanentemente o exercício <span className="font-semibold">{exerciseToDelete?.name}</span> do banco de dados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDelete}
+              className={buttonVariants({ variant: "destructive" })}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }
