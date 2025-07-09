@@ -114,6 +114,17 @@ export function ExerciseLibrary() {
   const handleInputChange = (field: keyof ExerciseFormData, value: string) => {
     setExerciseFormData(prev => ({...prev, [field]: value}));
   }
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        handleInputChange('imageUrl', reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   
   const handleDeleteClick = (group: string, exerciseName: string) => {
     setExerciseToDelete({group: group, name: exerciseName});
@@ -216,15 +227,22 @@ export function ExerciseLibrary() {
                     </Select>
                  </div>
                  <div className="grid gap-2">
-                  <Label htmlFor="imageUrl">URL da Imagem ou GIF</Label>
-                  <Input 
-                    id="imageUrl" 
-                    type="text" 
-                    value={exerciseFormData.imageUrl} 
-                    onChange={e => handleInputChange('imageUrl', e.target.value)} 
-                    placeholder="Cole o link da imagem aqui" 
-                  />
-                  <p className="text-xs text-muted-foreground">Cole um link de uma imagem ou GIF para representar o exercício.</p>
+                  <Label htmlFor="imageUrl">Imagem ou GIF</Label>
+                  <div className="flex items-center gap-4">
+                    <Input 
+                      id="imageUrl" 
+                      type="file" 
+                      accept="image/gif, image/jpeg, image/png"
+                      onChange={handleImageUpload}
+                      className="flex-1"
+                    />
+                     {exerciseFormData.imageUrl && (
+                        <div className="relative w-16 h-16 flex-shrink-0">
+                          <Image src={exerciseFormData.imageUrl} alt="Preview" fill className="rounded-md object-cover" />
+                        </div>
+                      )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Faça o upload de uma imagem ou GIF do seu computador.</p>
                 </div>
               </div>
             </form>
