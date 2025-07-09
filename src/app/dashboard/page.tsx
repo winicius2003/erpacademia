@@ -2,9 +2,9 @@
 "use client"
 
 import * as React from "react"
-import { Users, TrendingUp, BadgePercent, Loader2, UserX, ClipboardX, CalendarCheck, Target } from "lucide-react"
+import { Users, TrendingUp, Loader2, UserX, ClipboardX, CalendarCheck, Target, UserPlus } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { format, parseISO, differenceInDays } from "date-fns"
+import { format, parseISO, differenceInDays, isAfter, subDays } from "date-fns"
 
 import {
   Card,
@@ -19,7 +19,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
   Table,
@@ -30,6 +29,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { ProjectedRevenueChart } from "@/components/projected-revenue-chart"
+import { MemberActivityChart } from "@/components/member-activity-chart"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import type { Role } from "@/services/employees"
@@ -39,11 +39,11 @@ import { getRecentAccessLogs, type AccessLog } from "@/services/access-logs";
 
 const adminStatsTemplate = [
   { key: "activeMembers", title: "Alunos Ativos", Icon: Users },
+  { key: "newMembers", title: "Novos Alunos (30d)", Icon: UserPlus },
   { key: "riskGroup", title: "Grupo de Risco", Icon: Target },
   { key: "defaultRate", title: "Índice de Inadimplência", Icon: UserX },
   { key: "churn", title: "Desistências (30d)", Icon: ClipboardX },
   { key: "monthlyRevenue", title: "Receita Mensal", value: "R$ 45.231,89", change: "+20.1% em relação ao último mês", Icon: TrendingUp },
-  { key: "retentionRate", title: "Taxa de Retenção", value: "92%", change: "+2% em relação ao último mês", Icon: BadgePercent },
 ];
 
 // Dummy data for the new projected revenue chart
@@ -63,6 +63,7 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = React.useState(true)
   const [riskGroupMembers, setRiskGroupMembers] = React.useState<Member[]>([]);
   const [churnMembers, setChurnMembers] = React.useState<Member[]>([]);
+  const [newMembersCount, setNewMembersCount] = React.useState(0);
   const [isRiskGroupDialogOpen, setIsRiskGroupDialogOpen] = React.useState(false);
   const [isChurnDialogOpen, setIsChurnDialogOpen] = React.useState(false);
   const router = useRouter()
@@ -104,6 +105,11 @@ export default function Dashboard() {
             return diffDays > 3 && diffDays <= 30;
         });
         setChurnMembers(churn);
+
+        const thirtyDaysAgo = subDays(today, 30);
+        const newMembers = membersData.filter(m => isAfter(parseISO(m.createdAt), thirtyDaysAgo));
+        setNewMembersCount(newMembers.length);
+
 
       } catch (error) {
         console.error("Failed to fetch dashboard data", error)
@@ -147,6 +153,7 @@ export default function Dashboard() {
 
     const statsValues = {
       activeMembers: { value: activeMembers.length.toString(), change: `${activeMembers.length} de ${totalMembers} alunos totais` },
+      newMembers: { value: newMembersCount.toString(), change: 'Novas matrículas no período' },
       defaultRate: { value: `${defaultRate.toFixed(1)}%`, change: `${overdueMembers.length} alunos com pagamentos atrasados` },
       riskGroup: { value: riskGroupMembers.length.toString(), change: 'Alunos ativos com baixa frequência' },
       churn: { value: churnMembers.length.toString(), change: 'Planos que expiraram no período' }
@@ -197,7 +204,6 @@ export default function Dashboard() {
                   <TableRow>
                     <TableHead>Aluno</TableHead>
                     <TableHead>Última Frequência</TableHead>
-                    <TableHead>Motivo</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -205,7 +211,6 @@ export default function Dashboard() {
                     <TableRow key={member.id}>
                       <TableCell className="font-medium">{member.name}</TableCell>
                       <TableCell>{format(parseISO(member.lastSeen), "dd/MM/yyyy")}</TableCell>
-                      <TableCell>Baixa frequência</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -300,11 +305,11 @@ export default function Dashboard() {
           </Card>
           <Card className="xl:col-span-3">
             <CardHeader>
-              <CardTitle className="font-headline">Check-ins na Semana</CardTitle>
-              <CardDescription>Volume de presença de alunos nos últimos 7 dias.</CardDescription>
+              <CardTitle className="font-headline">Atividade de Alunos (Últimos 6 meses)</CardTitle>
+              <CardDescription>Novos alunos, renovações e desistências.</CardDescription>
             </CardHeader>
             <CardContent>
-              {/* This chart is a static example for now */}
+              <MemberActivityChart />
             </CardContent>
           </Card>
         </div>
