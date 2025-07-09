@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { User, Printer, Loader2, Search, Dumbbell, Check } from "lucide-react"
 
@@ -101,6 +101,7 @@ export default function PrintWorkoutPage() {
                                                 key={member.id}
                                                 value={member.name}
                                                 onSelect={() => handleSelectMember(member.name)}
+                                                onClick={() => handleSelectMember(member.name)}
                                             >
                                                 <Check className={cn("mr-2 h-4 w-4", selectedMember?.id === member.id ? "opacity-100" : "opacity-0")} />
                                                 {member.name}
