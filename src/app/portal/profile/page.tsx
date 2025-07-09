@@ -1,7 +1,8 @@
+
 "use client"
 
 import * as React from "react"
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
 import { Loader2, User, FileSignature, CalendarDays, CheckCircle, AlertCircle, XCircle } from "lucide-react"
 
 import { getMemberById, type Member } from "@/services/members"
@@ -88,7 +89,7 @@ export default function StudentProfilePage() {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Nascimento:</span>
-                                <span className="font-semibold">{format(new Date(user.dob.replace(/-/g, '/')), "dd/MM/yyyy")}</span>
+                                <span className="font-semibold">{format(parseISO(user.dob), "dd/MM/yyyy")}</span>
                             </div>
                              <div className="flex justify-between">
                                 <span className="text-muted-foreground">CPF:</span>
@@ -107,7 +108,7 @@ export default function StudentProfilePage() {
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground">Vencimento:</span>
-                                <span className="font-semibold">{format(new Date(user.expires.replace(/-/g, '/')), "dd/MM/yyyy")}</span>
+                                <span className="font-semibold">{format(parseISO(user.expires), "dd/MM/yyyy")}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground">Status:</span>
@@ -139,7 +140,7 @@ export default function StudentProfilePage() {
                                 <TableBody>
                                     {assessments.length > 0 ? assessments.map(item => (
                                         <TableRow key={item.id}>
-                                            <TableCell>{format(new Date(item.date.replace(/-/g, '/')), "dd/MM/yyyy")}</TableCell>
+                                            <TableCell>{format(parseISO(item.date), "dd/MM/yyyy")}</TableCell>
                                             <TableCell>{item.measures.weight.toFixed(1)} kg</TableCell>
                                             <TableCell>{item.measures.bodyFat?.toFixed(1) || '-'} %</TableCell>
                                             <TableCell>{item.measures.muscleMass?.toFixed(1) || '-'} kg</TableCell>
