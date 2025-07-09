@@ -98,7 +98,7 @@ const exerciseList: ExerciseListItem[] = [
             { name: 'Tríceps testa com halteres' },
             { name: 'Tríceps na polia alta (barra V)' },
             { name: 'Tríceps na polia alta (corda)' },
-            { name: 'Tríceps na polia alta (barra reta)', imageUrl: 'https://i.imgur.com/eunA5pE.png' },
+            { name: 'Tríceps na polia alta (barra reta)', imageUrl: 'https://www.mundoboaforma.com.br/wp-content/uploads/2021/07/triceps-puxada-no-pulley.gif' },
             { name: 'Tríceps francês sentado' },
             { name: 'Tríceps francês unilateral' },
             { name: 'Mergulho entre bancos' },
