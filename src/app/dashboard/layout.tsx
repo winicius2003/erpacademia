@@ -54,8 +54,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Dialog, DialogTrigger, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { CommandDialog, CommandEmpty, CommandInput, CommandGroup, CommandList, CommandItem, CommandSeparator } from "@/components/ui/command"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Command, CommandEmpty, CommandInput, CommandGroup, CommandList, CommandItem, CommandSeparator } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -175,6 +176,12 @@ export default function DashboardLayout({
     return permissions.includes(item.label)
   }) : []
 
+  const activeItem = navItems
+    .slice()
+    .sort((a, b) => b.href.length - a.href.length)
+    .find((item) => pathname.startsWith(item.href));
+
+
   if (!user || uiStatus === 'loading') {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -218,55 +225,58 @@ export default function DashboardLayout({
     }, [])
   
     return (
-      <>
-        <Button
-          variant="outline"
-          className="relative h-9 w-full justify-start rounded-[0.5rem] bg-background text-sm font-normal text-muted-foreground shadow-none sm:pr-12 md:w-40 lg:w-64"
-          onClick={() => setOpen(true)}
-        >
-          <Search className="h-4 w-4 mr-2" />
-          <span className="hidden lg:inline-flex">Buscar...</span>
-          <span className="inline-flex lg:hidden">Buscar...</span>
-          <kbd className="pointer-events-none absolute right-[0.3rem] top-[0.3rem] hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
-            <span className="text-xs">⌘</span>K
-          </kbd>
-        </Button>
-        <CommandDialog open={open} onOpenChange={setOpen}>
-          <CommandInput placeholder="Digite um comando ou pesquise..." />
-          <CommandList>
-            <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
-            <CommandGroup heading="Funcionalidades">
-              {visibleNavItems.map((navItem) => (
-                <CommandItem
-                  key={navItem.href}
-                  value={navItem.label}
-                  onSelect={() => {
-                    runCommand(() => router.push(navItem.href))
-                  }}
-                >
-                  <navItem.icon className="mr-2 h-4 w-4" />
-                  {navItem.label}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-            <CommandSeparator />
-            <CommandGroup heading="Alunos">
-              {members.map((member) => (
-                <CommandItem
-                  key={member.id}
-                  value={member.name}
-                  onSelect={() => {
-                    runCommand(() => router.push(`/dashboard/members/${member.id}`))
-                  }}
-                >
-                  <User className="mr-2 h-4 w-4" />
-                  {member.name}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </CommandDialog>
-      </>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className="relative h-9 w-full justify-start rounded-[0.5rem] bg-background text-sm font-normal text-muted-foreground shadow-none sm:pr-12 md:w-64 lg:w-96"
+          >
+            <Search className="h-4 w-4 mr-2" />
+            <span className="hidden lg:inline-flex">Buscar funcionalidades ou alunos...</span>
+            <span className="inline-flex lg:hidden">Buscar...</span>
+            <kbd className="pointer-events-none absolute right-[0.3rem] top-[0.3rem] hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+              <span className="text-xs">⌘</span>K
+            </kbd>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+          <Command>
+            <CommandInput placeholder="Digite um comando ou pesquise..." autoFocus />
+            <CommandList>
+              <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
+              <CommandGroup heading="Funcionalidades">
+                {visibleNavItems.map((navItem) => (
+                  <CommandItem
+                    key={navItem.href}
+                    value={navItem.label}
+                    onSelect={() => {
+                      runCommand(() => router.push(navItem.href))
+                    }}
+                  >
+                    <navItem.icon className="mr-2 h-4 w-4" />
+                    {navItem.label}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+              <CommandSeparator />
+              <CommandGroup heading="Alunos">
+                {members.map((member) => (
+                  <CommandItem
+                    key={member.id}
+                    value={member.name}
+                    onSelect={() => {
+                      runCommand(() => router.push(`/dashboard/members/${member.id}`))
+                    }}
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    {member.name}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     )
   }
 
@@ -323,10 +333,14 @@ export default function DashboardLayout({
             <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6">
               <SidebarTrigger className="md:hidden" />
               <div className="flex-1">
-                <GlobalSearch />
+                 <h1 className="font-semibold text-lg">{activeItem?.label}</h1>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-1 justify-center">
+                 <GlobalSearch />
+              </div>
+
+              <div className="flex items-center gap-2 ml-auto">
                 <HelpCenter />
                 <Notifications />
               
