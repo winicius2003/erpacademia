@@ -98,7 +98,7 @@ const exerciseList: ExerciseListItem[] = [
             { name: 'Tríceps testa com halteres' },
             { name: 'Tríceps na polia alta (barra V)' },
             { name: 'Tríceps na polia alta (corda)' },
-            { name: 'Tríceps na polia alta (barra reta)' },
+            { name: 'Tríceps na polia alta (barra reta)', imageUrl: 'https://i.imgur.com/eunA5pE.png' },
             { name: 'Tríceps francês sentado' },
             { name: 'Tríceps francês unilateral' },
             { name: 'Mergulho entre bancos' },
