@@ -55,7 +55,7 @@ const exerciseList: ExerciseListItem[] = [
         group: 'Ombros (Shoulders)',
         exercises: [
             { name: 'Desenvolvimento militar com barra' },
-            { name: 'Desenvolvimento com halteres' },
+            { name: 'Desenvolvimento com halteres', imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Shoulder-Press.gif' },
             { name: 'Desenvolvimento Arnold' },
             { name: 'Elevação lateral com halteres' },
             { name: 'Elevação frontal alternada' },
