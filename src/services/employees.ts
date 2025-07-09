@@ -2,7 +2,7 @@
 
 import { format } from 'date-fns';
 
-export type Role = "Admin" | "Gerente" | "Gestor" | "Professor" | "Recepção" | "Estagiário";
+export type Role = "Admin" | "Gerente" | "Gestor" | "Professor" | "Recepção" | "Estagiário" | "Personal Trainer Externo";
 
 export type Employee = {
     id: string;

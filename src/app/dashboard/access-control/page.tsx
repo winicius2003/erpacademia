@@ -67,6 +67,7 @@ export const rolePermissions: Record<Role, string[]> = {
   Gerente: ["Painel", "Alunos", "Agenda", "Financeiro (Pessoal)", "CRM", "Colaboradores"],
   Gestor: ["Painel", "Alunos", "Avaliações", "Agenda", "Financeiro (Geral)", "CRM", "Relatórios", "Planos", "Produtos", "Assinatura", "Gympass", "Frequência"],
   Professor: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda"],
+  "Personal Trainer Externo": ["Painel", "Alunos", "Treinos", "Avaliações"],
   Recepção: ["Alunos", "Agenda", "Financeiro (Pessoal)", "CRM", "Produtos"],
   Estagiário: ["Alunos", "Agenda", "Treinos"],
 }
@@ -350,6 +351,7 @@ export default function AccessControlPage() {
                         <SelectItem value="Gerente">Gerente</SelectItem>
                         <SelectItem value="Gestor">Gestor</SelectItem>
                         <SelectItem value="Professor">Professor</SelectItem>
+                        <SelectItem value="Personal Trainer Externo">Personal Trainer Externo</SelectItem>
                         <SelectItem value="Recepção">Recepção</SelectItem>
                         <SelectItem value="Estagiário">Estagiário</SelectItem>
                       </SelectContent>
@@ -437,14 +439,15 @@ export default function AccessControlPage() {
                         <SelectItem value="Gerente">Gerente</SelectItem>
                         <SelectItem value="Gestor">Gestor</SelectItem>
                         <SelectItem value="Professor">Professor</SelectItem>
+                        <SelectItem value="Personal Trainer Externo">Personal Trainer Externo</SelectItem>
                         <SelectItem value="Recepção">Recepção</SelectItem>
                         <SelectItem value="Estagiário">Estagiário</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
-             {(employeeFormData.role === 'Professor' || employeeFormData.role === 'Estagiário') && (
+             {(employeeFormData.role === 'Professor' || employeeFormData.role === 'Estagiário' || employeeFormData.role === 'Personal Trainer Externo') && (
                 <div className="grid gap-2">
-                    <Label htmlFor="cref">CREF (Obrigatório para Professor/Estagiário)</Label>
+                    <Label htmlFor="cref">CREF (Obrigatório para Profissionais de Ed. Física)</Label>
                     <Input id="cref" value={employeeFormData.cref} onChange={(e) => handleInputChange('cref', e.target.value)} placeholder="000000-G/SP" required />
                 </div>
             )}

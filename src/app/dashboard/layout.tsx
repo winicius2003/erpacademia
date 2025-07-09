@@ -95,6 +95,7 @@ export const navPermissions: Record<Role, string[]> = {
   Gerente: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Colaboradores"],
   Gestor: ["Painel", "Alunos", "Avaliações", "Agenda", "Financeiro", "CRM", "Frequência", "Relatórios", "Gympass", "Planos", "Produtos", "Assinatura"],
   Professor: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda"],
+  "Personal Trainer Externo": ["Painel", "Alunos", "Treinos", "Avaliações"],
   Recepção: ["Alunos", "Agenda", "Financeiro", "CRM", "Produtos"],
   Estagiário: ["Alunos", "Agenda"],
 };
