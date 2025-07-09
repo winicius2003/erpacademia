@@ -20,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { cn } from "@/lib/utils"
 
 
 function PrintableView({ member, workout }: { member: Member | null, workout: WorkoutPlan['workouts'][0] | null }) {
@@ -70,8 +71,10 @@ export default function PrintWorkoutPage() {
     const [searchQuery, setSearchQuery] = React.useState("");
     const [filteredMembers, setFilteredMembers] = React.useState<Member[]>([]);
     
-    const [selectedMember, setSelectedMember] = React.useState<Member | null>(null)
-    const [selectedWorkout, setSelectedWorkout] = React.useState<WorkoutPlan['workouts'][0] | null>(null);
+    const [selectedMember, setSelectedMember] = React.useState<Member | null>(null);
+    const [memberPlan, setMemberPlan] = React.useState<WorkoutPlan | null>(null);
+    const [recommendedWorkout, setRecommendedWorkout] = React.useState<WorkoutPlan['workouts'][0] | null>(null);
+    const [workoutToPrint, setWorkoutToPrint] = React.useState<WorkoutPlan['workouts'][0] | null>(null);
     
     const [isLoading, setIsLoading] = React.useState(true);
     const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
@@ -108,7 +111,6 @@ export default function PrintWorkoutPage() {
         }
     }, [searchQuery, allMembers]);
 
-
     const handleSelectMember = (member: Member) => {
         setSearchQuery("");
         setFilteredMembers([]);
@@ -116,6 +118,7 @@ export default function PrintWorkoutPage() {
         
         if (member.assignedPlanId) {
             const plan = allWorkoutPlans.find(p => p.id === member.assignedPlanId);
+            setMemberPlan(plan || null);
             
             if (plan && plan.workouts.length > 0) {
                 // Workout rotation logic
@@ -128,21 +131,24 @@ export default function PrintWorkoutPage() {
                 const numWorkouts = plan.workouts.length;
                 const workoutIndex = (dayOfYear - 1) % numWorkouts; // -1 to make it 0-indexed
 
-                const recommendedWorkout = plan.workouts[workoutIndex];
-                
-                setSelectedWorkout(recommendedWorkout);
-                setIsPreviewOpen(true);
-            } else {
-                setSelectedWorkout(null);
+                setRecommendedWorkout(plan.workouts[workoutIndex]);
             }
         } else {
-            setSelectedWorkout(null);
+            setMemberPlan(null);
+            setRecommendedWorkout(null);
         }
+    };
+    
+    const handleSelectWorkoutForPrint = (workout: WorkoutPlan['workouts'][0]) => {
+        setWorkoutToPrint(workout);
+        setIsPreviewOpen(true);
     };
 
     const handleReset = () => {
         setSelectedMember(null);
-        setSelectedWorkout(null);
+        setMemberPlan(null);
+        setRecommendedWorkout(null);
+        setWorkoutToPrint(null);
         setSearchQuery("");
     };
     
@@ -158,7 +164,7 @@ export default function PrintWorkoutPage() {
                     <CardTitle className="font-headline">Imprimir Treino do Dia</CardTitle>
                     <CardDescription>Pesquise pelo aluno para gerar o cupom de treino recomendado para hoje.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6 min-h-[200px]">
+                <CardContent className="space-y-4 min-h-[250px]">
                     {!selectedMember ? (
                         <div className="space-y-4">
                             <div className="relative">
@@ -176,7 +182,7 @@ export default function PrintWorkoutPage() {
                             {filteredMembers.length > 0 && (
                                 <div className="border rounded-md max-h-64 overflow-y-auto">
                                     {filteredMembers.map(member => (
-                                        <div
+                                        <button
                                             key={member.id}
                                             onClick={() => handleSelectMember(member)}
                                             className="w-full text-left flex items-center gap-3 p-3 hover:bg-muted first:rounded-t-md last:rounded-b-md cursor-pointer"
@@ -186,7 +192,7 @@ export default function PrintWorkoutPage() {
                                                 <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                             <span className="font-medium">{member.name}</span>
-                                        </div>
+                                        </button>
                                     ))}
                                 </div>
                             )}
@@ -203,9 +209,24 @@ export default function PrintWorkoutPage() {
                                 </Button>
                             </div>
                             
-                            <div className="text-center text-muted-foreground py-6">
-                                <p>O treino recomendado para hoje foi carregado.</p>
-                                <p className="text-sm">Clique em "Trocar Aluno" para buscar outra pessoa.</p>
+                           <div className="space-y-3 pt-4">
+                                <h3 className="font-semibold">Selecione o treino para imprimir:</h3>
+                                {memberPlan && memberPlan.workouts.length > 0 ? (
+                                    <div className="flex gap-3 flex-wrap">
+                                        {memberPlan.workouts.map(workout => (
+                                            <Button 
+                                                key={workout.id}
+                                                variant={workout.id === recommendedWorkout?.id ? "default" : "outline"}
+                                                onClick={() => handleSelectWorkoutForPrint(workout)}
+                                            >
+                                                {workout.name}
+                                                {workout.id === recommendedWorkout?.id && <span className="ml-2 text-xs opacity-80">(Recomendado)</span>}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-muted-foreground text-sm">Este aluno não possui um plano de treino atribuído.</p>
+                                )}
                             </div>
                         </div>
                     )}
@@ -214,7 +235,7 @@ export default function PrintWorkoutPage() {
 
             {/* Hidden div for printing */}
             <div className="hidden">
-                <PrintableView member={selectedMember} workout={selectedWorkout} />
+                <PrintableView member={selectedMember} workout={workoutToPrint} />
             </div>
             
             {/* Print Preview Dialog */}
@@ -223,12 +244,12 @@ export default function PrintWorkoutPage() {
                     <DialogHeader>
                         <DialogTitle>Pré-visualização da Impressão</DialogTitle>
                         <DialogDescription>
-                            Este é o treino recomendado para hoje. Confirme para imprimir.
+                            Confirme os detalhes do treino antes de imprimir o cupom.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="border rounded-md p-4 my-4 bg-gray-100 dark:bg-gray-800 flex justify-center">
                        <div className="w-[302px] bg-white p-2 shadow-lg"> {/* Simulate 80mm receipt paper */}
-                           <PrintableView member={selectedMember} workout={selectedWorkout} />
+                           <PrintableView member={selectedMember} workout={workoutToPrint} />
                        </div>
                     </div>
                     <DialogFooter>
