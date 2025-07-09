@@ -110,7 +110,7 @@ export function ExerciseLibrary() {
                     {group.group}
                   </AccordionTrigger>
                   <AccordionContent className="p-4 bg-background">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+                    <div className="space-y-2">
                       {group.exercises.map((exercise) => (
                         <div key={exercise} className="group flex items-center gap-4 p-2 rounded-md hover:bg-muted/50">
                           <div className="relative w-24 h-16 flex-shrink-0">
