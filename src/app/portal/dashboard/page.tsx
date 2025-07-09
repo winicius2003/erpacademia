@@ -116,7 +116,10 @@ export default function StudentDashboardPage() {
                 </Alert>
             )}
 
-            <h1 className="text-3xl font-bold font-headline">Bem-vindo(a) de volta, {user.name.split(' ')[0]}!</h1>
+            <div>
+                <h1 className="text-3xl font-bold font-headline">Meu Treino</h1>
+                {user && <p className="text-muted-foreground">Bem-vindo(a) de volta, {user.name.split(' ')[0]}!</p>}
+            </div>
             
             <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
                 {/* Main content: Workout Plan */}

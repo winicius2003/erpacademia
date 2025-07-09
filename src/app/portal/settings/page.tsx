@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useTheme } from "next-themes"
 import { Loader2, Palette } from "lucide-react"
 
 import { getMemberById, updateMember, type Member } from "@/services/members"
@@ -26,6 +27,7 @@ export default function StudentSettingsPage() {
     const [isSaving, setIsSaving] = React.useState(false)
     const [formData, setFormData] = React.useState<ProfileFormData>({ name: "", phone: "" })
     const { toast } = useToast()
+    const { theme, setTheme } = useTheme()
 
     const fetchUserData = React.useCallback(async () => {
         setIsLoading(true);
@@ -160,7 +162,10 @@ export default function StudentSettingsPage() {
                                     Ative o tema escuro para uma visualização mais confortável à noite.
                                 </p>
                             </div>
-                            <Switch disabled />
+                            <Switch
+                                checked={theme === 'dark'}
+                                onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                             />
                         </div>
                     </div>
                 </CardContent>

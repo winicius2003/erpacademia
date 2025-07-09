@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { format, parseISO } from "date-fns"
-import { Loader2, UserCircle, FileSignature, CalendarDays } from "lucide-react"
+import { Loader2, User, FileSignature, CalendarDays } from "lucide-react"
 
 import { getMemberById, type Member } from "@/services/members"
 import { getAssessments, type Assessment } from "@/services/assessments"
@@ -55,12 +55,12 @@ export default function StudentProfilePage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-3xl font-bold font-headline">Minha Ficha</h1>
+            <h1 className="text-3xl font-bold font-headline">Meu Perfil</h1>
             <div className="grid gap-6 lg:grid-cols-3">
                 <div className="lg:col-span-1 space-y-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><UserCircle /> Informações Pessoais</CardTitle>
+                            <CardTitle className="flex items-center gap-2"><User /> Informações Pessoais</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3 text-sm">
                            <div className="flex justify-between">
