@@ -49,9 +49,9 @@ let workoutPlans: WorkoutPlan[] = [
         id: 'd2',
         name: 'Treino B: Superiores (Foco em Costas)',
         exercises: [
-          { id: 'e4', name: 'Puxada Frontal', sets: '3', reps: '8-12', rest: '60s' },
-          { id: 'e5', name: 'Remada Curvada', sets: '3', reps: '8-12', rest: '60s' },
-          { id: 'e6', name: 'Rosca Direta com Barra', sets: '3', reps: '10-15', rest: '45s' },
+          { id: 'e4', name: 'Puxada Frontal', sets: '3', reps: '8-12', rest: '60s', imageUrl: 'https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/costas-puxada-aberta-com-barra-no-pulley.gif' },
+          { id: 'e5', name: 'Remada Curvada', sets: '3', reps: '8-12', rest: '60s', imageUrl: 'https://www.hipertrofia.org/blog/wp-content/uploads/2017/11/remada-curvada-no-cross.gif' },
+          { id: 'e6', name: 'Rosca Direta com Barra', sets: '3', reps: '10-15', rest: '45s', imageUrl: 'https://www.hipertrofia.org/blog/wp-content/uploads/2019/04/ez-barbell-curl.gif' },
         ],
       },
        {

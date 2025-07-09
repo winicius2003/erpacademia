@@ -34,8 +34,8 @@ const exerciseList: ExerciseListItem[] = [
     {
         group: 'Costas (Back)',
         exercises: [
-            { name: 'Puxada frontal na polia alta' },
-            { name: 'Remada curvada com barra' },
+            { name: 'Puxada frontal na polia alta', imageUrl: 'https://www.mundoboaforma.com.br/wp-content/uploads/2020/12/costas-puxada-aberta-com-barra-no-pulley.gif' },
+            { name: 'Remada curvada com barra', imageUrl: 'https://www.hipertrofia.org/blog/wp-content/uploads/2017/11/remada-curvada-no-cross.gif' },
             { name: 'Remada curvada com halteres' },
             { name: 'Remada unilateral na polia' },
             { name: 'Remada sentada triângulo' },
@@ -74,7 +74,7 @@ const exerciseList: ExerciseListItem[] = [
     {
         group: 'Bíceps (Biceps)',
         exercises: [
-            { name: 'Rosca direta com barra' },
+            { name: 'Rosca direta com barra', imageUrl: 'https://www.hipertrofia.org/blog/wp-content/uploads/2019/04/ez-barbell-curl.gif' },
             { name: 'Rosca direta com barra W' },
             { name: 'Rosca alternada com halteres' },
             { name: 'Rosca alternada inclinado' },
