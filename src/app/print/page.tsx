@@ -43,10 +43,10 @@ export default function PrintWorkoutPage() {
         fetchData();
     }, []);
 
-    const handleSelectMember = (memberId: string) => {
+    const handleSelectMember = (memberName: string) => {
         setOpen(false);
         setSelectedWorkout(null); // Reset selected workout when member changes
-        const member = members.find(m => m.id === memberId);
+        const member = members.find(m => m.name === memberName);
         
         if (!member) {
             setSelectedMember(null);
@@ -100,7 +100,7 @@ export default function PrintWorkoutPage() {
                                             <CommandItem
                                                 key={member.id}
                                                 value={member.name}
-                                                onSelect={() => handleSelectMember(member.id)}
+                                                onSelect={handleSelectMember}
                                             >
                                                 <Check className={cn("mr-2 h-4 w-4", selectedMember?.id === member.id ? "opacity-100" : "opacity-0")} />
                                                 {member.name}
