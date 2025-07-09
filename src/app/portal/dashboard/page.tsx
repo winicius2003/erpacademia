@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -131,8 +132,8 @@ export default function StudentDashboardPage() {
                                         <AccordionContent>
                                             <div className="space-y-4">
                                                 {day.exercises.map(ex => (
-                                                    <div key={ex.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
-                                                        <div className="relative w-24 h-20 flex-shrink-0">
+                                                    <div key={ex.id} className="flex flex-col md:flex-row items-start md:items-center gap-4 p-3 rounded-lg bg-muted/50">
+                                                        <div className="relative w-full md:w-24 h-32 md:h-20 flex-shrink-0">
                                                             <Image
                                                                 src={ex.imageUrl || `https://placehold.co/400x300.png`}
                                                                 alt={ex.name}
@@ -144,7 +145,7 @@ export default function StudentDashboardPage() {
                                                         <div className="flex-1">
                                                             <p className="font-semibold text-foreground">{ex.name}</p>
                                                         </div>
-                                                        <div className="flex gap-4 text-center">
+                                                        <div className="flex gap-6 text-center w-full justify-around md:w-auto md:justify-start pt-4 md:pt-0 mt-4 md:mt-0 border-t md:border-none border-border">
                                                             <div>
                                                                 <p className="text-xs text-muted-foreground">Séries</p>
                                                                 <p className="font-bold">{ex.sets}</p>
@@ -153,7 +154,7 @@ export default function StudentDashboardPage() {
                                                                 <p className="text-xs text-muted-foreground">Reps</p>
                                                                 <p className="font-bold">{ex.reps}</p>
                                                             </div>
-                                                             <div>
+                                                            <div>
                                                                 <p className="text-xs text-muted-foreground">Descanso</p>
                                                                 <p className="font-bold">{ex.rest}</p>
                                                             </div>

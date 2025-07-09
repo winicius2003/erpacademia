@@ -170,7 +170,13 @@ export default function Dashboard() {
     });
   }
 
-  const stats = user.role === 'Professor' ? getProfessorStats() : getAdminStats();
+  const isProfessorRole = user.role === 'Professor' || user.role === 'Personal Trainer Externo';
+  const stats = isProfessorRole ? getProfessorStats() : getAdminStats();
+
+  const gridClass = isProfessorRole
+    ? "grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+    : "grid gap-4 md:grid-cols-2 lg:grid-cols-3";
+
 
   const renderStatsCard = (stat: any) => {
     const cardContent = (
@@ -264,11 +270,11 @@ export default function Dashboard() {
 
   return (
     <div className="grid gap-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className={gridClass}>
         {stats.map((stat) => renderStatsCard(stat))}
       </div>
 
-      {user.role !== 'Professor' && (
+      {!isProfessorRole && (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           <Card className="xl:col-span-2">
             <CardHeader>
