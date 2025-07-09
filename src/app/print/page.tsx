@@ -26,7 +26,7 @@ function PrintableView({ member, workout }: { member: Member | null, workout: Wo
     if (!workout || !member) return null;
 
     return (
-        <div id="printable-area" className="printable-workout">
+        <div id="printable-area" className="printable-workout text-black">
             <div className="text-center space-y-1">
                 <h3 className="font-bold text-lg">Academia Exemplo</h3>
                 <p><strong>Aluno(a):</strong> {member?.name}</p>
