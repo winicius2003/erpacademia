@@ -60,11 +60,11 @@ import { getEmployees, addEmployee, updateEmployee, deleteEmployee, type Employe
 import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 
-export const allPermissions = ["Painel", "Alunos", "Treinos", "Agenda", "Financeiro (Geral)", "Financeiro (Pessoal)", "CRM", "Colaboradores", "Relatórios", "Configurações", "Assinatura", "Gympass", "Planos", "Produtos", "Avaliações", "Frequência"]
+export const allPermissions = ["Painel", "Alunos", "Treinos", "Agenda", "Financeiro (Geral)", "Financeiro (Pessoal)", "CRM", "Controle de Acesso", "Relatórios", "Configurações", "Assinatura", "Gympass", "Planos", "Produtos", "Avaliações", "Frequência"]
 
 export const rolePermissions: Record<Role, string[]> = {
-  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro (Geral)", "CRM", "Colaboradores", "Relatórios", "Configurações", "Assinatura", "Gympass", "Planos", "Produtos", "Frequência"],
-  Gerente: ["Painel", "Alunos", "Agenda", "Financeiro (Pessoal)", "CRM", "Colaboradores"],
+  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro (Geral)", "CRM", "Controle de Acesso", "Relatórios", "Configurações", "Assinatura", "Gympass", "Planos", "Produtos", "Frequência"],
+  Gerente: ["Painel", "Alunos", "Agenda", "Financeiro (Pessoal)", "CRM", "Controle de Acesso"],
   Gestor: ["Painel", "Alunos", "Avaliações", "Agenda", "Financeiro (Geral)", "CRM", "Relatórios", "Planos", "Produtos", "Assinatura", "Gympass", "Frequência"],
   Professor: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda"],
   "Personal Trainer Externo": ["Painel", "Alunos", "Treinos", "Avaliações"],
@@ -309,9 +309,9 @@ export default function AccessControlPage() {
       <CardHeader>
         <div className="flex items-start justify-between">
             <div>
-                <CardTitle className="font-headline">Colaboradores</CardTitle>
+                <CardTitle className="font-headline">Controle de Acesso</CardTitle>
                 <CardDescription>
-                Adicione, edite e gerencie as permissões dos colaboradores da sua equipe.
+                Gerencie os colaboradores e seus respectivos níveis de acesso.
                 </CardDescription>
             </div>
              <div className="flex items-center gap-4">

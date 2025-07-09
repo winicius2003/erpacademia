@@ -81,7 +81,7 @@ const navItems = [
   { href: "/dashboard/financial", icon: Wallet, label: "Financeiro" },
   { href: "/dashboard/crm", icon: HeartHandshake, label: "CRM" },
   { href: "/dashboard/frequency", icon: FileClock, label: "Frequência" },
-  { href: "/dashboard/access-control", icon: UsersRound, label: "Colaboradores" },
+  { href: "/dashboard/access-control", icon: UsersRound, label: "Controle de Acesso" },
   { href: "/dashboard/reports", icon: AreaChart, label: "Relatórios" },
   { href: "/dashboard/gympass", icon: Handshake, label: "Gympass" },
   { href: "/dashboard/plans", icon: Tags, label: "Planos" },
@@ -91,8 +91,8 @@ const navItems = [
 ]
 
 export const navPermissions: Record<Role, string[]> = {
-  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro", "CRM", "Colaboradores", "Relatórios", "Gympass", "Planos", "Produtos", "Assinatura", "Configurações"],
-  Gerente: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Colaboradores"],
+  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro", "CRM", "Controle de Acesso", "Relatórios", "Gympass", "Planos", "Produtos", "Assinatura", "Configurações"],
+  Gerente: ["Painel", "Alunos", "Agenda", "Financeiro", "CRM", "Controle de Acesso"],
   Gestor: ["Painel", "Alunos", "Avaliações", "Agenda", "Financeiro", "CRM", "Frequência", "Relatórios", "Gympass", "Planos", "Produtos", "Assinatura"],
   Professor: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda"],
   "Personal Trainer Externo": ["Painel", "Alunos", "Treinos", "Avaliações"],
