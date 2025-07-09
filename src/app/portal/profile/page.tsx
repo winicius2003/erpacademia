@@ -88,7 +88,7 @@ export default function StudentProfilePage() {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Nascimento:</span>
-                                <span className="font-semibold">{format(parseISO(user.dob), "dd/MM/yyyy")}</span>
+                                <span className="font-semibold">{format(new Date(user.dob.replace(/-/g, '/')), "dd/MM/yyyy")}</span>
                             </div>
                              <div className="flex justify-between">
                                 <span className="text-muted-foreground">CPF:</span>
@@ -107,7 +107,7 @@ export default function StudentProfilePage() {
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground">Vencimento:</span>
-                                <span className="font-semibold">{format(parseISO(user.expires), "dd/MM/yyyy")}</span>
+                                <span className="font-semibold">{format(new Date(user.expires.replace(/-/g, '/')), "dd/MM/yyyy")}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground">Status:</span>
