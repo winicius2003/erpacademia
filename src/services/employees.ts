@@ -17,6 +17,8 @@ export type Employee = {
     salary: number;
     workHours: string; // Ex: "08:00 - 17:00"
     cpf: string;
+    rg?: string;
+    rgIssuer?: string;
     cref?: string;
     accessPin?: string;
     universityInfo?: {
@@ -30,7 +32,7 @@ export type Employee = {
 
 // --- In-Memory Database ---
 let employees: Employee[] = [
-    { id: 'admin-master', name: 'Administrador Master', email: 'admin@admin', phone: '(11) 99999-0000', address: 'Rua Principal, 1', login: 'admin@admin', password: 'uUmope5Z', role: 'Admin', status: 'Ativo', salary: 10000, workHours: 'Integral', cpf: "000.000.000-00" },
+    { id: 'admin-master', name: 'Administrador Master', email: 'admin@admin', phone: '(11) 99999-0000', address: 'Rua Principal, 1', login: 'admin@admin', password: 'uUmope5Z', role: 'Admin', status: 'Ativo', salary: 10000, workHours: 'Integral', cpf: "000.000.000-00", rg: "12.345.678-9", rgIssuer: "SSP/SP" },
     { id: '1', name: 'Carla Silva', email: 'carla.silva@fitcore.com', phone: '(11) 99999-0001', address: 'Rua das Flores, 123', login: 'carla', password: '123', role: 'Gestor', status: 'Ativo', salary: 5000, workHours: '09:00 - 18:00', cpf: "111.111.111-11", accessPin: '9901' },
     { id: '2', name: 'Marcos Rocha', email: 'marcos.rocha@fitcore.com', phone: '(11) 99999-0002', address: 'Avenida Brasil, 456', login: 'marcos', password: '123', role: 'Professor', status: 'Ativo', salary: 3500, workHours: '06:00 - 15:00', cpf: "222.222.222-22", cref: '12345-G/SP', accessPin: '9902' },
     { id: '3', name: 'Juliana Alves', email: 'juliana.alves@fitcore.com', phone: '(11) 99999-0003', address: 'Praça da Sé, 789', login: 'juliana', password: '123', role: 'Recepção', status: 'Ativo', salary: 1800, workHours: '13:00 - 22:00', cpf: "333.333.333-33", accessPin: '9903' },

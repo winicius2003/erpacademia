@@ -84,6 +84,8 @@ const initialEmployeeFormState = {
   salary: 0,
   workHours: "",
   cpf: "",
+  rg: "",
+  rgIssuer: "",
   cref: "",
   accessPin: "",
   universityInfo: {
@@ -203,6 +205,8 @@ export default function AccessControlPage() {
       salary: employee.salary,
       workHours: employee.workHours,
       cpf: employee.cpf,
+      rg: employee.rg || "",
+      rgIssuer: employee.rgIssuer || "",
       cref: employee.cref || '',
       accessPin: employee.accessPin || '',
       universityInfo: employee.universityInfo || initialEmployeeFormState.universityInfo
@@ -233,6 +237,8 @@ export default function AccessControlPage() {
         salary: Number(employeeFormData.salary) || 0,
         workHours: employeeFormData.workHours,
         cpf: employeeFormData.cpf,
+        rg: employeeFormData.rg,
+        rgIssuer: employeeFormData.rgIssuer,
         cref: employeeFormData.cref,
         accessPin: employeeFormData.accessPin,
         universityInfo: employeeFormData.role === 'Estagiário' ? employeeFormData.universityInfo : undefined,
@@ -425,9 +431,19 @@ export default function AccessControlPage() {
               <Label htmlFor="email">E-mail</Label>
               <Input id="email" type="email" value={employeeFormData.email} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="email@exemplo.com" />
             </div>
-             <div className="grid gap-2">
-                <Label htmlFor="cpf">CPF</Label>
-                <Input id="cpf" value={employeeFormData.cpf} onChange={(e) => handleInputChange('cpf', e.target.value)} placeholder="000.000.000-00" />
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid gap-2">
+                    <Label htmlFor="cpf">CPF</Label>
+                    <Input id="cpf" value={employeeFormData.cpf} onChange={(e) => handleInputChange('cpf', e.target.value)} placeholder="000.000.000-00" />
+                </div>
+                 <div className="grid gap-2">
+                    <Label htmlFor="rg">RG</Label>
+                    <Input id="rg" value={employeeFormData.rg} onChange={(e) => handleInputChange('rg', e.target.value)} placeholder="00.000.000-0" />
+                </div>
+                 <div className="grid gap-2">
+                    <Label htmlFor="rgIssuer">Órgão Emissor</Label>
+                    <Input id="rgIssuer" value={employeeFormData.rgIssuer} onChange={(e) => handleInputChange('rgIssuer', e.target.value)} placeholder="SSP/SP" />
+                </div>
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="role">Função</Label>
