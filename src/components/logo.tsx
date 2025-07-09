@@ -10,14 +10,29 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <path
-        d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z"
-        fill="currentColor"
-        fillOpacity="0.4"
+      <defs>
+        <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="1" result="coloredBlur" />
+          <feMerge>
+            <feMergeNode in="coloredBlur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <circle
+        cx="12"
+        cy="12"
+        r="8"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeOpacity="0.4"
+        filter="url(#neon-glow)"
       />
       <path
-        d="M12 6C8.69 6 6 8.69 6 12H8C8 9.79 9.79 8 12 8V6Z"
-        fill="currentColor"
+        d="M15.5 8.5 A 5 5 0 0 0 12 7"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
       />
     </svg>
   );
