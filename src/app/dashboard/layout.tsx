@@ -28,6 +28,7 @@ import {
   MessageSquare,
   Handshake,
   FileClock,
+  Search,
 } from "lucide-react"
 import { usePathname, useRouter } from 'next/navigation'
 import { differenceInDays } from 'date-fns'
@@ -53,7 +54,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { CommandDialog, CommandEmpty, CommandInput, CommandGroup, CommandList, CommandItem, CommandSeparator } from "@/components/ui/command"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -68,6 +70,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { getNotificationsForAcademy, type Notification as NotificationType } from "@/services/notifications"
+import { getMembers, type Member } from "@/services/members"
 import { formatDistanceToNow } from "date-fns"
 import { ptBR } from "date-fns/locale"
 
@@ -172,11 +175,6 @@ export default function DashboardLayout({
     return permissions.includes(item.label)
   }) : []
 
-  const activeItem = navItems
-    .slice()
-    .sort((a, b) => b.href.length - a.href.length)
-    .find((item) => pathname.startsWith(item.href));
-
   if (!user || uiStatus === 'loading') {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -192,6 +190,85 @@ export default function DashboardLayout({
     daysRemaining,
     refreshSubscription: fetchSubscription,
   };
+
+  const GlobalSearch = () => {
+    const [open, setOpen] = React.useState(false)
+    const [members, setMembers] = React.useState<Member[]>([])
+    const router = useRouter()
+
+    React.useEffect(() => {
+      getMembers().then(setMembers)
+    }, [])
+  
+    React.useEffect(() => {
+      const down = (e: KeyboardEvent) => {
+        if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+          e.preventDefault()
+          setOpen((open) => !open)
+        }
+      }
+  
+      document.addEventListener("keydown", down)
+      return () => document.removeEventListener("keydown", down)
+    }, [])
+
+    const runCommand = React.useCallback((command: () => unknown) => {
+        setOpen(false)
+        command()
+    }, [])
+  
+    return (
+      <>
+        <Button
+          variant="outline"
+          className="relative h-9 w-full justify-start rounded-[0.5rem] bg-background text-sm font-normal text-muted-foreground shadow-none sm:pr-12 md:w-40 lg:w-64"
+          onClick={() => setOpen(true)}
+        >
+          <Search className="h-4 w-4 mr-2" />
+          <span className="hidden lg:inline-flex">Buscar...</span>
+          <span className="inline-flex lg:hidden">Buscar...</span>
+          <kbd className="pointer-events-none absolute right-[0.3rem] top-[0.3rem] hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+            <span className="text-xs">⌘</span>K
+          </kbd>
+        </Button>
+        <CommandDialog open={open} onOpenChange={setOpen}>
+          <CommandInput placeholder="Digite um comando ou pesquise..." />
+          <CommandList>
+            <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
+            <CommandGroup heading="Funcionalidades">
+              {visibleNavItems.map((navItem) => (
+                <CommandItem
+                  key={navItem.href}
+                  value={navItem.label}
+                  onSelect={() => {
+                    runCommand(() => router.push(navItem.href))
+                  }}
+                >
+                  <navItem.icon className="mr-2 h-4 w-4" />
+                  {navItem.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            <CommandSeparator />
+            <CommandGroup heading="Alunos">
+              {members.map((member) => (
+                <CommandItem
+                  key={member.id}
+                  value={member.name}
+                  onSelect={() => {
+                    runCommand(() => router.push(`/dashboard/members/${member.id}`))
+                  }}
+                >
+                  <User className="mr-2 h-4 w-4" />
+                  {member.name}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </CommandDialog>
+      </>
+    )
+  }
 
   return (
     <SubscriptionContext.Provider value={subscriptionContextValue}>
@@ -245,10 +322,8 @@ export default function DashboardLayout({
           <SidebarInset>
             <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6">
               <SidebarTrigger className="md:hidden" />
-              <div className="w-full flex-1">
-                <h1 className="text-lg font-headline hidden md:block">
-                  {activeItem?.label}
-                </h1>
+              <div className="flex-1">
+                <GlobalSearch />
               </div>
 
               <div className="flex items-center gap-2">
