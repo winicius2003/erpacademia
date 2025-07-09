@@ -64,15 +64,16 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           <ul className="space-y-2">
             {navItems.map((item) => (
               <li key={item.href}>
-                <Link href={item.href}>
-                  <Button
-                    variant={pathname.startsWith(item.href) ? "secondary" : "ghost"}
-                    className="w-full justify-start"
-                  >
+                <Button
+                  variant={pathname.startsWith(item.href) ? "secondary" : "ghost"}
+                  className="w-full justify-start"
+                  asChild
+                >
+                  <Link href={item.href}>
                     <item.icon className="mr-2 h-4 w-4" />
                     {item.label}
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </li>
             ))}
           </ul>
