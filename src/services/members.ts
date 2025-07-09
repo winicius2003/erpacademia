@@ -2,6 +2,7 @@
 'use server';
 
 import { format, addMonths, differenceInDays, parseISO } from 'date-fns';
+import type { Address } from './employees';
 
 export type Member = {
   id: string,
@@ -14,6 +15,7 @@ export type Member = {
   cpf: string,
   rg: string,
   dob: string, // "yyyy-MM-dd"
+  address: Address,
   professor: string,
   attendanceStatus: "Presente" | "Faltante",
   workoutStatus: "Completo" | "Pendente",
@@ -32,17 +34,17 @@ export type Member = {
   medicalNotes?: string;
 };
 
+const defaultAddress: Address = { street: 'Rua Fictícia', number: '123', neighborhood: 'Centro', city: 'São Paulo', state: 'SP', zipCode: '01000-000' };
 
 // --- In-Memory Database ---
-// Status is now dynamically calculated in getMembers(), no need to hardcode it here.
 let members: Omit<Member, 'status'>[] = [
-  { id: '1', name: 'João da Silva', email: 'joao.silva@example.com', password: '123', loginMethod: 'password', phone: '(11) 98765-4321', plan: 'Anual', expires: format(addMonths(new Date(), 10), 'yyyy-MM-dd'), cpf: "111.222.333-44", rg: "12.345.678-9", dob: '1990-05-10', professor: 'Marcos Rocha', attendanceStatus: 'Presente', workoutStatus: 'Completo', goal: 'Hipertrofia', notes: 'Relatou dor no ombro esquerdo.', accessPin: '1234', fingerprintRegistered: true, assignedPlanId: '1', medicalNotes: 'Atestado médico válido até 2025-01-01. Liberado para atividades de alto impacto.' },
-  { id: '2', name: 'Maria Oliveira', email: 'maria.oliveira@gmail.com', loginMethod: 'google', phone: '(21) 91234-5678', plan: 'Mensal', expires: format(new Date(), 'yyyy-MM-dd'), cpf: "222.333.444-55", rg: "23.456.789-0", dob: format(new Date(), 'yyyy-MM-dd'), professor: 'Fernando Costa', attendanceStatus: 'Faltante', workoutStatus: 'Pendente', goal: 'Emagrecimento', notes: 'Aniversariante de hoje.', accessPin: '5678', fingerprintRegistered: false, medicalNotes: 'Atestado de aptidão para atividades físicas gerais.' },
-  { id: '3', name: 'Carlos Pereira', email: 'carlos.pereira@example.com', password: '123', loginMethod: 'password', phone: '(31) 95555-4444', plan: 'Trimestral', expires: format(addMonths(new Date(), -1), 'yyyy-MM-dd'), cpf: "333.444.555-66", rg: "34.567.890-1", dob: '1985-11-23', professor: 'Marcos Rocha', attendanceStatus: 'Presente', workoutStatus: 'Completo', goal: 'Definição muscular', notes: 'Asma, usar bombinha se necessário.', accessPin: '9012', fingerprintRegistered: true },
-  { id: '4', name: 'Ana Costa', email: 'ana.costa@example.com', password: '123', loginMethod: 'password', phone: '(41) 98888-7777', plan: 'Anual', expires: format(addMonths(new Date(), 6), 'yyyy-MM-dd'), cpf: "444.555.666-77", rg: "45.678.901-2", dob: '2000-02-15', professor: 'Marcos Rocha', attendanceStatus: 'Faltante', workoutStatus: 'Pendente', goal: 'Condicionamento físico', notes: '', accessPin: '4444', fingerprintRegistered: false },
-  { id: '5', name: 'Bruno Santos', email: 'bruno.santos@gmail.com', loginMethod: 'google', phone: '(51) 97777-6666', plan: 'Mensal', expires: format(addMonths(new Date(), 1), 'yyyy-MM-dd'), cpf: "555.666.777-88", rg: "56.789.012-3", dob: '1998-09-30', professor: 'Fernando Costa', attendanceStatus: 'Presente', workoutStatus: 'Pendente', goal: 'Ganho de força', notes: '', accessPin: '4321', fingerprintRegistered: false },
-  { id: '6', name: 'Débora Martins', email: 'debora.martins@example.com', password: '123', loginMethod: 'password', phone: '(61) 96666-5555', plan: 'Mensal', expires: format(addMonths(new Date(), -2), 'yyyy-MM-dd'), cpf: "666.777.888-99", rg: "67.890.123-4", dob: '1995-03-20', professor: 'Marcos Rocha', attendanceStatus: 'Faltante', workoutStatus: 'Completo', goal: 'Manutenção', notes: '', accessPin: '1122', fingerprintRegistered: true },
-  { id: '7', name: 'Pedro Junior', email: 'pedro.junior@example.com', password: '123', loginMethod: 'password', phone: '(71) 91111-2222', plan: 'Mensal', expires: format(addMonths(new Date(), 1), 'yyyy-MM-dd'), cpf: "777.888.999-00", rg: "78.901.234-5", dob: '2010-08-15', professor: 'Marcos Rocha', attendanceStatus: 'Presente', workoutStatus: 'Pendente', goal: 'Iniciação Esportiva', notes: '', accessPin: '7788', fingerprintRegistered: false, guardian: { name: 'Pedro Pai', cpf: '123.456.789-00', phone: '(71) 93333-4444' } },
+  { id: '1', name: 'João da Silva', email: 'joao.silva@example.com', password: '123', loginMethod: 'password', phone: '(11) 98765-4321', plan: 'Anual', expires: format(addMonths(new Date(), 10), 'yyyy-MM-dd'), cpf: "111.222.333-44", rg: "12.345.678-9", dob: '1990-05-10', address: defaultAddress, professor: 'Marcos Rocha', attendanceStatus: 'Presente', workoutStatus: 'Completo', goal: 'Hipertrofia', notes: 'Relatou dor no ombro esquerdo.', accessPin: '1234', fingerprintRegistered: true, assignedPlanId: '1', medicalNotes: 'Atestado médico válido até 2025-01-01. Liberado para atividades de alto impacto.' },
+  { id: '2', name: 'Maria Oliveira', email: 'maria.oliveira@gmail.com', loginMethod: 'google', phone: '(21) 91234-5678', plan: 'Mensal', expires: format(new Date(), 'yyyy-MM-dd'), cpf: "222.333.444-55", rg: "23.456.789-0", dob: format(new Date(), 'yyyy-MM-dd'), address: defaultAddress, professor: 'Fernando Costa', attendanceStatus: 'Faltante', workoutStatus: 'Pendente', goal: 'Emagrecimento', notes: 'Aniversariante de hoje.', accessPin: '5678', fingerprintRegistered: false, medicalNotes: 'Atestado de aptidão para atividades físicas gerais.' },
+  { id: '3', name: 'Carlos Pereira', email: 'carlos.pereira@example.com', password: '123', loginMethod: 'password', phone: '(31) 95555-4444', plan: 'Trimestral', expires: format(addMonths(new Date(), -1), 'yyyy-MM-dd'), cpf: "333.444.555-66", rg: "34.567.890-1", dob: '1985-11-23', address: defaultAddress, professor: 'Marcos Rocha', attendanceStatus: 'Presente', workoutStatus: 'Completo', goal: 'Definição muscular', notes: 'Asma, usar bombinha se necessário.', accessPin: '9012', fingerprintRegistered: true },
+  { id: '4', name: 'Ana Costa', email: 'ana.costa@example.com', password: '123', loginMethod: 'password', phone: '(41) 98888-7777', plan: 'Anual', expires: format(addMonths(new Date(), 6), 'yyyy-MM-dd'), cpf: "444.555.666-77", rg: "45.678.901-2", dob: '2000-02-15', address: defaultAddress, professor: 'Marcos Rocha', attendanceStatus: 'Faltante', workoutStatus: 'Pendente', goal: 'Condicionamento físico', notes: '', accessPin: '4444', fingerprintRegistered: false },
+  { id: '5', name: 'Bruno Santos', email: 'bruno.santos@gmail.com', loginMethod: 'google', phone: '(51) 97777-6666', plan: 'Mensal', expires: format(addMonths(new Date(), 1), 'yyyy-MM-dd'), cpf: "555.666.777-88", rg: "56.789.012-3", dob: '1998-09-30', address: defaultAddress, professor: 'Fernando Costa', attendanceStatus: 'Presente', workoutStatus: 'Pendente', goal: 'Ganho de força', notes: '', accessPin: '4321', fingerprintRegistered: false },
+  { id: '6', name: 'Débora Martins', email: 'debora.martins@example.com', password: '123', loginMethod: 'password', phone: '(61) 96666-5555', plan: 'Mensal', expires: format(addMonths(new Date(), -2), 'yyyy-MM-dd'), cpf: "666.777.888-99", rg: "67.890.123-4", dob: '1995-03-20', address: defaultAddress, professor: 'Marcos Rocha', attendanceStatus: 'Faltante', workoutStatus: 'Completo', goal: 'Manutenção', notes: '', accessPin: '1122', fingerprintRegistered: true },
+  { id: '7', name: 'Pedro Junior', email: 'pedro.junior@example.com', password: '123', loginMethod: 'password', phone: '(71) 91111-2222', plan: 'Mensal', expires: format(addMonths(new Date(), 1), 'yyyy-MM-dd'), cpf: "777.888.999-00", rg: "78.901.234-5", dob: '2010-08-15', address: defaultAddress, professor: 'Marcos Rocha', attendanceStatus: 'Presente', workoutStatus: 'Pendente', goal: 'Iniciação Esportiva', notes: '', accessPin: '7788', fingerprintRegistered: false, guardian: { name: 'Pedro Pai', cpf: '123.456.789-00', phone: '(71) 93333-4444' } },
 ];
 let nextId = members.length + 1;
 // -------------------------

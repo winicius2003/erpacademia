@@ -221,7 +221,7 @@ export default function FinancialPage() {
             setPaymentAction({ studentId, studentName, planName, planPrice });
             router.replace('/dashboard/financial', { scroll: false });
         }
-    }, []); 
+    }, [searchParams, router]); 
 
      React.useEffect(() => {
         if (paymentAction && members.length > 0) {

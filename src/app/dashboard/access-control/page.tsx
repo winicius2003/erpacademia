@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Eye, MoreHorizontal, PlusCircle, Trash2, Loader2, WalletCards, ShieldCheck, FileText, UserCog, Check, XIcon, UserCircle, Briefcase, KeyRound } from "lucide-react"
+import { Eye, MoreHorizontal, PlusCircle, Trash2, Loader2, WalletCards, ShieldCheck, FileText, UserCog, Check, XIcon, UserCircle, Briefcase, KeyRound, MapPin } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -58,7 +58,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { getEmployees, addEmployee, updateEmployee, deleteEmployee, type Employee, type Role } from "@/services/employees"
+import { getEmployees, addEmployee, updateEmployee, deleteEmployee, type Employee, type Role, type Address } from "@/services/employees"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 
@@ -74,12 +74,14 @@ export const rolePermissions: Record<Role, string[]> = {
   Estagiário: ["Alunos", "Agenda", "Treinos"],
 }
 
+const initialAddress: Address = { zipCode: "", street: "", number: "", neighborhood: "", city: "", state: "" };
+
 const initialEmployeeFormState = {
   id: "",
   name: "",
   email: "",
   phone: "",
-  address: "",
+  address: initialAddress,
   login: "",
   password: "",
   role: "Professor" as Role,
@@ -190,6 +192,37 @@ export default function AccessControlPage() {
     setEmployeeFormData(prev => ({ ...prev, [field]: value }))
   }
 
+   const handleAddressChange = (field: keyof Address, value: string) => {
+    setEmployeeFormData(prev => ({
+        ...prev,
+        address: {
+            ...prev.address,
+            [field]: value
+        }
+    }));
+  }
+
+  const handleCepBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const cep = e.target.value.replace(/\D/g, '');
+    if (cep.length !== 8) return;
+
+    try {
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await response.json();
+        if (data.erro) {
+            toast({ title: "CEP não encontrado", variant: "destructive" });
+            return;
+        }
+        handleAddressChange('street', data.logradouro);
+        handleAddressChange('neighborhood', data.bairro);
+        handleAddressChange('city', data.localidade);
+        handleAddressChange('state', data.uf);
+    } catch (error) {
+        toast({ title: "Erro ao buscar CEP", variant: "destructive" });
+    }
+  };
+
+
    const handleUniversityInfoChange = (field: keyof typeof initialEmployeeFormState.universityInfo, value: string) => {
     setEmployeeFormData(prev => ({
       ...prev,
@@ -213,7 +246,7 @@ export default function AccessControlPage() {
       name: employee.name,
       email: employee.email,
       phone: employee.phone || "",
-      address: employee.address || "",
+      address: employee.address || initialAddress,
       login: employee.login,
       password: '', // Clear password field for editing
       role: employee.role,
@@ -459,8 +492,9 @@ export default function AccessControlPage() {
         </DialogHeader>
         <form id="employee-form" onSubmit={handleSaveEmployee}>
             <Tabs defaultValue="personal" className="max-h-[70vh] flex flex-col">
-                <TabsList className="grid w-full grid-cols-3 shrink-0">
+                <TabsList className="grid w-full grid-cols-4 shrink-0">
                     <TabsTrigger value="personal"><UserCircle className="mr-2" /> Dados Pessoais</TabsTrigger>
+                    <TabsTrigger value="address"><MapPin className="mr-2" /> Endereço</TabsTrigger>
                     <TabsTrigger value="professional"><Briefcase className="mr-2"/> Dados Profissionais</TabsTrigger>
                     <TabsTrigger value="access"><KeyRound className="mr-2"/> Acesso</TabsTrigger>
                 </TabsList>
@@ -470,9 +504,15 @@ export default function AccessControlPage() {
                             <Label htmlFor="name">Nome Completo</Label>
                             <Input id="name" value={employeeFormData.name} onChange={(e) => handleInputChange('name', e.target.value)} placeholder="Nome completo" />
                         </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="email">E-mail</Label>
-                            <Input id="email" type="email" value={employeeFormData.email} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="email@exemplo.com" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           <div className="grid gap-2">
+                                <Label htmlFor="email">E-mail</Label>
+                                <Input id="email" type="email" value={employeeFormData.email} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="email@exemplo.com" />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="phone">Telefone de Contato</Label>
+                                <Input id="phone" value={employeeFormData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} placeholder="(99) 99999-9999" />
+                            </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="grid gap-2">
@@ -488,14 +528,36 @@ export default function AccessControlPage() {
                                 <Input id="rgIssuer" value={employeeFormData.rgIssuer} onChange={(e) => handleInputChange('rgIssuer', e.target.value)} placeholder="SSP/SP" />
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                    </TabsContent>
+                    <TabsContent value="address" className="mt-0 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="phone">Telefone de Contato</Label>
-                                <Input id="phone" value={employeeFormData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} placeholder="(99) 99999-9999" />
+                                <Label htmlFor="zipCode">CEP</Label>
+                                <Input id="zipCode" value={employeeFormData.address.zipCode} onChange={(e) => handleAddressChange('zipCode', e.target.value)} onBlur={handleCepBlur} placeholder="00000-000" />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid gap-2 col-span-2">
+                                <Label htmlFor="street">Logradouro</Label>
+                                <Input id="street" value={employeeFormData.address.street} onChange={(e) => handleAddressChange('street', e.target.value)} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="address">Endereço</Label>
-                                <Input id="address" value={employeeFormData.address} onChange={(e) => handleInputChange('address', e.target.value)} placeholder="Rua, Nº, Bairro" />
+                                <Label htmlFor="number">Número</Label>
+                                <Input id="number" value={employeeFormData.address.number} onChange={(e) => handleAddressChange('number', e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="neighborhood">Bairro</Label>
+                                <Input id="neighborhood" value={employeeFormData.address.neighborhood} onChange={(e) => handleAddressChange('neighborhood', e.target.value)} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="city">Cidade</Label>
+                                <Input id="city" value={employeeFormData.address.city} onChange={(e) => handleAddressChange('city', e.target.value)} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="state">Estado</Label>
+                                <Input id="state" value={employeeFormData.address.state} onChange={(e) => handleAddressChange('state', e.target.value)} />
                             </div>
                         </div>
                     </TabsContent>

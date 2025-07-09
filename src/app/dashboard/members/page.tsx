@@ -3,7 +3,7 @@
 
 import * as React from "react"
 import { format, addMonths, parseISO, parse, differenceInYears } from "date-fns"
-import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Loader2, Search, Fingerprint, Upload, Copy, KeyRound, RefreshCw, Shield } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Loader2, Search, Fingerprint, Upload, Copy, KeyRound, RefreshCw, Shield, MapPin } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Papa from "papaparse"
 import * as XLSX from "xlsx"
@@ -79,7 +79,9 @@ import { getMembers, addMember, updateMember, deleteMember, type Member } from "
 import { useSubscription } from "@/lib/subscription-context"
 import { getPlans, type Plan } from "@/services/plans"
 import { Separator } from "@/components/ui/separator"
+import type { Address } from "@/services/employees"
 
+const initialAddress: Address = { zipCode: "", street: "", number: "", neighborhood: "", city: "", state: "" };
 
 const initialMemberFormState = {
   id: "",
@@ -89,6 +91,7 @@ const initialMemberFormState = {
   dob: undefined as Date | undefined,
   cpf: "",
   rg: "",
+  address: initialAddress,
   plan: "Mensal",
   expires: new Date() as Date | undefined,
   guardian: {
@@ -187,6 +190,36 @@ export default function MembersPage() {
     setMemberFormData(prev => ({ ...prev, [field]: value }))
   }
 
+  const handleAddressChange = (field: keyof Address, value: string) => {
+    setMemberFormData(prev => ({
+        ...prev,
+        address: {
+            ...prev.address,
+            [field]: value
+        }
+    }));
+  }
+
+  const handleCepBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const cep = e.target.value.replace(/\D/g, '');
+    if (cep.length !== 8) return;
+
+    try {
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await response.json();
+        if (data.erro) {
+            toast({ title: "CEP não encontrado", variant: "destructive" });
+            return;
+        }
+        handleAddressChange('street', data.logradouro);
+        handleAddressChange('neighborhood', data.bairro);
+        handleAddressChange('city', data.localidade);
+        handleAddressChange('state', data.uf);
+    } catch (error) {
+        toast({ title: "Erro ao buscar CEP", variant: "destructive" });
+    }
+  };
+
   const handleNestedChange = (category: 'address' | 'guardian', field: string, value: string) => {
     setMemberFormData(prev => ({
       ...prev,
@@ -217,6 +250,7 @@ export default function MembersPage() {
       cpf: member.cpf,
       rg: member.rg,
       dob: dobDate,
+      address: member.address || initialAddress,
       plan: member.plan,
       expires: expiresDate,
       goal: member.goal || "",
@@ -245,6 +279,7 @@ export default function MembersPage() {
             cpf: memberFormData.cpf,
             rg: memberFormData.rg,
             dob: format(memberFormData.dob, "yyyy-MM-dd"),
+            address: memberFormData.address,
             plan: memberFormData.plan,
             expires: format(memberFormData.expires, "yyyy-MM-dd"),
             goal: memberFormData.goal,
@@ -258,6 +293,8 @@ export default function MembersPage() {
         if (isEditing) {
             await updateMember(memberFormData.id, payload);
             toast({ title: "Aluno Atualizado", description: "Os dados do aluno foram atualizados com sucesso." });
+            fetchData();
+            setIsFormDialogOpen(false);
         } else {
             const addPayload = {
                 ...payload,
@@ -267,15 +304,16 @@ export default function MembersPage() {
                 workoutStatus: "Pendente" as const,
                 fingerprintRegistered: false,
             };
-            const newMember = await addMember(addPayload);
-            toast({ title: "Aluno Adicionado", description: "Credenciais de acesso foram geradas." });
-            if (newMember.password) {
-                setNewCredentials({ email: newMember.email, password: newMember.password });
-                setIsCredentialsDialogOpen(true);
-            }
+            const newMember = await addMember(addPayload as Omit<Member, 'id'>);
+            
+            const planDetails = plans.find(p => p.name === newMember.plan);
+            const planPrice = planDetails ? planDetails.price : 0;
+            
+            toast({ title: "Aluno Adicionado", description: "Redirecionando para o pagamento inicial..." });
+            
+            setIsFormDialogOpen(false);
+            router.push(`/dashboard/financial?action=new_payment&studentId=${newMember.id}&studentName=${encodeURIComponent(newMember.name)}&planName=${encodeURIComponent(newMember.plan)}&planPrice=${planPrice}`);
         }
-        fetchData();
-        setIsFormDialogOpen(false);
     } catch (error) {
         toast({ title: "Erro", description: `Não foi possível salvar o aluno.`, variant: "destructive" });
     } finally {
@@ -488,6 +526,7 @@ export default function MembersPage() {
                     phone: memberData.phone || '',
                     cpf: memberData.cpf || '',
                     rg: memberData.rg || '',
+                    address: initialAddress,
                     dob: memberData.dob || format(new Date(1990, 0, 1), 'yyyy-MM-dd'),
                     plan: memberData.plan || 'Mensal',
                     expires: memberData.expires || format(addMonths(new Date(), 1), 'yyyy-MM-dd'),
@@ -574,10 +613,10 @@ export default function MembersPage() {
                         <Tabs defaultValue="personal-data" className="max-h-[75vh] overflow-hidden flex flex-col">
                           <TabsList className="grid w-full grid-cols-5">
                               <TabsTrigger value="personal-data">Dados Pessoais</TabsTrigger>
+                              <TabsTrigger value="address-data"><MapPin className="mr-2" /> Endereço</TabsTrigger>
                               <TabsTrigger value="guardian">Responsável</TabsTrigger>
                               <TabsTrigger value="health">Saúde</TabsTrigger>
                               <TabsTrigger value="access">Acesso</TabsTrigger>
-                              <TabsTrigger value="emergency">Emergência</TabsTrigger>
                           </TabsList>
                           <div className="flex-1 overflow-y-auto pt-4 px-1">
                           <TabsContent value="personal-data" className="py-4 mt-0">
@@ -661,6 +700,38 @@ export default function MembersPage() {
                                     <Label htmlFor="notes">Observações / Anamnese</Label>
                                     <Textarea id="notes" value={memberFormData.notes} onChange={(e) => handleInputChange('notes', e.target.value)} placeholder="Lesões pré-existentes, medicamentos, etc." />
                                 </div>
+                          </TabsContent>
+                          <TabsContent value="address-data" className="py-4 mt-0 space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="zipCode">CEP</Label>
+                                    <Input id="zipCode" value={memberFormData.address.zipCode} onChange={(e) => handleAddressChange('zipCode', e.target.value)} onBlur={handleCepBlur} placeholder="00000-000" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid gap-2 col-span-2">
+                                    <Label htmlFor="street">Logradouro</Label>
+                                    <Input id="street" value={memberFormData.address.street} onChange={(e) => handleAddressChange('street', e.target.value)} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="number">Número</Label>
+                                    <Input id="number" value={memberFormData.address.number} onChange={(e) => handleAddressChange('number', e.target.value)} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="neighborhood">Bairro</Label>
+                                    <Input id="neighborhood" value={memberFormData.address.neighborhood} onChange={(e) => handleAddressChange('neighborhood', e.target.value)} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="city">Cidade</Label>
+                                    <Input id="city" value={memberFormData.address.city} onChange={(e) => handleAddressChange('city', e.target.value)} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="state">Estado</Label>
+                                    <Input id="state" value={memberFormData.address.state} onChange={(e) => handleAddressChange('state', e.target.value)} />
+                                </div>
+                            </div>
                           </TabsContent>
                            <TabsContent value="guardian" className="py-4 mt-0">
                                 {isUnderage ? (
@@ -746,18 +817,6 @@ export default function MembersPage() {
                                     </div>
                                 </div>
                             </TabsContent>
-                          <TabsContent value="emergency" className="py-4 mt-0">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="grid gap-2">
-                                      <Label htmlFor="emergency-name">Nome do Contato</Label>
-                                      <Input id="emergency-name" value={memberFormData.guardian.name} onChange={(e) => handleNestedChange('guardian', 'name', e.target.value)} placeholder="Nome completo" />
-                                  </div>
-                                  <div className="grid gap-2">
-                                      <Label htmlFor="emergency-phone">Telefone do Contato</Label>
-                                      <Input id="emergency-phone" value={memberFormData.guardian.phone} onChange={(e) => handleNestedChange('guardian', 'phone', e.target.value)} placeholder="(99) 99999-9999" />
-                                  </div>
-                              </div>
-                          </TabsContent>
                           </div>
                         </Tabs>
                       </form>
@@ -765,7 +824,7 @@ export default function MembersPage() {
                         <Button type="button" variant="ghost" onClick={() => setIsFormDialogOpen(false)}>Cancelar</Button>
                         <Button type="submit" form="add-member-form" disabled={isLoading}>
                             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            {isEditing ? 'Salvar Alterações' : 'Salvar Aluno'}
+                            {isEditing ? 'Salvar Alterações' : 'Salvar e Pagar'}
                         </Button>
                       </DialogFooter>
                     </DialogContent>

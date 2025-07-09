@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { format, parseISO } from "date-fns"
-import { ArrowLeft, Dumbbell, Receipt, HeartPulse, Loader2, Shield, FileText } from "lucide-react"
+import { ArrowLeft, Dumbbell, Receipt, HeartPulse, Loader2, Shield, FileText, MapPin } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -143,6 +143,10 @@ export default function MemberProfilePage() {
                              <div className="flex justify-between">
                                 <span className="text-muted-foreground">CPF:</span>
                                 <span className="font-medium">{member.cpf}</span>
+                            </div>
+                            <div className="flex justify-between items-start gap-2">
+                                <span className="text-muted-foreground flex-shrink-0"><MapPin className="inline h-4 w-4 mr-1" /> Endereço:</span>
+                                <span className="font-medium text-right">{`${member.address.street}, ${member.address.number} - ${member.address.neighborhood}`}</span>
                             </div>
                         </CardContent>
                     </Card>
