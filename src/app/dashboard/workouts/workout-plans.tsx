@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useFieldArray, useForm, type SubmitHandler, type UseFormReturn, type Control, type ControllerRenderProps } from "react-hook-form"
 import { z } from "zod"
@@ -55,6 +56,7 @@ const exerciseSchema = z.object({
   sets: z.string().min(1, "Séries são obrigatórias."),
   reps: z.string().min(1, "Repetições são obrigatórias."),
   rest: z.string().min(1, "Descanso é obrigatório."),
+  imageUrl: z.string().optional(),
 });
 
 const workoutDaySchema = z.object({
@@ -119,7 +121,7 @@ export function WorkoutPlans() {
       name: "",
       goal: "Hipertrofia",
       level: "Iniciante",
-      workouts: [{ name: "Treino A", exercises: [{ name: "", sets: "", reps: "", rest: "" }] }],
+      workouts: [{ name: "Treino A", exercises: [{ name: "", sets: "", reps: "", rest: "", imageUrl: "" }] }],
     });
     setIsDialogOpen(true);
   };
@@ -199,27 +201,35 @@ export function WorkoutPlans() {
                       <div key={day.id}>
                         {index > 0 && <Separator className="my-4" />}
                         <h4 className="font-semibold text-md mb-2">{day.name}</h4>
-                        <div className="overflow-x-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Exercício</TableHead>
-                                        <TableHead className="text-center">Séries</TableHead>
-                                        <TableHead className="text-center">Reps</TableHead>
-                                        <TableHead className="text-center">Descanso</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {day.exercises.map(ex => (
-                                        <TableRow key={ex.id}>
-                                            <TableCell className="font-medium">{ex.name}</TableCell>
-                                            <TableCell className="text-center">{ex.sets}</TableCell>
-                                            <TableCell className="text-center">{ex.reps}</TableCell>
-                                            <TableCell className="text-center">{ex.rest}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                        <div className="space-y-3 rounded-md border p-2">
+                          {day.exercises.map(ex => (
+                            <div key={ex.id} className="flex items-center gap-4 p-2 rounded-lg hover:bg-muted/50">
+                              <div className="relative w-24 h-16 flex-shrink-0">
+                                <Image
+                                  src={ex.imageUrl || `https://placehold.co/400x300.png`}
+                                  alt={ex.name}
+                                  fill
+                                  className="rounded-md object-cover"
+                                  data-ai-hint={ex.name.split(' ').slice(0, 2).join(' ').toLowerCase()}
+                                />
+                              </div>
+                              <div className="flex-1 font-medium">{ex.name}</div>
+                              <div className="flex gap-6 text-center text-sm">
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Séries</p>
+                                  <p className="font-bold">{ex.sets}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Reps</p>
+                                  <p className="font-bold">{ex.reps}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Descanso</p>
+                                  <p className="font-bold">{ex.rest}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>  
                     ))}
@@ -300,7 +310,7 @@ export function WorkoutPlans() {
                     />
                   ))}
                 </div>
-                <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => appendWorkout({ name: `Treino ${String.fromCharCode(65 + workoutFields.length)}`, exercises: [{ name: "", sets: "3", reps: "10-12", rest: "60s" }] })}>
+                <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => appendWorkout({ name: `Treino ${String.fromCharCode(65 + workoutFields.length)}`, exercises: [{ name: "", sets: "3", reps: "10-12", rest: "60s", imageUrl: "" }] })}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Dia de Treino
                 </Button>
               </div>
@@ -400,7 +410,7 @@ function WorkoutDayField({
             ))}
           </div>
         </div>
-        <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ name: "", sets: "3", reps: "10-12", rest: "60s" })}>
+        <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ name: "", sets: "3", reps: "10-12", rest: "60s", imageUrl: "" })}>
           <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Exercício
         </Button>
       </CardContent>
@@ -454,20 +464,20 @@ function ExerciseCombobox({
               <CommandGroup key={group.group} heading={group.group}>
                 {group.exercises.map((exercise) => (
                   <CommandItem
-                    value={exercise}
-                    key={exercise}
+                    value={exercise.name}
+                    key={exercise.name}
                     onSelect={() => {
-                      field.onChange(exercise);
+                      field.onChange(exercise.name);
                       setOpen(false);
                     }}
                   >
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        exercise === field.value ? "opacity-100" : "opacity-0"
+                        exercise.name === field.value ? "opacity-100" : "opacity-0"
                       )}
                     />
-                    {exercise}
+                    {exercise.name}
                   </CommandItem>
                 ))}
               </CommandGroup>
