@@ -21,6 +21,7 @@ export type Employee = {
     rgIssuer?: string;
     cref?: string;
     accessPin?: string;
+    permissions?: string[];
     universityInfo?: {
       universityName: string;
       course: string;

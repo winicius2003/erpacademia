@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Eye, MoreHorizontal, PlusCircle, Trash2, Loader2, WalletCards, ShieldCheck, FileText } from "lucide-react"
+import { Eye, MoreHorizontal, PlusCircle, Trash2, Loader2, WalletCards, ShieldCheck, FileText, UserCog, Check } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -10,6 +10,7 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
+  CardFooter,
   CardTitle,
 } from "@/components/ui/card"
 import {
@@ -53,6 +54,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
@@ -60,11 +62,11 @@ import { getEmployees, addEmployee, updateEmployee, deleteEmployee, type Employe
 import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 
-export const allPermissions = ["Painel", "Alunos", "Treinos", "Agenda", "Financeiro (Geral)", "Financeiro (Pessoal)", "CRM", "Controle de Acesso", "Relatórios", "Configurações", "Assinatura", "Gympass", "Planos", "Produtos", "Avaliações", "Frequência"]
+export const allPermissions = ["Painel", "Alunos", "Treinos", "Agenda", "Financeiro (Geral)", "Financeiro (Pessoal)", "CRM", "Colaboradores", "Relatórios", "Configurações", "Assinatura", "Gympass", "Planos", "Produtos", "Avaliações", "Frequência"]
 
 export const rolePermissions: Record<Role, string[]> = {
-  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro (Geral)", "CRM", "Controle de Acesso", "Relatórios", "Configurações", "Assinatura", "Gympass", "Planos", "Produtos", "Frequência"],
-  Gerente: ["Painel", "Alunos", "Agenda", "Financeiro (Pessoal)", "CRM", "Controle de Acesso"],
+  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro (Geral)", "CRM", "Colaboradores", "Relatórios", "Configurações", "Assinatura", "Gympass", "Planos", "Produtos", "Frequência"],
+  Gerente: ["Painel", "Alunos", "Agenda", "Financeiro (Pessoal)", "CRM", "Colaboradores"],
   Gestor: ["Painel", "Alunos", "Avaliações", "Agenda", "Financeiro (Geral)", "CRM", "Relatórios", "Planos", "Produtos", "Assinatura", "Gympass", "Frequência"],
   Professor: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda"],
   "Personal Trainer Externo": ["Painel", "Alunos", "Treinos", "Avaliações"],
@@ -88,6 +90,7 @@ const initialEmployeeFormState = {
   rgIssuer: "",
   cref: "",
   accessPin: "",
+  permissions: [],
   universityInfo: {
     universityName: "",
     course: "",
@@ -106,7 +109,7 @@ export default function AccessControlPage() {
   const { toast } = useToast()
   
   const [isEmployeeDialogOpen, setIsEmployeeDialogOpen] = React.useState(false)
-  const [isProfileDialogOpen, setIsProfileDialogOpen] = React.useState(false)
+  const [isPermissionDialogOpen, setIsPermissionDialogOpen] = React.useState(false)
   const [isCreateRoleDialogOpen, setIsCreateRoleDialogOpen] = React.useState(false);
   const [newRoleName, setNewRoleName] = React.useState("");
 
@@ -118,6 +121,9 @@ export default function AccessControlPage() {
 
   const [employeeToPay, setEmployeeToPay] = React.useState<Employee | null>(null);
   const [isPaySalaryAlertOpen, setIsPaySalaryAlertOpen] = React.useState(false);
+
+  const [selectedEmployeeForPermissions, setSelectedEmployeeForPermissions] = React.useState<Employee | null>(null);
+  const [customPermissions, setCustomPermissions] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     const sessionUser = sessionStorage.getItem("fitcore.user");
@@ -146,6 +152,15 @@ export default function AccessControlPage() {
   React.useEffect(() => {
     fetchEmployees();
   }, [fetchEmployees]);
+
+   React.useEffect(() => {
+    if (selectedEmployeeForPermissions) {
+      const initialPerms = selectedEmployeeForPermissions.permissions || rolePermissions[selectedEmployeeForPermissions.role] || [];
+      setCustomPermissions(initialPerms);
+    } else {
+      setCustomPermissions([]);
+    }
+  }, [selectedEmployeeForPermissions]);
 
   const handleRoleChange = async (employeeId: string, newRole: Role) => {
     try {
@@ -209,6 +224,7 @@ export default function AccessControlPage() {
       rgIssuer: employee.rgIssuer || "",
       cref: employee.cref || '',
       accessPin: employee.accessPin || '',
+      permissions: employee.permissions || [],
       universityInfo: employee.universityInfo || initialEmployeeFormState.universityInfo
     });
     setIsEmployeeDialogOpen(true);
@@ -302,6 +318,26 @@ export default function AccessControlPage() {
     setEmployeeToPay(null);
   };
 
+  const handleSaveCustomPermissions = async () => {
+    if (!selectedEmployeeForPermissions) return;
+    // Simulate API call
+    await updateEmployee(selectedEmployeeForPermissions.id, { permissions: customPermissions });
+    toast({
+        title: "Permissões Atualizadas",
+        description: `As permissões de ${selectedEmployeeForPermissions.name} foram salvas.`,
+    });
+    // Refresh local data
+    fetchEmployees();
+  };
+
+  const handleResetToRoleDefaults = () => {
+    if (!selectedEmployeeForPermissions) return;
+    setCustomPermissions(rolePermissions[selectedEmployeeForPermissions.role]);
+     toast({
+        title: "Permissões Restauradas",
+        description: `As permissões foram redefinidas para o padrão da função "${selectedEmployeeForPermissions.role}".`,
+    });
+  }
 
   return (
     <>
@@ -309,13 +345,13 @@ export default function AccessControlPage() {
       <CardHeader>
         <div className="flex items-start justify-between">
             <div>
-                <CardTitle className="font-headline">Controle de Acesso</CardTitle>
+                <CardTitle className="font-headline">Colaboradores</CardTitle>
                 <CardDescription>
-                Gerencie os colaboradores e seus respectivos níveis de acesso.
+                Gerencie os colaboradores e seus perfis de acesso.
                 </CardDescription>
             </div>
              <div className="flex items-center gap-4">
-                <Button variant="outline" onClick={() => setIsProfileDialogOpen(true)}><ShieldCheck className="mr-2 h-4 w-4" />Gerenciar Perfis de Acesso</Button>
+                <Button variant="outline" onClick={() => setIsPermissionDialogOpen(true)}><UserCog className="mr-2 h-4 w-4" />Gerenciar Perfis de Acesso</Button>
                 <Button onClick={handleAddNewClick} disabled={isLoading}><PlusCircle className="mr-2 h-4 w-4" />Adicionar Colaborador</Button>
             </div>
         </div>
@@ -550,46 +586,103 @@ export default function AccessControlPage() {
       </DialogContent>
     </Dialog>
     
-    <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
-        <DialogContent className="sm:max-w-2xl">
+    <Dialog open={isPermissionDialogOpen} onOpenChange={setIsPermissionDialogOpen}>
+        <DialogContent className="sm:max-w-4xl">
             <DialogHeader>
                 <DialogTitle>Gerenciar Perfis de Acesso</DialogTitle>
                 <DialogDescription>
-                    Veja as permissões de cada perfil. A criação de novos perfis e a edição de permissões é uma funcionalidade avançada.
+                    Defina permissões por função ou personalize o acesso para um colaborador específico.
                 </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
-                {Object.entries(rolePermissions).map(([role, permissions]) => (
-                    <Card key={role}>
-                        <CardHeader>
-                            <CardTitle className="text-lg">{role}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            {allPermissions.map(permission => (
-                                <div key={permission} className="flex items-center gap-2">
-                                    <Checkbox 
-                                        id={`${role}-${permission}`}
-                                        checked={permissions.includes(permission)}
-                                        disabled
-                                    />
-                                    <Label htmlFor={`${role}-${permission}`} className="text-sm font-normal">{permission}</Label>
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
-            <DialogFooter>
-                 <Button 
-                    variant="outline" 
-                    onClick={() => {
-                        setNewRoleName("");
-                        setIsCreateRoleDialogOpen(true);
-                    }}
-                 >
-                    <PlusCircle className="mr-2 h-4 w-4" /> Criar Nova Função
-                </Button>
-            </DialogFooter>
+            <Tabs defaultValue="by-role" className="pt-2">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="by-role">Por Função</TabsTrigger>
+                    <TabsTrigger value="by-employee">Por Colaborador</TabsTrigger>
+                </TabsList>
+                <TabsContent value="by-role" className="mt-4 max-h-[60vh] overflow-y-auto">
+                     <div className="space-y-4 py-4">
+                        {Object.entries(rolePermissions).map(([role, permissions]) => (
+                            <Card key={role}>
+                                <CardHeader>
+                                    <CardTitle className="text-lg">{role}</CardTitle>
+                                </CardHeader>
+                                <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    {allPermissions.map(permission => (
+                                        <div key={permission} className="flex items-center gap-2">
+                                            <Checkbox 
+                                                id={`${role}-${permission}`}
+                                                checked={permissions.includes(permission)}
+                                                disabled
+                                            />
+                                            <Label htmlFor={`${role}-${permission}`} className="text-sm font-normal">{permission}</Label>
+                                        </div>
+                                    ))}
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                     <DialogFooter>
+                        <Button 
+                            variant="outline" 
+                            onClick={() => {
+                                setNewRoleName("");
+                                setIsCreateRoleDialogOpen(true);
+                            }}
+                        >
+                            <PlusCircle className="mr-2 h-4 w-4" /> Criar Nova Função
+                        </Button>
+                    </DialogFooter>
+                </TabsContent>
+                <TabsContent value="by-employee" className="mt-4 max-h-[60vh] overflow-y-auto">
+                    <div className="p-1 space-y-4">
+                        <Select onValueChange={(employeeId) => {
+                            const employee = employees.find(e => e.id === employeeId);
+                            setSelectedEmployeeForPermissions(employee || null);
+                        }}>
+                            <SelectTrigger className="w-full md:w-1/2">
+                                <SelectValue placeholder="Selecione um colaborador para personalizar" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {employees.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+
+                        {selectedEmployeeForPermissions && (
+                            <Card className="mt-4">
+                                <CardHeader>
+                                    <CardTitle>Permissões para {selectedEmployeeForPermissions.name}</CardTitle>
+                                    <CardDescription>
+                                        A função base é <Badge variant="secondary">{selectedEmployeeForPermissions.role}</Badge>. 
+                                        As permissões marcadas aqui irão sobrescrever as da função.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    {allPermissions.map(permission => (
+                                        <div key={permission} className="flex items-center gap-2">
+                                            <Checkbox
+                                                id={`perm-${permission}`}
+                                                checked={customPermissions.includes(permission)}
+                                                onCheckedChange={(checked) => {
+                                                    setCustomPermissions(prev => 
+                                                        checked ? [...prev, permission] : prev.filter(p => p !== permission)
+                                                    );
+                                                }}
+                                            />
+                                            <Label htmlFor={`perm-${permission}`} className="font-normal">{permission}</Label>
+                                        </div>
+                                    ))}
+                                </CardContent>
+                                <CardFooter className="gap-2">
+                                    <Button onClick={handleSaveCustomPermissions}>
+                                        <Check className="mr-2 h-4 w-4" /> Salvar Permissões
+                                    </Button>
+                                    <Button variant="ghost" onClick={handleResetToRoleDefaults}>Restaurar Padrão</Button>
+                                </CardFooter>
+                            </Card>
+                        )}
+                    </div>
+                </TabsContent>
+            </Tabs>
         </DialogContent>
     </Dialog>
     
