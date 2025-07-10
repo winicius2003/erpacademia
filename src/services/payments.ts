@@ -1,5 +1,5 @@
 
-'use server';
+"use client";
 
 import { format, addDays, isAfter, parseISO } from 'date-fns';
 import { getMemberById, updateMember } from './members';
@@ -105,10 +105,9 @@ export async function addPayment(paymentData: Omit<Payment, 'id'>): Promise<Paym
                 
                 const newExpiryDate = addDays(startDateForRenewal, maxDuration);
 
-                // Update member's expiry and set status to active
+                // Update member's expiry date. The status will be dynamically recalculated by getMembers.
                 await updateMember(member.id, {
                     expires: format(newExpiryDate, "yyyy-MM-dd"),
-                    status: 'Ativo' 
                 });
             }
         }
