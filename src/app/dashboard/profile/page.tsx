@@ -1,8 +1,9 @@
+
 "use client"
 
 import * as React from "react"
 import { useTheme } from "next-themes"
-import { Loader2, Trash2, PlusCircle, Fingerprint, Network, Palette } from "lucide-react"
+import { Loader2, Trash2, PlusCircle, Fingerprint, Network, Palette, CheckCircle, TestTube2, AlertTriangle } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -34,6 +35,29 @@ export default function SettingsPage() {
     { name: "Unidade Centro", address: "Av. Central, 456 - Centro, Cidade/UF, CEP 12345-000" },
   ])
 
+  const [connectionStatus, setConnectionStatus] = React.useState<'idle' | 'testing' | 'success' | 'failed'>('idle');
+
+  const handleTestConnection = () => {
+    setConnectionStatus('testing');
+    setTimeout(() => {
+        // Simulate a 50/50 chance of success or failure
+        if (Math.random() > 0.5) {
+            setConnectionStatus('success');
+            toast({
+                title: "Conexão Bem-Sucedida!",
+                description: "A comunicação com a catraca foi estabelecida.",
+            });
+        } else {
+            setConnectionStatus('failed');
+             toast({
+                title: "Falha na Conexão",
+                description: "Não foi possível comunicar com a catraca. Verifique o IP e a porta.",
+                variant: 'destructive'
+            });
+        }
+    }, 2000);
+  }
+
   const handleUnitChange = (index: number, field: keyof Unit, value: string) => {
     const newUnits = [...units];
     newUnits[index][field] = value;
@@ -64,13 +88,20 @@ export default function SettingsPage() {
       // In a real app, you'd fetch the full user object from the server
       // For this demo, we'll use the login to get the employee details
       getEmployeeByLogin(parsedUser.login).then(employee => {
-        setUser(employee);
+        if(employee) {
+          setUser(employee);
+          if (employee.theme) {
+            setTheme(employee.theme);
+          }
+        } else {
+           router.push("/login")
+        }
         setIsLoading(false);
       });
     } else {
       router.push("/login")
     }
-  }, [router]);
+  }, [router, setTheme]);
   
   const handleThemeChange = async (checked: boolean) => {
     const newTheme = checked ? 'dark' : 'light';
@@ -240,56 +271,97 @@ export default function SettingsPage() {
 
         {/* Hardware Integration Section */}
         <div className="space-y-4">
-            <h3 className="text-base font-semibold">Integração de Hardware</h3>
+            <h3 className="text-base font-semibold">Configurações da Catraca</h3>
             <CardDescription>
-                Configure a comunicação com sua catraca e leitor biométrico. As senhas e digitais são cadastradas na ficha de cada aluno/funcionário.
+                Catraca Recepção Fit, Topdata (SDK EasyInner Versão 4 - Cartão e Biométrica)
             </CardDescription>
             <Card className="p-4 bg-muted/50">
-                <div className="grid md:grid-cols-2 gap-6">
-                    <div className="grid gap-2">
-                        <Label htmlFor="turnstile-ip" className="flex items-center gap-2"><Network className="h-4 w-4" /> IP da Catraca</Label>
-                        <Input id="turnstile-ip" placeholder="192.168.1.100" />
+                <div className="space-y-6">
+                    <div>
+                        <h4 className="font-medium text-foreground mb-2">Comunicação</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                             <div className="grid gap-2">
+                                <Label htmlFor="turnstile-port">Porta</Label>
+                                <Input id="turnstile-port" type="number" defaultValue="3570" min="0" max="9999" />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="turnstile-inner">Número do Inner</Label>
+                                <Input id="turnstile-inner" type="number" defaultValue="1" min="1" max="9999" />
+                            </div>
+                        </div>
                     </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="turnstile-port">Porta</Label>
-                        <Input id="turnstile-port" placeholder="8000" type="number" />
+                    
+                    <Separator />
+
+                    <div>
+                        <h4 className="font-medium text-foreground mb-2">Acionamento</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                             <div className="grid gap-2">
+                                <Label htmlFor="reader-type">Tipo de Leitor</Label>
+                                <Select defaultValue="card-and-bio">
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="card-and-bio">Cartão e Biométrica</SelectItem>
+                                        <SelectItem value="card-only">Apenas Cartão</SelectItem>
+                                        <SelectItem value="bio-only">Apenas Biométrica</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="card-digits">Dígitos do Cartão</Label>
+                                <Input id="card-digits" type="number" defaultValue="14" min="4" max="14"/>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="release-time">Tempo Liberação (s)</Label>
+                                <Input id="release-time" type="number" defaultValue="5" min="1" max="200" />
+                            </div>
+                        </div>
                     </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="turnstile-password">Senha de Comunicação</Label>
-                        <Input id="turnstile-password" type="password" placeholder="••••••••" />
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="turnstile-model">Modelo da Catraca</Label>
-                        <Select>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione um modelo" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="controlid-idaccess">Control iD iDAccess</SelectItem>
-                                <SelectItem value="topdata-inner">TopData Inner</SelectItem>
-                                <SelectItem value="henry-orion">Henry Orion</SelectItem>
-                                <SelectItem value="outros">Outro (config. manual)</SelectItem>
-                            </SelectContent>
-                        </Select>
+                    
+                    <Separator />
+
+                    <div>
+                         <h4 className="font-medium text-foreground mb-2">Configuração Biométrica</h4>
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                            <div className="flex items-center space-x-2">
+                                <Switch id="use-keyboard" />
+                                <Label htmlFor="use-keyboard">Utilizar Teclado</Label>
+                            </div>
+                             <div className="flex items-center space-x-2">
+                                <Switch id="bio-module" defaultChecked />
+                                <Label htmlFor="bio-module">Módulo Biométrico Ativado</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <Switch id="separate-reader" />
+                                <Label htmlFor="separate-reader">Liberar pelo Leitor de Digitais Avulso</Label>
+                            </div>
+                             <div className="flex items-center space-x-2">
+                                <Switch id="access-digital" defaultChecked/>
+                                <Label htmlFor="access-digital">Acesso Utilizando a Digital</Label>
+                            </div>
+                             <div className="flex items-center space-x-2">
+                                <Switch id="access-card" defaultChecked />
+                                <Label htmlFor="access-card">Acesso Utilizando Teclado ou Cartão</Label>
+                            </div>
+                             <div className="flex items-center space-x-2">
+                                <Switch id="two-readers" />
+                                <Label htmlFor="two-readers">Dois Leitores (Entrada e Saída)</Label>
+                            </div>
+                         </div>
                     </div>
                 </div>
+
                 <Separator className="my-6" />
-                <div className="space-y-4">
-                    <div className="flex items-center space-x-3">
-                         <Switch id="biometrics-enabled" defaultChecked />
-                         <Label htmlFor="biometrics-enabled" className="flex items-center gap-2">
-                            <Fingerprint className="h-4 w-4" />
-                            Leitor Biométrico Ativado
-                         </Label>
-                    </div>
-                    <CardFooter className="p-0 pt-2">
-                        <Button variant="outline">Testar Conexão</Button>
-                    </CardFooter>
-                </div>
+                <CardFooter className="p-0 pt-2 flex items-center justify-between">
+                    <Button variant="outline" onClick={handleTestConnection} disabled={connectionStatus === 'testing'}>
+                        {connectionStatus === 'testing' ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <TestTube2 className="mr-2 h-4 w-4"/>}
+                        {connectionStatus === 'testing' ? 'Testando...' : 'Testar Conexão'}
+                    </Button>
+                    {connectionStatus === 'success' && <span className="text-sm text-green-600 flex items-center gap-2"><CheckCircle className="h-4 w-4" /> Conectado</span>}
+                    {connectionStatus === 'failed' && <span className="text-sm text-destructive flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> Falha na conexão</span>}
+                </CardFooter>
             </Card>
         </div>
-
-
       </CardContent>
       <CardFooter className="border-t px-6 py-4">
         <Button>Salvar Alterações</Button>
@@ -297,3 +369,5 @@ export default function SettingsPage() {
     </Card>
   )
 }
+
+    
