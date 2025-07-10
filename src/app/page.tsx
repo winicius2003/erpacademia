@@ -12,11 +12,6 @@ import {
   Check,
   ArrowRight,
   UsersRound,
-  ArrowRightLeft,
-  Archive,
-  ReceiptText,
-  Printer,
-  Network,
   BarChart,
   HeartHandshake,
 } from "lucide-react"
@@ -70,6 +65,21 @@ const features = [
       description: "Gerencie leads em um funil de vendas e utilize listas automáticas para contatar aniversariantes e alunos ausentes.",
     },
 ];
+
+const checklistFeatures = [
+    "Cadastros Ilimitados",
+    "Acesso por Biometria",
+    "Bloqueio de Alunos",
+    "Controle de Turmas",
+    "Controle de Estoque",
+    "Impressão de Relatórios",
+    "Integração com Mini Impressoras",
+    "Aplicativo para Alunos (PWA)",
+    "Pagamento Recorrente (Stripe)",
+    "Gestão Multi-Unidades",
+    "Armazenamento em Nuvem",
+    "Integração Wellhub e TotalPass (API)",
+]
 
 export default function LandingPage() {
 
@@ -141,6 +151,21 @@ export default function LandingPage() {
                     </motion.div>
                 ))}
             </div>
+
+            <Separator className="my-16" />
+
+             <div className="text-center mb-12">
+                <h3 className="text-2xl font-bold font-headline">E o FitCore vai além, com recursos avançados para escalar seu negócio</h3>
+            </div>
+            <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-muted-foreground">
+                {checklistFeatures.map(item => (
+                    <div key={item} className="flex items-center gap-3">
+                        <Check className="h-5 w-5 text-green-500" />
+                        <span className="font-medium">{item}</span>
+                    </div>
+                ))}
+            </div>
+
         </section>
 
 
@@ -198,7 +223,7 @@ export default function LandingPage() {
             <div>
               <h4 className="font-medium">Contato</h4>
               <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-                <li><a href="mailto:jwinicius.souza@gmail.com" className="hover:text-foreground">jwinicius.souza@gmail.com</a></li>
+                <li><a href="mailto:contato@starcreation.com.br" className="hover:text-foreground">contato@starcreation.com.br</a></li>
                 <li><a href="tel:+5516997972936" className="hover:text-foreground">+55 (16) 99797-2936</a></li>
               </ul>
             </div>
