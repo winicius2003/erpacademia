@@ -490,7 +490,7 @@ export default function LandingPage() {
              <div>
               <h4 className="font-medium">{t.footer.company}</h4>
               <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-                <li><Link href="#" className="hover:text-foreground">{t.footer.about}</Link></li>
+                <li><Link href="/about" className="hover:text-foreground">{t.footer.about}</Link></li>
               </ul>
             </div>
             <div>
