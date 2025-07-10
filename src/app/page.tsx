@@ -158,8 +158,14 @@ const translations = {
     footer: {
       product: "Produto",
       company: "Empresa",
+      contact: "Contato",
       legal: "Legal",
       rights: "Todos os direitos reservados.",
+      phone: "+55 (XX) XXXX-XXXX", // Placeholder, as requested
+      email: "contato@starcreation.com", // Placeholder, as requested
+      about: "Sobre Nós",
+      terms: "Termos de Serviço",
+      privacy: "Política de Privacidade",
     },
   },
   en: {
@@ -296,8 +302,14 @@ const translations = {
     footer: {
       product: "Product",
       company: "Company",
+      contact: "Contact",
       legal: "Legal",
       rights: "All rights reserved.",
+      phone: "+55 (XX) XXXX-XXXX", // Placeholder, as requested
+      email: "contact@starcreation.com", // Placeholder, as requested
+      about: "About Us",
+      terms: "Terms of Service",
+      privacy: "Privacy Policy",
     },
   },
 }
@@ -457,21 +469,42 @@ export default function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t">
-        <div className="container grid items-center gap-8 pb-8 pt-6 md:py-8 md:grid-cols-3">
-          <div className="flex flex-col gap-2">
+      <footer className="border-t bg-muted/50">
+        <div className="container grid items-start gap-8 pb-8 pt-12 md:grid-cols-4">
+          <div className="flex flex-col gap-2 col-span-1">
             <Link href="#" className="flex items-center space-x-2">
               <Logo className="h-6 w-6" />
               <span className="font-bold font-headline">FitCore</span>
             </Link>
-            <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} FitCore. {t.footer.rights}</p>
+            <p className="text-sm text-muted-foreground">© 2025 StarCreation. <br/>{t.footer.rights}</p>
           </div>
-          <div className="grid grid-cols-3 gap-4 col-span-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 col-span-3">
             <div>
               <h4 className="font-medium">{t.footer.product}</h4>
-              <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
+              <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
                 <li><Link href="#features" className="hover:text-foreground">{t.nav.features}</Link></li>
                 <li><Link href="#pricing" className="hover:text-foreground">{t.nav.pricing}</Link></li>
+                 <li><Link href="/demo" className="hover:text-foreground">{t.hero.ctaSecondary}</Link></li>
+              </ul>
+            </div>
+             <div>
+              <h4 className="font-medium">{t.footer.company}</h4>
+              <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
+                <li><Link href="#" className="hover:text-foreground">{t.footer.about}</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium">{t.footer.contact}</h4>
+              <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
+                <li><a href={`mailto:${t.footer.email}`} className="hover:text-foreground">{t.footer.email}</a></li>
+                <li><a href={`tel:${t.footer.phone.replace(/\D/g, '')}`} className="hover:text-foreground">{t.footer.phone}</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium">{t.footer.legal}</h4>
+              <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
+                 <li><Link href="#" className="hover:text-foreground">{t.footer.terms}</Link></li>
+                 <li><Link href="#" className="hover:text-foreground">{t.footer.privacy}</Link></li>
               </ul>
             </div>
           </div>
