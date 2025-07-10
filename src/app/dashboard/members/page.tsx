@@ -3,7 +3,7 @@
 
 import * as React from "react"
 import { format, addMonths, parseISO, parse, differenceInYears } from "date-fns"
-import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Loader2, Search, Fingerprint, Upload, Copy, KeyRound, RefreshCw, Shield, MapPin } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Loader2, Search, Fingerprint, Upload, Copy, KeyRound, RefreshCw, Shield, MapPin, BadgeCheck } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Papa from "papaparse"
 import * as XLSX from "xlsx"
@@ -34,6 +34,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -79,7 +80,7 @@ import { getMembers, addMember, updateMember, deleteMember, type Member } from "
 import { useSubscription } from "@/lib/subscription-context"
 import { getPlans, type Plan } from "@/services/plans"
 import { Separator } from "@/components/ui/separator"
-import type { Address } from "@/services/employees"
+import type { Address, Role } from "@/services/employees"
 
 const initialAddress: Address = { zipCode: "", street: "", number: "", neighborhood: "", city: "", state: "" };
 
@@ -123,7 +124,7 @@ export default function MembersPage() {
   const [memberFormData, setMemberFormData] = React.useState<MemberFormData>(initialMemberFormState)
   const [memberToDelete, setMemberToDelete] = React.useState<Member | null>(null)
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false)
-  const [user, setUser] = React.useState<{ name: string; role: string } | null>(null);
+  const [user, setUser] = React.useState<{ name: string; role: Role } | null>(null);
 
   const [isImportDialogOpen, setIsImportDialogOpen] = React.useState(false)
   const [importFile, setImportFile] = React.useState<File | null>(null);
@@ -1025,12 +1026,14 @@ function MemberTable({
   onViewPayments
 }: { 
   data: Member[],
-  userRole: string,
+  userRole: Role,
   onEdit: (member: Member) => void,
   onDelete: (member: Member) => void,
   onViewProfile: (member: Member) => void,
   onViewPayments: (member: Member) => void
 }) {
+    const canManagePayments = userRole === 'Admin' || userRole === 'Gestor' || userRole === 'Recepção';
+
     return (
         <Table>
             <TableHeader>
@@ -1075,6 +1078,15 @@ function MemberTable({
                         {userRole !== 'Professor' && (
                           <DropdownMenuItem onSelect={() => onViewPayments(member)}>Ver Pagamentos</DropdownMenuItem>
                         )}
+                        {canManagePayments && (member.status === 'Inativo' || member.status === 'Atrasado') && (
+                            <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onSelect={() => onViewPayments(member)} className="text-green-600 focus:text-green-700 focus:bg-green-100 dark:text-green-400 dark:focus:bg-green-900/50 dark:focus:text-green-300">
+                                    <BadgeCheck className="mr-2 h-4 w-4" /> Renovar / Pagar
+                                </DropdownMenuItem>
+                            </>
+                        )}
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onSelect={() => onDelete(member)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">Excluir</DropdownMenuItem>
                     </DropdownMenuContent>
                     </DropdownMenu>
