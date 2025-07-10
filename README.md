@@ -1,3 +1,4 @@
+
 # FitCore - Sistema de Gestão para Academias
 
 FitCore é um sistema SaaS (Software as a Service) completo, projetado para simplificar e automatizar a gestão de academias, estúdios e centros de fitness.
@@ -239,3 +240,4 @@ Este método garante que você possa experimentar, fazer alterações e, se nece
 -   **Professor:** `marcos` / senha: `123`
 -   **Recepção:** `juliana` / senha: `123`
 -   **Aluno:** `joao.silva@example.com` / senha: `123`
+-   **Impressão:** `treino` / senha: `123`
