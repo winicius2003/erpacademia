@@ -71,11 +71,13 @@ const features = [
 ];
 
 const checklistFeatures = [
-    "Cadastros Ilimitados",
+    "Gestão de Funcionários e Permissões",
+    "Controle de Caixa e Ponto de Venda",
+    "Gestão de Estoque",
+    "Emissão de Recibos e Faturas",
     "Acesso por Biometria",
-    "Bloqueio de Alunos",
-    "Controle de Turmas",
-    "Controle de Estoque",
+    "Bloqueio Automático de Inadimplentes",
+    "Controle de Turmas e Agenda",
     "Impressão de Relatórios",
     "Integração com Mini Impressoras",
     "Aplicativo para Alunos (PWA)",
@@ -181,7 +183,7 @@ export default function LandingPage() {
             <Card className="shadow-2xl border-primary ring-2 ring-primary/50">
                  <CardHeader className="text-center p-8 bg-primary/5">
                   <CardTitle className="text-3xl font-headline">Plano Completo e Sem Limites</CardTitle>
-                  <CardDescription>Acesso total a todas as funcionalidades, sem surpresas ou taxas escondidas.</CardDescription>
+                  <CardDescription>Acesso total a todas as funcionalidades, sem pegadinhas ou taxas escondidas.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-8">
                     <div className="text-center mb-8">
@@ -189,6 +191,10 @@ export default function LandingPage() {
                         <p className="text-5xl font-extrabold">R$ 59<span className="text-2xl font-semibold text-muted-foreground">,99</span><span className="text-xl font-normal text-muted-foreground">/mês</span></p>
                         <p className="text-muted-foreground text-sm">Durante os 3 primeiros meses.</p>
                         <p className="mt-4 font-semibold">Após o período, o valor é de R$ 450,00/mês.</p>
+                        <div className="mt-4 flex justify-center items-center gap-2 font-medium text-green-600">
+                            <Check className="h-5 w-5" />
+                            <span>Alunos ilimitados</span>
+                        </div>
                     </div>
                 </CardContent>
                 <CardFooter className="p-8 pt-0 flex-col">
