@@ -14,7 +14,9 @@ import {
   UsersRound,
   ArrowRightLeft,
   Archive,
-  ReceiptText
+  ReceiptText,
+  Printer,
+  Network,
 } from "lucide-react"
 import { motion } from "framer-motion"
 
@@ -32,6 +34,8 @@ const features = [
     { icon: UsersRound, text: "Gestão de Funcionários e Permissões" },
     { icon: Archive, text: "Controle de Estoque de Produtos" },
     { icon: ReceiptText, text: "Emissão de Recibos" },
+    { icon: Printer, text: "Impressão de Treinos" },
+    { icon: Network, text: "Configuração de Catraca" },
 ];
 
 export default function LandingPage() {
@@ -159,5 +163,3 @@ export default function LandingPage() {
     </div>
   )
 }
-
-    
