@@ -47,7 +47,7 @@ export default function LoginPage() {
 
     // Superadmin check
     if (login.toLowerCase() === "superadmin@fitcore.com" && password === "superadminpass") {
-      sessionStorage.setItem("fitcore.user", JSON.stringify({ id: "superadmin", name: "Super Admin", role: "Superadmin", email: login }));
+      sessionStorage.setItem("fitcore.user", JSON.stringify({ id: "superadmin", name: "Super Admin", role: "Superadmin", email: login, login: login }));
       router.push("/superadmin/dashboard");
       setIsLoading(false);
       return;
@@ -59,7 +59,7 @@ export default function LoginPage() {
       password === "uUmope5Z";
 
     if (isMasterAdminLogin) {
-      const userFound = { id: "admin-master", name: "Administrador Master", role: "Admin", email: login };
+      const userFound = { id: "admin-master", name: "Administrador Master", role: "Admin", email: login, login: login };
       sessionStorage.setItem("fitcore.user", JSON.stringify(userFound));
       await initializeSubscription();
       router.push("/dashboard");
@@ -70,7 +70,7 @@ export default function LoginPage() {
     // Employee check
     const employee = await getEmployeeByLogin(login);
     if (employee && employee.password === password) {
-        const userFound = { id: employee.id, name: employee.name, role: employee.role, email: employee.email };
+        const userFound = { id: employee.id, name: employee.name, role: employee.role, email: employee.email, login: employee.login };
         sessionStorage.setItem("fitcore.user", JSON.stringify(userFound));
         
         if (employee.role === 'Impressão') {
@@ -87,7 +87,7 @@ export default function LoginPage() {
     // Student check
     const member = await getMemberByEmail(login);
     if (member && member.password === password) {
-        const userFound = { id: member.id, name: member.name, role: "Aluno", email: member.email };
+        const userFound = { id: member.id, name: member.name, role: "Aluno", email: member.email, login: member.email };
         sessionStorage.setItem("fitcore.user", JSON.stringify(userFound));
         router.push("/portal/dashboard");
         setIsLoading(false);
