@@ -17,25 +17,58 @@ import {
   ReceiptText,
   Printer,
   Network,
+  BarChart,
+  HeartHandshake,
 } from "lucide-react"
 import { motion } from "framer-motion"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Logo } from "@/components/logo"
+import { Separator } from "@/components/ui/separator"
+
 
 const features = [
-    { icon: Users, text: "Gestão Completa de Alunos" },
-    { icon: Wallet, text: "Financeiro com Ponto de Venda" },
-    { icon: ArrowRightLeft, text: "Controle de Fluxo de Caixa" },
-    { icon: Fingerprint, text: "Controle de Acesso por Biometria" },
-    { icon: Dumbbell, text: "Criação de Planos de Treino" },
-    { icon: HeartPulse, text: "Avaliações Físicas Detalhadas" },
-    { icon: UsersRound, text: "Gestão de Funcionários e Permissões" },
-    { icon: Archive, text: "Controle de Estoque de Produtos" },
-    { icon: ReceiptText, text: "Emissão de Recibos" },
-    { icon: Printer, text: "Impressão de Treinos" },
-    { icon: Network, text: "Configuração de Catraca" },
+    {
+      icon: Users,
+      title: "Ficha de Aluno 360°",
+      description: "Visualize tudo sobre seu aluno em um só lugar: pagamentos, treinos, avaliações e contato. Uma visão completa para um serviço personalizado.",
+    },
+    {
+      icon: Wallet,
+      title: "Ponto de Venda (PDV) Inteligente",
+      description: "Venda planos e produtos com agilidade. Nosso PDV simplifica o registro de pagamentos e organiza seu caixa automaticamente.",
+    },
+     {
+      icon: Fingerprint,
+      title: "Controle de Acesso Automatizado",
+      description: "Integração total com catracas e biometria para bloquear inadimplentes e garantir a segurança, sem intervenção manual.",
+    },
+    {
+      icon: Dumbbell,
+      title: "Criação de Treinos Profissionais",
+      description: "Monte planos de treino detalhados, com acesso a um banco de exercícios com imagens, e imprima fichas para seus alunos.",
+    },
+    {
+      icon: HeartPulse,
+      title: "Avaliação Física Detalhada",
+      description: "Registre medidas, calcule o IMC e monitore a evolução corporal dos seus alunos com gráficos e relatórios visuais.",
+    },
+     {
+      icon: UsersRound,
+      title: "Gestão de Equipe e Permissões",
+      description: "Cadastre funcionários, defina cargos e controle o que cada um pode acessar no sistema, do gestor à recepção.",
+    },
+     {
+      icon: BarChart,
+      title: "Dashboard com Métricas Reais",
+      description: "Tome decisões baseadas em dados. Acompanhe alunos ativos, inadimplência e o crescimento do seu negócio em tempo real.",
+    },
+    {
+      icon: HeartHandshake,
+      title: "CRM para Relacionamento",
+      description: "Gerencie leads em um funil de vendas e utilize listas automáticas para contatar aniversariantes e alunos ausentes.",
+    },
 ];
 
 export default function LandingPage() {
@@ -80,13 +113,44 @@ export default function LandingPage() {
             </div>
         </section>
 
+        {/* Features Section */}
+        <section className="container pb-20 md:pb-24">
+            <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold font-headline">Tudo que você precisa, em um só lugar</h2>
+                <p className="text-muted-foreground md:text-lg mt-2">Transforme o caos da gestão em simplicidade e eficiência.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {features.map((feature, index) => (
+                    <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                    >
+                        <Card className="h-full flex flex-col text-center items-center">
+                            <CardHeader>
+                                <div className="bg-primary/10 p-3 rounded-full mx-auto">
+                                    <feature.icon className="h-6 w-6 text-primary" />
+                                </div>
+                            </CardHeader>
+                            <CardContent className="flex-1">
+                                <CardTitle className="text-xl font-semibold mb-2">{feature.title}</CardTitle>
+                                <CardDescription>{feature.description}</CardDescription>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+                ))}
+            </div>
+        </section>
+
+
         {/* Pricing Section */}
         <section id="pricing" className="container pb-20 md:pb-24">
           <div className="mx-auto max-w-3xl">
             <Card className="shadow-2xl border-primary ring-2 ring-primary/50">
                  <CardHeader className="text-center p-8 bg-primary/5">
-                  <CardTitle className="text-3xl font-headline">Plano Completo FitCore</CardTitle>
-                  <CardDescription>Acesso total a todas as funcionalidades, sem surpresas.</CardDescription>
+                  <CardTitle className="text-3xl font-headline">Plano Completo e Sem Limites</CardTitle>
+                  <CardDescription>Acesso total a todas as funcionalidades, sem surpresas ou taxas escondidas.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-8">
                     <div className="text-center mb-8">
@@ -94,18 +158,6 @@ export default function LandingPage() {
                         <p className="text-5xl font-extrabold">R$ 59<span className="text-2xl font-semibold text-muted-foreground">,99</span><span className="text-xl font-normal text-muted-foreground">/mês</span></p>
                         <p className="text-muted-foreground text-sm">Durante os 3 primeiros meses.</p>
                         <p className="mt-4 font-semibold">Após o período, o valor é de R$ 450,00/mês.</p>
-                    </div>
-
-                    <p className="text-center mb-6 font-semibold">Todas as funcionalidades inclusas:</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
-                        {features.map((feature) => (
-                          <div key={feature.text} className="flex items-center gap-3">
-                            <div className="bg-green-100 dark:bg-green-900/50 p-1 rounded-full">
-                                <Check className="h-4 w-4 text-green-600 dark:text-green-300" />
-                            </div>
-                            <span className="text-muted-foreground">{feature.text}</span>
-                          </div>
-                        ))}
                     </div>
                 </CardContent>
                 <CardFooter className="p-8 pt-0">
