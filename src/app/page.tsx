@@ -16,12 +16,14 @@ import {
   HeartHandshake,
   Calendar,
   BarChart,
+  ArrowRight,
 } from "lucide-react"
 import { motion } from "framer-motion"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Logo } from "@/components/logo"
+import { Badge } from "@/components/ui/badge"
 
 const translations = {
   pt: {
@@ -31,15 +33,15 @@ const translations = {
       features: "Funcionalidades",
       pricing: "Preços",
       login: "Entrar",
-      signup: "Cadastre-se",
+      signup: "Cadastre-se Grátis",
     },
     hero: {
-      title: "O sistema completo para gerenciar sua academia.",
-      subtitle: "Do controle de alunos e treinos à gestão financeira e CRM. FitCore é o núcleo do seu negócio.",
+      title: "O Sistema Operacional da Sua Academia",
+      subtitle: "Unifique gestão de alunos, finanças, treinos e acesso em uma única plataforma inteligente. Menos planilhas, mais resultados.",
       cta: "Começar Agora",
       ctaSecondary: "Ver Demonstração",
     },
-    features: {
+     features: {
       title: "Tudo que você precisa em um só lugar",
       subtitle: "Simplifique sua operação com ferramentas poderosas e fáceis de usar.",
       items: [
@@ -175,15 +177,15 @@ const translations = {
       features: "Features",
       pricing: "Pricing",
       login: "Log In",
-      signup: "Sign Up",
+      signup: "Sign Up Free",
     },
     hero: {
-      title: "The complete system to manage your gym.",
-      subtitle: "From student and workout tracking to financial management and CRM. FitCore is the core of your business.",
+      title: "The Operating System for Your Gym",
+      subtitle: "Unify member management, finances, workouts, and access in a single intelligent platform. Less spreadsheets, more results.",
       cta: "Get Started Now",
       ctaSecondary: "View Demo",
     },
-    features: {
+     features: {
       title: "Everything you need in one place",
       subtitle: "Simplify your operation with powerful and easy-to-use tools.",
       items: [
@@ -358,29 +360,26 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="container py-20 md:py-32">
-          <div className="grid place-items-center gap-6 text-center">
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
-              <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl font-headline">
-                {t.hero.title}
-              </h1>
-            </motion.div>
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.1 }}>
-              <p className="max-w-3xl text-muted-foreground md:text-xl">
-                {t.hero.subtitle}
-              </p>
-            </motion.div>
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }} className="flex gap-4">
-              <Link href="/signup"><Button size="lg">{t.hero.cta}</Button></Link>
-              <Link href="/demo"><Button size="lg" variant="outline">{t.hero.ctaSecondary}</Button></Link>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Image Section */}
-        <section className="container">
-           <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.3 }}>
-             <div className="rounded-lg border bg-background shadow-lg overflow-hidden">
+        <section className="container relative pt-16 md:pt-24 pb-20 md:pb-28">
+            <div className="absolute inset-0 bottom-1/4 -z-10 bg-gradient-to-b from-primary/5 to-transparent"></div>
+            <div className="grid place-items-center gap-6 text-center">
+                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
+                    <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl font-headline">
+                        {t.hero.title}
+                    </h1>
+                </motion.div>
+                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.1 }}>
+                    <p className="max-w-3xl text-muted-foreground md:text-xl">
+                        {t.hero.subtitle}
+                    </p>
+                </motion.div>
+                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }} className="flex gap-4">
+                    <Link href="/signup"><Button size="lg">{t.hero.cta}</Button></Link>
+                    <Link href="/demo"><Button size="lg" variant="outline">{t.hero.ctaSecondary}</Button></Link>
+                </motion.div>
+            </div>
+             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.3 }} className="mt-12">
+             <div className="rounded-xl border bg-background shadow-2xl overflow-hidden">
                 <div className="h-11 flex items-center px-4 border-b">
                     <div className="flex items-center gap-1.5">
                         <span className="w-3 h-3 rounded-full bg-red-500"></span>
@@ -402,22 +401,38 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="container py-20 md:py-24 mt-20">
-          <div className="mx-auto grid max-w-5xl place-items-center gap-6 text-center">
+        <section id="features" className="container py-20 md:py-24">
+          <div className="mx-auto grid max-w-5xl place-items-center gap-6 text-center mb-12">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl font-headline">{t.features.title}</h2>
             <p className="text-muted-foreground md:text-lg">{t.features.subtitle}</p>
           </div>
-          <div className="mx-auto mt-12 grid max-w-5xl gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mx-auto max-w-5xl space-y-20">
             {t.features.items.map((feature, index) => (
-              <motion.div key={feature.title} initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: index * 0.1 }} viewport={{ once: true }}>
-                <div className="flex items-start gap-4">
-                  <div className="bg-primary/10 p-3 rounded-full">
-                    <feature.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="mb-2 text-xl font-bold font-headline">{feature.title}</h3>
-                    <p className="text-muted-foreground">{feature.description}</p>
-                  </div>
+              <motion.div 
+                key={feature.title} 
+                className="grid md:grid-cols-2 gap-10 items-center"
+                initial={{ y: 30, opacity: 0 }} 
+                whileInView={{ y: 0, opacity: 1 }} 
+                transition={{ duration: 0.5, delay: 0.2 }} 
+                viewport={{ once: true }}
+              >
+                <div className={index % 2 === 1 ? 'md:order-2' : ''}>
+                    <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-semibold mb-4">
+                        <feature.icon className="h-4 w-4" />
+                        {feature.title}
+                    </div>
+                  <h3 className="mb-2 text-2xl font-bold font-headline">{feature.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
+                </div>
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <Image
+                    src={`https://placehold.co/500x350.png`}
+                    alt={feature.title}
+                    width={500}
+                    height={350}
+                    className="rounded-md shadow-md w-full h-auto"
+                    data-ai-hint={feature.title.toLowerCase().split(' ').slice(0, 2).join(' ')}
+                  />
                 </div>
               </motion.div>
             ))}
@@ -429,6 +444,7 @@ export default function LandingPage() {
           <div className="mx-auto grid max-w-5xl place-items-center gap-6 text-center">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl font-headline">{t.pricing.title}</h2>
             <p className="text-muted-foreground md:text-lg">{t.pricing.subtitle}</p>
+
           </div>
           <div className="mx-auto mt-12 grid max-w-7xl gap-8 sm:grid-cols-2 lg:grid-cols-5 items-stretch">
             {t.pricing.plans.map((plan) => (
@@ -468,6 +484,22 @@ export default function LandingPage() {
             ))}
           </div>
         </section>
+
+         {/* Final CTA */}
+        <section className="container py-20 text-center">
+            <h2 className="text-3xl font-bold font-headline">Pronto para transformar sua gestão?</h2>
+            <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
+                Junte-se a centenas de academias que já simplificaram suas operações com o FitCore.
+            </p>
+            <div className="mt-8">
+                 <Link href="/signup">
+                    <Button size="lg">
+                        Comece gratuitamente <ArrowRight className="ml-2 h-4 w-4"/>
+                    </Button>
+                </Link>
+            </div>
+        </section>
+
       </main>
 
       {/* Footer */}
@@ -478,7 +510,7 @@ export default function LandingPage() {
               <Logo className="h-6 w-6" />
               <span className="font-bold font-headline">FitCore</span>
             </Link>
-            <p className="text-sm text-muted-foreground">© 2025 StarCreation. <br/>{t.footer.rights}</p>
+            <p className="text-sm text-muted-foreground">StarCreation © 2025. <br/>{t.footer.rights}</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-8 col-span-3">
             <div>
