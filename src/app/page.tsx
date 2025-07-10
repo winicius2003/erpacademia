@@ -162,7 +162,7 @@ const translations = {
       legal: "Legal",
       rights: "Todos os direitos reservados.",
       phone: "+55 (16) 99797-2936",
-      email: "contato@starcreation.com.br",
+      email: "jwinicius.souza@gmail.com",
       about: "Sobre Nós",
       terms: "Termos de Serviço",
       privacy: "Política de Privacidade",
@@ -306,7 +306,7 @@ const translations = {
       legal: "Legal",
       rights: "All rights reserved.",
       phone: "+55 (16) 99797-2936",
-      email: "contact@starcreation.com.br",
+      email: "jwinicius.souza@gmail.com",
       about: "About Us",
       terms: "Terms of Service",
       privacy: "Privacy Policy",
@@ -504,7 +504,7 @@ export default function LandingPage() {
               <h4 className="font-medium">{t.footer.legal}</h4>
               <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
                  <li><Link href="/terms" className="hover:text-foreground">{t.footer.terms}</Link></li>
-                 <li><Link href="#" className="hover:text-foreground">{t.footer.privacy}</Link></li>
+                 <li><Link href="/privacy" className="hover:text-foreground">{t.footer.privacy}</Link></li>
               </ul>
             </div>
           </div>
