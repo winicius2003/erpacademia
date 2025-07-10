@@ -9,325 +9,28 @@ import {
   Wallet,
   HeartPulse,
   Fingerprint,
-  Network,
-  Check,
-  Globe,
   Dumbbell,
-  HeartHandshake,
-  Calendar,
-  BarChart,
-  ArrowRight,
+  Check,
+  ArrowRight
 } from "lucide-react"
 import { motion } from "framer-motion"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Logo } from "@/components/logo"
-import { Badge } from "@/components/ui/badge"
 
-const translations = {
-  pt: {
-    lang: "PT",
-    langName: "Português",
-    nav: {
-      features: "Funcionalidades",
-      pricing: "Preços",
-      login: "Entrar",
-      signup: "Cadastre-se Grátis",
-    },
-    hero: {
-      title: "O Sistema Operacional da Sua Academia",
-      subtitle: "Unifique gestão de alunos, finanças, treinos e acesso em uma única plataforma inteligente. Menos planilhas, mais resultados.",
-      cta: "Começar Agora",
-      ctaSecondary: "Ver Demonstração",
-    },
-     features: {
-      title: "Tudo que você precisa em um só lugar",
-      subtitle: "Simplifique sua operação com ferramentas poderosas e fáceis de usar.",
-      items: [
-        {
-          icon: Users,
-          title: "Gestão de Alunos 360°",
-          description: "Ficha completa com histórico de pagamentos, treinos, avaliações físicas, metas e observações.",
-        },
-        {
-          icon: Wallet,
-          title: "Financeiro e PDV Completo",
-          description: "Controle fluxo de caixa, planos, produtos e pagamentos com integração Stripe e fechamento de caixa por funcionário.",
-        },
-        {
-          icon: Fingerprint,
-          title: "Controle de Acesso e Biometria",
-          description: "Integre com catracas por PIN e biometria, com bloqueio automático de inadimplentes.",
-        },
-        {
-          icon: Dumbbell,
-          title: "Criação de Planos de Treino",
-          description: "Crie modelos de treino para diferentes níveis e objetivos e atribua aos seus alunos com facilidade.",
-        },
-        {
-          icon: HeartHandshake,
-          title: "CRM e Funil de Vendas",
-          description: "Capture e gerencie leads, transformando interessados em novos alunos matriculados.",
-        },
-        {
-          icon: Network,
-          title: "Gestão Multi-Unidades",
-          description: "Gerencie múltiplas filiais a partir de uma única plataforma, com um plano de assinatura unificado.",
-        },
-        {
-            icon: Calendar,
-            title: "Agenda de Aulas Coletivas",
-            description: "Crie e gerencie um calendário de aulas em grupo, como Fit Dance, Muay Thai e Yoga."
-        },
-        {
-            icon: BarChart,
-            title: "Relatórios e Dashboards",
-            description: "Tenha uma visão clara do seu negócio com dashboards analíticos de alunos, finanças e retenção."
-        }
-      ],
-    },
-    pricing: {
-      title: "Escolha o plano ideal para você",
-      subtitle: "Preços transparentes que crescem com o seu negócio. O limite de alunos é a soma de todas as suas unidades. Sem surpresas.",
-      plans: [
-        {
-          name: "Iniciante",
-          price: "R$ 97",
-          period: "/mês",
-          students: "Até 50 alunos",
-          features: ["Gestão de Alunos 360°", "Planos e Produtos", "Avaliações Físicas", "Até 3 funcionários"],
-          cta: "Escolher Plano",
-        },
-        {
-          name: "Profissional",
-          price: "R$ 197",
-          period: "/mês",
-          students: "51–200 alunos",
-          features: [
-            "Tudo do Iniciante",
-            "Cobrança Recorrente (Stripe)",
-            "Controle de Acesso (Catraca)",
-            "CRM e Funil de Vendas",
-            "Até 3 funcionários",
-          ],
-          cta: "Escolher Plano",
-          popular: true,
-        },
-        {
-          name: "Business",
-          price: "R$ 397",
-          period: "/mês",
-          students: "201–500 alunos",
-          features: [
-            "Tudo do Profissional",
-            "Gestão Multi-Unidades",
-            "Relatórios Avançados",
-            "Até 5 funcionários",
-          ],
-          cta: "Escolher Plano",
-        },
-        {
-          name: "Enterprise",
-          price: "R$ 697",
-          period: "/mês",
-          students: "501-1000 alunos",
-          features: [
-            "Tudo do Business",
-            "Gestão de Funcionários",
-            "Suporte na Implantação",
-            "Até 10 funcionários",
-          ],
-          cta: "Escolher Plano",
-        },
-        {
-            name: "Enterprise+",
-            price: "R$ 1399",
-            period: "/mês",
-            students: "Acima de 1000 alunos",
-            description: "+ R$ 1,39 por aluno extra",
-            features: [
-              "Tudo do Enterprise",
-              "Suporte Prioritário",
-              "Onboarding Assistido",
-              "Até 20 funcionários",
-            ],
-            cta: "Escolher Plano",
-            isCustom: false,
-        },
-      ],
-    },
-    footer: {
-      product: "Produto",
-      company: "Empresa",
-      contact: "Contato",
-      legal: "Legal",
-      rights: "Todos os direitos reservados.",
-      phone: "+55 (16) 99797-2936",
-      email: "jwinicius.souza@gmail.com",
-      about: "Sobre Nós",
-      terms: "Termos de Serviço",
-      privacy: "Política de Privacidade",
-    },
-  },
-  en: {
-    lang: "EN",
-    langName: "English",
-    nav: {
-      features: "Features",
-      pricing: "Pricing",
-      login: "Log In",
-      signup: "Sign Up Free",
-    },
-    hero: {
-      title: "The Operating System for Your Gym",
-      subtitle: "Unify member management, finances, workouts, and access in a single intelligent platform. Less spreadsheets, more results.",
-      cta: "Get Started Now",
-      ctaSecondary: "View Demo",
-    },
-     features: {
-      title: "Everything you need in one place",
-      subtitle: "Simplify your operation with powerful and easy-to-use tools.",
-      items: [
-        {
-            icon: Users,
-            title: "360° Member Management",
-            description: "Complete profile with payment history, workouts, physical assessments, goals, and notes.",
-        },
-        {
-            icon: Wallet,
-            title: "Complete Financials & POS",
-            description: "Control cash flow, plans, products, and payments with Stripe integration and cashier closing reports.",
-        },
-        {
-            icon: Fingerprint,
-            title: "Access Control & Biometrics",
-            description: "Integrate with turnstiles via PIN and biometrics, with automatic blocking for overdue members.",
-        },
-        {
-            icon: Dumbbell,
-            title: "Workout Plan Creation",
-            description: "Create workout templates for different levels and goals and easily assign them to your members.",
-        },
-        {
-            icon: HeartHandshake,
-            title: "CRM & Sales Funnel",
-            description: "Capture and manage leads, turning interested prospects into new enrolled members.",
-        },
-        {
-            icon: Network,
-            title: "Multi-Branch Management",
-            description: "Manage multiple branches from a single platform with a unified subscription plan.",
-        },
-        {
-            icon: Calendar,
-            title: "Group Class Schedule",
-            description: "Create and manage a calendar for group classes like Fit Dance, Muay Thai, and Yoga."
-        },
-        {
-            icon: BarChart,
-            title: "Reports & Dashboards",
-            description: "Get a clear view of your business with analytical dashboards for members, finances, and retention."
-        }
-      ],
-    },
-    pricing: {
-      title: "Choose the perfect plan for you",
-      subtitle: "Transparent pricing that grows with your business. The member limit is the total across all your units. No surprises.",
-      plans: [
-        {
-          name: "Starter",
-          price: "$20",
-          period: "/month",
-          students: "Up to 50 members",
-          features: ["360° Member Management", "Plans & Products", "Physical Assessments", "Up to 3 staff accounts"],
-          cta: "Choose Plan",
-        },
-        {
-          name: "Professional",
-          price: "$40",
-          period: "/month",
-          students: "51–200 members",
-          features: [
-            "Everything in Starter",
-            "Recurring Billing (Stripe)",
-            "Access Control (Turnstile)",
-            "CRM & Sales Funnel",
-            "Up to 3 staff accounts"
-          ],
-          cta: "Choose Plan",
-          popular: true,
-        },
-        {
-          name: "Business",
-          price: "$80",
-          period: "/month",
-          students: "201–500 members",
-          features: [
-            "Everything in Professional",
-            "Multi-Branch Management",
-            "Advanced Reports",
-            "Up to 5 staff accounts"
-          ],
-          cta: "Choose Plan",
-        },
-        {
-          name: "Enterprise",
-          price: "$140",
-          period: "/month",
-          students: "501-1000 members",
-          features: [
-            "Everything in Business",
-            "Employee Management",
-            "Onboarding Support",
-            "Up to 10 staff accounts"
-          ],
-          cta: "Choose Plan",
-        },
-        {
-            name: "Enterprise+",
-            price: "$279",
-            period: "/month",
-            students: "1000+ members",
-            description: "+ $0.28 per extra member",
-            features: [
-              "Everything in Enterprise",
-              "Priority Support",
-              "Assisted Onboarding",
-              "Up to 20 staff accounts"
-            ],
-            cta: "Choose Plan",
-            isCustom: false,
-        },
-      ],
-    },
-    footer: {
-      product: "Product",
-      company: "Company",
-      contact: "Contact",
-      legal: "Legal",
-      rights: "All rights reserved.",
-      phone: "+55 (16) 99797-2936",
-      email: "jwinicius.souza@gmail.com",
-      about: "About Us",
-      terms: "Terms of Service",
-      privacy: "Privacy Policy",
-    },
-  },
-}
-
-type Lang = "pt" | "en"
+const features = [
+    { icon: Users, text: "Gestão Completa de Alunos" },
+    { icon: Wallet, text: "Financeiro com Ponto de Venda" },
+    { icon: Fingerprint, text: "Controle de Acesso por Biometria" },
+    { icon: Dumbbell, text: "Criação de Planos de Treino" },
+    { icon: HeartPulse, text: "Avaliações Físicas Detalhadas" },
+];
 
 export default function LandingPage() {
-  const [lang, setLang] = React.useState<Lang>("pt")
-  const t = translations[lang]
-
-  const toggleLang = () => {
-    setLang(current => (current === "pt" ? "en" : "pt"))
-  }
 
   return (
-    <div className="flex flex-col flex-1 bg-background text-foreground">
+    <div className="flex flex-col flex-1 bg-muted/30 text-foreground">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center">
@@ -335,24 +38,12 @@ export default function LandingPage() {
             <Logo className="h-6 w-6" />
             <span className="font-bold font-headline">FitCore</span>
           </Link>
-          <nav className="hidden items-center gap-6 text-sm md:flex">
-            <Link href="#features" className="text-muted-foreground transition-colors hover:text-foreground">
-              {t.nav.features}
-            </Link>
-            <Link href="#pricing" className="text-muted-foreground transition-colors hover:text-foreground">
-              {t.nav.pricing}
-            </Link>
-          </nav>
           <div className="flex flex-1 items-center justify-end gap-2">
-            <Button variant="ghost" size="icon" onClick={toggleLang} aria-label="Toggle language">
-              <Globe className="h-4 w-4" />
-              <span className="sr-only">Toggle Language</span>
-            </Button>
             <Link href="/login">
-              <Button variant="ghost">{t.nav.login}</Button>
+              <Button variant="ghost">Entrar</Button>
             </Link>
             <Link href="/signup">
-              <Button>{t.nav.signup}</Button>
+              <Button>Iniciar Teste Gratuito</Button>
             </Link>
           </div>
         </div>
@@ -360,185 +51,99 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="container relative pt-16 md:pt-24 pb-20 md:pb-28">
-            <div className="absolute inset-0 bottom-1/4 -z-10 bg-gradient-to-b from-primary/5 to-transparent"></div>
-            <div className="grid place-items-center gap-6 text-center">
+        <section className="container relative pt-16 md:pt-24 pb-20 md:pb-28 text-center">
+            <div className="mx-auto max-w-3xl">
                 <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
-                    <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl font-headline">
-                        {t.hero.title}
+                    <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-6xl font-headline">
+                        O sistema definitivo para sua academia decolar.
                     </h1>
                 </motion.div>
                 <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.1 }}>
-                    <p className="max-w-3xl text-muted-foreground md:text-xl">
-                        {t.hero.subtitle}
+                    <p className="mt-6 text-muted-foreground md:text-xl">
+                        Centralize a gestão de alunos, finanças, treinos e acesso em um único lugar. Menos burocracia, mais resultados.
                     </p>
                 </motion.div>
-                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }} className="flex gap-4">
-                    <Link href="/signup"><Button size="lg">{t.hero.cta}</Button></Link>
-                    <Link href="/demo"><Button size="lg" variant="outline">{t.hero.ctaSecondary}</Button></Link>
+                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }} className="mt-8">
+                    <Link href="/signup"><Button size="lg">Quero meus 14 dias grátis <ArrowRight className="ml-2 h-4 w-4"/></Button></Link>
                 </motion.div>
             </div>
-             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.3 }} className="mt-12">
-             <div className="rounded-xl border bg-background shadow-2xl overflow-hidden">
-                <div className="h-11 flex items-center px-4 border-b">
-                    <div className="flex items-center gap-1.5">
-                        <span className="w-3 h-3 rounded-full bg-red-500"></span>
-                        <span className="w-3 h-3 rounded-full bg-yellow-400"></span>
-                        <span className="w-3 h-3 rounded-full bg-green-500"></span>
-                    </div>
-                </div>
-                <Image
-                    src="https://i.imgur.com/k91Bv4U.png"
-                    alt="Dashboard do FitCore"
-                    width={1200}
-                    height={675}
-                    className="w-full h-auto"
-                    data-ai-hint="dashboard app"
-                    priority
-                />
-            </div>
-          </motion.div>
-        </section>
-
-        {/* Features Section */}
-        <section id="features" className="container py-20 md:py-24">
-          <div className="mx-auto grid max-w-5xl place-items-center gap-6 text-center mb-12">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl font-headline">{t.features.title}</h2>
-            <p className="text-muted-foreground md:text-lg">{t.features.subtitle}</p>
-          </div>
-          <div className="mx-auto max-w-5xl space-y-20">
-            {t.features.items.map((feature, index) => (
-              <motion.div 
-                key={feature.title} 
-                className="grid md:grid-cols-2 gap-10 items-center"
-                initial={{ y: 30, opacity: 0 }} 
-                whileInView={{ y: 0, opacity: 1 }} 
-                transition={{ duration: 0.5, delay: 0.2 }} 
-                viewport={{ once: true }}
-              >
-                <div className={index % 2 === 1 ? 'md:order-2' : ''}>
-                    <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-semibold mb-4">
-                        <feature.icon className="h-4 w-4" />
-                        {feature.title}
-                    </div>
-                  <h3 className="mb-2 text-2xl font-bold font-headline">{feature.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
-                </div>
-                <div className="bg-muted/50 p-6 rounded-lg">
-                  <Image
-                    src={`https://placehold.co/500x350.png`}
-                    alt={feature.title}
-                    width={500}
-                    height={350}
-                    className="rounded-md shadow-md w-full h-auto"
-                    data-ai-hint={feature.title.toLowerCase().split(' ').slice(0, 2).join(' ')}
-                  />
-                </div>
-              </motion.div>
-            ))}
-          </div>
         </section>
 
         {/* Pricing Section */}
-        <section id="pricing" className="container py-20 md:py-24">
-          <div className="mx-auto grid max-w-5xl place-items-center gap-6 text-center">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl font-headline">{t.pricing.title}</h2>
-            <p className="text-muted-foreground md:text-lg">{t.pricing.subtitle}</p>
-
-          </div>
-          <div className="mx-auto mt-12 grid max-w-7xl gap-8 sm:grid-cols-2 lg:grid-cols-5 items-stretch">
-            {t.pricing.plans.map((plan) => (
-              <Card key={plan.name} className={`flex flex-col ${plan.popular ? "border-primary ring-2 ring-primary" : ""}`}>
-                {plan.popular && (
-                  <div className="bg-primary text-primary-foreground text-xs font-bold uppercase tracking-wider text-center py-1 rounded-t-lg">Popular</div>
-                )}
-                <CardHeader>
-                  <CardTitle className="font-headline">{plan.name}</CardTitle>
-                  <CardDescription>{plan.students}</CardDescription>
-                  <div className="flex items-baseline">
-                    <span className="text-4xl font-extrabold">{plan.price}</span>
-                    <span className="text-muted-foreground">{plan.period}</span>
-                  </div>
-                   {plan.description && <CardDescription className="text-primary font-medium">{plan.description}</CardDescription>}
+        <section id="pricing" className="container pb-20 md:pb-24">
+          <div className="mx-auto max-w-2xl">
+            <Card className="shadow-2xl border-primary ring-2 ring-primary/50">
+                 <CardHeader className="text-center p-8 bg-primary/5">
+                  <CardTitle className="text-3xl font-headline">Plano Completo FitCore</CardTitle>
+                  <CardDescription>Acesso total, sem limites de alunos ou funcionalidades.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex-1">
-                  <ul className="space-y-3">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                        <span className="text-muted-foreground text-sm">{feature}</span>
+                <CardContent className="p-8">
+                    <div className="text-center mb-8">
+                        <p className="text-sm uppercase text-primary font-bold">Oferta de Lançamento</p>
+                        <p className="text-5xl font-extrabold">R$ 59<span className="text-2xl font-semibold text-muted-foreground">,99</span><span className="text-xl font-normal text-muted-foreground">/mês</span></p>
+                        <p className="text-muted-foreground text-sm">Durante os 3 primeiros meses.</p>
+                        <p className="mt-4 font-semibold">Após o período, o valor é de R$ 450,00/mês.</p>
+                    </div>
+
+                    <p className="text-center mb-6 font-semibold">Todas as funcionalidades inclusas:</p>
+                    <ul className="space-y-3">
+                    {features.map((feature) => (
+                      <li key={feature.text} className="flex items-center gap-3">
+                        <div className="bg-green-100 dark:bg-green-900/50 p-1 rounded-full">
+                            <Check className="h-4 w-4 text-green-600 dark:text-green-300" />
+                        </div>
+                        <span className="text-muted-foreground">{feature.text}</span>
                       </li>
                     ))}
                   </ul>
                 </CardContent>
-                <CardFooter>
-                    {plan.isCustom ? (
-                        <Button className="w-full" variant="outline">{plan.cta}</Button>
-                    ) : (
-                        <Link href={`/signup?plan=${plan.name}`} className="w-full">
-                            <Button className="w-full">{plan.cta}</Button>
-                        </Link>
-                    )}
+                <CardFooter className="p-8 pt-0">
+                    <Link href="/signup" className="w-full">
+                        <Button className="w-full" size="lg">Iniciar meu teste de 14 dias</Button>
+                    </Link>
                 </CardFooter>
-              </Card>
-            ))}
+            </Card>
           </div>
-        </section>
-
-         {/* Final CTA */}
-        <section className="container py-20 text-center">
-            <h2 className="text-3xl font-bold font-headline">Pronto para transformar sua gestão?</h2>
-            <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
-                Junte-se a centenas de academias que já simplificaram suas operações com o FitCore.
-            </p>
-            <div className="mt-8">
-                 <Link href="/signup">
-                    <Button size="lg">
-                        Comece gratuitamente <ArrowRight className="ml-2 h-4 w-4"/>
-                    </Button>
-                </Link>
-            </div>
         </section>
 
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-muted/50">
+      <footer className="border-t bg-background">
         <div className="container grid items-start gap-8 pb-8 pt-12 md:grid-cols-4">
           <div className="flex flex-col gap-2 col-span-1">
             <Link href="#" className="flex items-center space-x-2">
               <Logo className="h-6 w-6" />
               <span className="font-bold font-headline">FitCore</span>
             </Link>
-            <p className="text-sm text-muted-foreground">StarCreation © 2025. <br/>{t.footer.rights}</p>
+            <p className="text-sm text-muted-foreground">StarCreation © 2025. <br/>Todos os direitos reservados.</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-8 col-span-3">
             <div>
-              <h4 className="font-medium">{t.footer.product}</h4>
+              <h4 className="font-medium">Produto</h4>
               <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-                <li><Link href="#features" className="hover:text-foreground">{t.nav.features}</Link></li>
-                <li><Link href="#pricing" className="hover:text-foreground">{t.nav.pricing}</Link></li>
-                 <li><Link href="/demo" className="hover:text-foreground">{t.hero.ctaSecondary}</Link></li>
+                <li><Link href="#pricing" className="hover:text-foreground">Preços</Link></li>
+                 <li><Link href="/demo" className="hover:text-foreground">Demonstração</Link></li>
               </ul>
             </div>
              <div>
-              <h4 className="font-medium">{t.footer.company}</h4>
+              <h4 className="font-medium">Empresa</h4>
               <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-                <li><Link href="/about" className="hover:text-foreground">{t.footer.about}</Link></li>
+                <li><Link href="/about" className="hover:text-foreground">Sobre Nós</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-medium">{t.footer.contact}</h4>
+              <h4 className="font-medium">Contato</h4>
               <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-                <li><a href={`mailto:${t.footer.email}`} className="hover:text-foreground">{t.footer.email}</a></li>
-                <li><a href={`tel:${t.footer.phone.replace(/\D/g, '')}`} className="hover:text-foreground">{t.footer.phone}</a></li>
+                <li><a href="mailto:jwinicius.souza@gmail.com" className="hover:text-foreground">jwinicius.souza@gmail.com</a></li>
+                <li><a href="tel:+5516997972936" className="hover:text-foreground">+55 (16) 99797-2936</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-medium">{t.footer.legal}</h4>
+              <h4 className="font-medium">Legal</h4>
               <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-                 <li><Link href="/terms" className="hover:text-foreground">{t.footer.terms}</Link></li>
-                 <li><Link href="/privacy" className="hover:text-foreground">{t.footer.privacy}</Link></li>
+                 <li><Link href="/terms" className="hover:text-foreground">Termos de Serviço</Link></li>
+                 <li><Link href="/privacy" className="hover:text-foreground">Política de Privacidade</Link></li>
               </ul>
             </div>
           </div>
@@ -547,3 +152,5 @@ export default function LandingPage() {
     </div>
   )
 }
+
+    
