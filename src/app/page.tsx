@@ -14,6 +14,10 @@ import {
   UsersRound,
   BarChart,
   HeartHandshake,
+  KeyRound,
+  Printer,
+  ShoppingBasket,
+  FileClock,
 } from "lucide-react"
 import { motion } from "framer-motion"
 
@@ -79,6 +83,8 @@ const checklistFeatures = [
     "Gestão Multi-Unidades",
     "Armazenamento em Nuvem",
     "Integração Wellhub e TotalPass (API)",
+    "Impressão de Treinos",
+    "Configuração de Catraca",
 ]
 
 export default function LandingPage() {
@@ -185,10 +191,11 @@ export default function LandingPage() {
                         <p className="mt-4 font-semibold">Após o período, o valor é de R$ 450,00/mês.</p>
                     </div>
                 </CardContent>
-                <CardFooter className="p-8 pt-0">
+                <CardFooter className="p-8 pt-0 flex-col">
                     <Link href="/signup" className="w-full">
                         <Button className="w-full" size="lg">Iniciar meu teste de 14 dias</Button>
                     </Link>
+                    <p className="text-xs text-muted-foreground mt-3">Cancele a qualquer momento.</p>
                 </CardFooter>
             </Card>
           </div>
