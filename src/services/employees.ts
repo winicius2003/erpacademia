@@ -62,8 +62,11 @@ export async function getEmployees(): Promise<Employee[]> {
 }
 
 export async function getEmployeeByLogin(login: string): Promise<Employee | null> {
-    if (!login) return Promise.resolve(null);
-    const employee = employees.find(e => e.login && e.login.toLowerCase() === login.toLowerCase());
+    if (!login) {
+        return Promise.resolve(null);
+    }
+    const lowercasedLogin = login.toLowerCase();
+    const employee = employees.find(e => e.login && e.login.toLowerCase() === lowercasedLogin);
     return Promise.resolve(employee || null);
 }
 
