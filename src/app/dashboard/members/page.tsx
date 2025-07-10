@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -92,6 +93,7 @@ const initialMemberFormState = {
   dob: undefined as Date | undefined,
   cpf: "",
   rg: "",
+  rgIssuer: "",
   address: initialAddress,
   plan: "Mensal",
   expires: new Date() as Date | undefined,
@@ -250,6 +252,7 @@ export default function MembersPage() {
       phone: member.phone,
       cpf: member.cpf,
       rg: member.rg,
+      rgIssuer: member.rgIssuer || "",
       dob: dobDate,
       address: member.address || initialAddress,
       plan: member.plan,
@@ -279,6 +282,7 @@ export default function MembersPage() {
             phone: memberFormData.phone,
             cpf: memberFormData.cpf,
             rg: memberFormData.rg,
+            rgIssuer: memberFormData.rgIssuer,
             dob: format(memberFormData.dob, "yyyy-MM-dd"),
             address: memberFormData.address,
             plan: memberFormData.plan,
@@ -661,9 +665,15 @@ export default function MembersPage() {
                                       <Label htmlFor="cpf">CPF</Label>
                                       <Input id="cpf" value={memberFormData.cpf} onChange={(e) => handleInputChange('cpf', e.target.value)} placeholder="000.000.000-00" />
                                   </div>
-                                  <div className="grid gap-2">
-                                      <Label htmlFor="rg">RG</Label>
-                                      <Input id="rg" value={memberFormData.rg} onChange={(e) => handleInputChange('rg', e.target.value)} placeholder="00.000.000-0" />
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="rg">RG</Label>
+                                        <Input id="rg" value={memberFormData.rg} onChange={(e) => handleInputChange('rg', e.target.value)} placeholder="00.000.000-0" />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="rgIssuer">Órgão Emissor</Label>
+                                        <Input id="rgIssuer" value={memberFormData.rgIssuer} onChange={(e) => handleInputChange('rgIssuer', e.target.value)} placeholder="SSP/SP" />
+                                    </div>
                                   </div>
                                   <div className="grid gap-2">
                                       <Label htmlFor="plan">Plano</Label>
