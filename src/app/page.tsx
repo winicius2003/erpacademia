@@ -3,7 +3,6 @@
 
 import * as React from "react"
 import Link from "next/link"
-import Image from "next/image"
 import {
   Users,
   Wallet,
@@ -11,7 +10,11 @@ import {
   Fingerprint,
   Dumbbell,
   Check,
-  ArrowRight
+  ArrowRight,
+  UsersRound,
+  ArrowRightLeft,
+  Archive,
+  ReceiptText
 } from "lucide-react"
 import { motion } from "framer-motion"
 
@@ -22,9 +25,13 @@ import { Logo } from "@/components/logo"
 const features = [
     { icon: Users, text: "Gestão Completa de Alunos" },
     { icon: Wallet, text: "Financeiro com Ponto de Venda" },
+    { icon: ArrowRightLeft, text: "Controle de Fluxo de Caixa" },
     { icon: Fingerprint, text: "Controle de Acesso por Biometria" },
     { icon: Dumbbell, text: "Criação de Planos de Treino" },
     { icon: HeartPulse, text: "Avaliações Físicas Detalhadas" },
+    { icon: UsersRound, text: "Gestão de Funcionários e Permissões" },
+    { icon: Archive, text: "Controle de Estoque de Produtos" },
+    { icon: ReceiptText, text: "Emissão de Recibos" },
 ];
 
 export default function LandingPage() {
@@ -71,11 +78,11 @@ export default function LandingPage() {
 
         {/* Pricing Section */}
         <section id="pricing" className="container pb-20 md:pb-24">
-          <div className="mx-auto max-w-2xl">
+          <div className="mx-auto max-w-3xl">
             <Card className="shadow-2xl border-primary ring-2 ring-primary/50">
                  <CardHeader className="text-center p-8 bg-primary/5">
                   <CardTitle className="text-3xl font-headline">Plano Completo FitCore</CardTitle>
-                  <CardDescription>Acesso total, sem limites de alunos ou funcionalidades.</CardDescription>
+                  <CardDescription>Acesso total a todas as funcionalidades, sem surpresas.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-8">
                     <div className="text-center mb-8">
@@ -86,16 +93,16 @@ export default function LandingPage() {
                     </div>
 
                     <p className="text-center mb-6 font-semibold">Todas as funcionalidades inclusas:</p>
-                    <ul className="space-y-3">
-                    {features.map((feature) => (
-                      <li key={feature.text} className="flex items-center gap-3">
-                        <div className="bg-green-100 dark:bg-green-900/50 p-1 rounded-full">
-                            <Check className="h-4 w-4 text-green-600 dark:text-green-300" />
-                        </div>
-                        <span className="text-muted-foreground">{feature.text}</span>
-                      </li>
-                    ))}
-                  </ul>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
+                        {features.map((feature) => (
+                          <div key={feature.text} className="flex items-center gap-3">
+                            <div className="bg-green-100 dark:bg-green-900/50 p-1 rounded-full">
+                                <Check className="h-4 w-4 text-green-600 dark:text-green-300" />
+                            </div>
+                            <span className="text-muted-foreground">{feature.text}</span>
+                          </div>
+                        ))}
+                    </div>
                 </CardContent>
                 <CardFooter className="p-8 pt-0">
                     <Link href="/signup" className="w-full">
