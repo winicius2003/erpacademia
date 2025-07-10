@@ -402,20 +402,22 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="container py-20 md:py-24 bg-muted/50 dark:bg-card mt-20">
+        <section id="features" className="container py-20 md:py-24 mt-20">
           <div className="mx-auto grid max-w-5xl place-items-center gap-6 text-center">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl font-headline">{t.features.title}</h2>
             <p className="text-muted-foreground md:text-lg">{t.features.subtitle}</p>
           </div>
-          <div className="mx-auto mt-12 grid max-w-5xl gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mx-auto mt-12 grid max-w-5xl gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {t.features.items.map((feature, index) => (
               <motion.div key={feature.title} initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: index * 0.1 }} viewport={{ once: true }}>
-                <div className="flex flex-col items-start p-6 bg-background rounded-lg shadow-sm h-full">
-                  <div className="bg-primary/10 p-3 rounded-full mb-4">
+                <div className="flex items-start gap-4">
+                  <div className="bg-primary/10 p-3 rounded-full">
                     <feature.icon className="h-6 w-6 text-primary" />
                   </div>
-                  <h3 className="mb-2 text-xl font-bold font-headline">{feature.title}</h3>
-                  <p className="text-muted-foreground">{feature.description}</p>
+                  <div>
+                    <h3 className="mb-2 text-xl font-bold font-headline">{feature.title}</h3>
+                    <p className="text-muted-foreground">{feature.description}</p>
+                  </div>
                 </div>
               </motion.div>
             ))}
