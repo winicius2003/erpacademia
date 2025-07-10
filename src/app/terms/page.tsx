@@ -82,7 +82,7 @@ export default function TermsOfServicePage() {
                     <Separator />
 
                     <Section title="7. Limitação de Responsabilidade">
-                        <p>A StarCreation não se responsabiliza por quaisquer danos diretos, indiretos, incidentais ou consequenciais resultantes do uso ou da incapacidade de usar a Plataforma, incluindo, mas não se limitando a, perda de dados, interrupção de negócios ou perda de lucros. Nossa responsabilidade total, em qualquer caso, está limitada ao valor pago por você nos últimos três (3) meses de serviço.</p>
+                        <p>A StarCreation não se responsabiliza por quaisquer danos diretos, indiretos, incidentais ou consequenciais resultantes do uso ou da incapacidade de usar a Plataforma, incluindo, mas não se limitando a, perda de dados, interrupção de negócios ou perda de lucros.</p>
                     </Section>
                     
                     <Separator />
