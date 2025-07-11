@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -82,7 +83,8 @@ const navItems = [
   { href: "/dashboard/workouts", icon: Dumbbell, label: "Treinos" },
   { href: "/dashboard/assessments", icon: HeartPulse, label: "Avaliações" },
   { href: "/dashboard/schedule", icon: Calendar, label: "Agenda" },
-  { href: "/dashboard/financial", icon: Wallet, label: "Financeiro" },
+  { href: "/dashboard/financial", icon: Wallet, label: "Financeiro (Geral)", altLabel: "Financeiro", permissionLabel: "Financeiro (Geral)" },
+  { href: "/dashboard/financial", icon: Wallet, label: "Financeiro (Pessoal)", altLabel: "Financeiro", permissionLabel: "Financeiro (Pessoal)" },
   { href: "/dashboard/crm", icon: HeartHandshake, label: "CRM" },
   { href: "/dashboard/frequency", icon: FileClock, label: "Frequência" },
   { href: "/dashboard/access-control", icon: UsersRound, label: "Colaboradores" },
@@ -174,8 +176,15 @@ export default function DashboardLayout({
   
   const visibleNavItems = user ? navItems.filter(item => {
     const permissions = navPermissions[user.role] || []
-    return permissions.includes(item.label)
-  }) : []
+    return permissions.includes(item.permissionLabel || item.label)
+  }).reduce((acc, item) => {
+    // This logic prevents duplicate "Financeiro" items from showing up
+    const altLabel = item.altLabel || item.label;
+    if (!acc.find(i => (i.altLabel || i.label) === altLabel)) {
+        acc.push(item);
+    }
+    return acc;
+  }, [] as typeof navItems) : []
 
   const activeItem = navItems
     .slice()
@@ -255,7 +264,7 @@ export default function DashboardLayout({
                     }}
                   >
                     <navItem.icon className="mr-2 h-4 w-4" />
-                    {navItem.label}
+                    {navItem.altLabel || navItem.label}
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -302,10 +311,10 @@ export default function DashboardLayout({
                     <Link href={item.href}>
                       <SidebarMenuButton
                         isActive={item.href === '/dashboard' ? pathname === item.href : pathname.startsWith(item.href)}
-                        tooltip={item.label}
+                        tooltip={item.altLabel || item.label}
                       >
                         <item.icon />
-                        <span>{item.label}</span>
+                        <span>{item.altLabel || item.label}</span>
                       </SidebarMenuButton>
                     </Link>
                   </SidebarMenuItem>
@@ -334,7 +343,7 @@ export default function DashboardLayout({
             <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6">
               <SidebarTrigger className="md:hidden" />
               <div className="flex-1">
-                 <h1 className="font-semibold text-lg">{activeItem?.label}</h1>
+                 <h1 className="font-semibold text-lg">{activeItem?.altLabel || activeItem?.label}</h1>
               </div>
 
               <div className="flex flex-1 justify-center">
