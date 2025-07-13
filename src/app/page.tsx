@@ -110,8 +110,10 @@ export default function PreLaunchPage() {
 
 
   return (
-    <div className="flex flex-col min-h-screen bg-muted/30 text-foreground">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden">
+       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/10 via-background to-background -z-10" />
+
+      <header className="sticky top-0 z-50 w-full border-b border-border/20 bg-background/50 backdrop-blur-sm">
         <div className="container flex h-14 items-center">
           <Link href="#" className="mr-6 flex items-center space-x-2">
             <Logo className="h-6 w-6" />
@@ -125,34 +127,33 @@ export default function PreLaunchPage() {
       </header>
 
       <main className="flex-1">
-        <section className="container grid lg:grid-cols-2 gap-12 items-center pt-16 md:pt-24 pb-20">
-          <div className="max-w-xl">
-             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
-                <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl font-headline">
-                    O Futuro da Gestão de Academias Chegou.
-                </h1>
-            </motion.div>
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.1 }}>
-                <p className="mt-6 text-muted-foreground md:text-xl">
-                    O FitCore está chegando para revolucionar a forma como você gerencia seu negócio. Seja um dos primeiros a ter acesso e garanta uma oferta exclusiva de lançamento.
-                </p>
-                 <ul className="mt-6 space-y-3 text-muted-foreground">
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /> <strong>14 Dias de Teste Grátis</strong> para explorar tudo.</li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /> <strong>3 Meses por R$ 59,99/mês</strong> (depois R$ 450/mês).</li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /> <strong>Acesso a todas as funcionalidades</strong>, sem limites.</li>
-                </ul>
-            </motion.div>
-          </div>
-          <div>
-            <Card className="shadow-2xl">
+        <section className="container flex flex-col items-center justify-center text-center pt-16 md:pt-24 pb-20">
+          
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }} 
+            animate={{ y: 0, opacity: 1 }} 
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="max-w-3xl"
+          >
+            <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-6xl font-headline bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70">
+                O Futuro da Gestão de Academias Chegou.
+            </h1>
+            <p className="mt-6 text-muted-foreground md:text-xl max-w-2xl mx-auto">
+                Seja um dos primeiros a ter acesso ao FitCore e garanta uma oferta de fundador exclusiva e por tempo limitado.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
+            className="w-full max-w-2xl mx-auto mt-12"
+          >
+             <Card className="shadow-2xl bg-card/60 backdrop-blur-xl border-border/30">
                 <CardContent className="p-6 md:p-8">
                     <div className="text-center space-y-2 mb-6">
-                        <h3 className="text-2xl font-bold font-headline">A oferta termina em...</h3>
-                        <div className="flex items-center justify-center gap-1 text-sm text-primary">
-                            <Clock className="h-4 w-4" />
-                            <span>Garanta seu desconto de fundador!</span>
-                        </div>
-                        <div className="pt-2">
+                        <h3 className="text-2xl font-bold font-headline">A oferta de fundador termina em...</h3>
+                         <div className="pt-2">
                             <CountdownTimer />
                         </div>
                     </div>
@@ -166,29 +167,31 @@ export default function PreLaunchPage() {
                         </div>
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="name">Seu Nome</Label>
-                                <div className="relative">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input id="name" name="name" placeholder="Nome e Sobrenome" className="pl-9" required />
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="name" className="text-left">Seu Nome</Label>
+                                    <div className="relative">
+                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input id="name" name="name" placeholder="Nome e Sobrenome" className="pl-9" required />
+                                    </div>
+                                </div>
+                                 <div className="grid gap-2">
+                                    <Label htmlFor="gymName" className="text-left">Nome da Academia</Label>
+                                    <div className="relative">
+                                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input id="gymName" name="gymName" placeholder="Sua Academia" className="pl-9" required />
+                                    </div>
                                 </div>
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="gymName">Nome da Academia</Label>
-                                <div className="relative">
-                                    <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input id="gymName" name="gymName" placeholder="Sua Academia" className="pl-9" required />
-                                </div>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">Seu Melhor E-mail</Label>
+                                <Label htmlFor="email" className="text-left">Seu Melhor E-mail</Label>
                                  <div className="relative">
                                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input id="email" name="email" type="email" placeholder="voce@exemplo.com" className="pl-9" required />
                                 </div>
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="phone">Seu WhatsApp</Label>
+                                <Label htmlFor="phone" className="text-left">Seu WhatsApp</Label>
                                  <div className="relative">
                                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input id="phone" name="phone" type="tel" placeholder="(99) 99999-9999" className="pl-9" required />
@@ -202,11 +205,19 @@ export default function PreLaunchPage() {
                     )}
                 </CardContent>
             </Card>
-          </div>
+            <div className="mt-8 text-center">
+                 <p className="font-bold text-lg">Sua oferta exclusiva de fundador inclui:</p>
+                 <ul className="mt-4 space-y-2 text-muted-foreground inline-flex flex-col items-start">
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /> <strong>14 Dias de Teste Grátis</strong> para explorar tudo.</li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /> <strong>3 Meses por R$ 59,99/mês</strong> (depois R$ 450/mês).</li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /> <strong>Acesso a todas as funcionalidades</strong>, sem limites.</li>
+                </ul>
+            </div>
+          </motion.div>
         </section>
       </main>
 
-      <footer className="border-t bg-background">
+      <footer className="border-t border-border/20 bg-transparent">
         <div className="container py-6">
            <p className="text-center text-sm text-muted-foreground">StarCreation © 2025. Todos os direitos reservados.</p>
         </div>
