@@ -4,7 +4,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { Check, Clock, Loader2, Mail, User, Phone } from "lucide-react"
+import { Check, Clock, Loader2, Mail, User, Phone, Building } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/logo"
@@ -80,12 +80,13 @@ export default function PreLaunchPage() {
 
         const formData = new FormData(event.currentTarget);
         const name = formData.get("name") as string;
+        const gymName = formData.get("gymName") as string;
         const email = formData.get("email") as string;
         const phone = formData.get("phone") as string;
         
         try {
             await addLead({
-                name,
+                name: `${name} (${gymName})`,
                 contact: phone || email, // Prioritize phone, fallback to email
                 source: "Pré-lançamento",
                 status: "Novo Lead"
@@ -170,6 +171,13 @@ export default function PreLaunchPage() {
                                 <div className="relative">
                                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input id="name" name="name" placeholder="Nome e Sobrenome" className="pl-9" required />
+                                </div>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="gymName">Nome da Academia</Label>
+                                <div className="relative">
+                                    <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input id="gymName" name="gymName" placeholder="Sua Academia" className="pl-9" required />
                                 </div>
                             </div>
                             <div className="grid gap-2">
