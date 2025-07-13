@@ -187,10 +187,7 @@ export default function LandingPage() {
                 </CardHeader>
                 <CardContent className="p-8">
                     <div className="text-center mb-8">
-                        <p className="text-sm uppercase text-primary font-bold">Oferta de Lançamento</p>
-                        <p className="text-5xl font-extrabold">R$ 59<span className="text-2xl font-semibold text-muted-foreground">,99</span><span className="text-xl font-normal text-muted-foreground">/mês</span></p>
-                        <p className="text-muted-foreground text-sm">Durante os 3 primeiros meses.</p>
-                        <p className="mt-4 font-semibold">Após o período, o valor é de R$ 450,00/mês.</p>
+                        <p className="text-5xl font-extrabold">R$ 450<span className="text-2xl font-semibold text-muted-foreground">,00</span><span className="text-xl font-normal text-muted-foreground">/mês</span></p>
                         <div className="mt-4 flex justify-center items-center gap-2 font-medium text-green-600">
                             <Check className="h-5 w-5" />
                             <span>Alunos ilimitados</span>

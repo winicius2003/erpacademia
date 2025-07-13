@@ -4,7 +4,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { Check, Clock, Loader2, Mail, User } from "lucide-react"
+import { Check, Clock, Loader2, Mail, User, Phone } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/logo"
@@ -16,7 +16,11 @@ import { Card, CardContent } from "@/components/ui/card"
 
 const CountdownTimer = () => {
   const calculateTimeLeft = () => {
-    const difference = +new Date("2024-09-15") - +new Date();
+    // Set a fixed end date for the countdown, e.g., 30 days from a reference point
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + 30);
+    
+    const difference = +endDate - +new Date();
     let timeLeft = {};
 
     if (difference > 0) {
@@ -77,11 +81,12 @@ export default function PreLaunchPage() {
         const formData = new FormData(event.currentTarget);
         const name = formData.get("name") as string;
         const email = formData.get("email") as string;
+        const phone = formData.get("phone") as string;
         
         try {
             await addLead({
                 name,
-                contact: email,
+                contact: phone || email, // Prioritize phone, fallback to email
                 source: "Pré-lançamento",
                 status: "Novo Lead"
             });
@@ -172,6 +177,13 @@ export default function PreLaunchPage() {
                                  <div className="relative">
                                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input id="email" name="email" type="email" placeholder="voce@exemplo.com" className="pl-9" required />
+                                </div>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="phone">Seu WhatsApp</Label>
+                                 <div className="relative">
+                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input id="phone" name="phone" type="tel" placeholder="(99) 99999-9999" className="pl-9" required />
                                 </div>
                             </div>
                             <Button type="submit" className="w-full font-bold" size="lg" disabled={isLoading}>
