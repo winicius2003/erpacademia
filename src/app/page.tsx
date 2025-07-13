@@ -120,8 +120,12 @@ export default function PreLaunchPage() {
             <span className="font-bold font-headline">FitCore</span>
           </Link>
           <div className="flex flex-1 items-center justify-end gap-2">
-            <Button variant="ghost" disabled>Entrar</Button>
-            <Button disabled>Criar Conta</Button>
+            <Link href="/login">
+              <Button variant="ghost">Entrar</Button>
+            </Link>
+            <Link href="/signup">
+              <Button>Criar Conta</Button>
+            </Link>
           </div>
         </div>
       </header>
