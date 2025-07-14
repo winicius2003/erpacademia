@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { MoreHorizontal, PlusCircle, Loader2 } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Loader2, AlertTriangle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,6 +19,7 @@ const initialFormState = {
   name: "",
   price: 0,
   stock: 0,
+  minStock: 5,
 };
 
 type ProductFormData = typeof initialFormState;
@@ -56,7 +57,10 @@ export default function ProductsPage() {
 
     const handleEditClick = (product: Product) => {
         setIsEditing(true);
-        setProductFormData(product);
+        setProductFormData({
+            ...product,
+            minStock: product.minStock || 5, // Default if not present
+        });
         setIsDialogOpen(true);
     };
 
@@ -81,6 +85,7 @@ export default function ProductsPage() {
             name: productFormData.name,
             price: Number(productFormData.price),
             stock: Number(productFormData.stock),
+            minStock: Number(productFormData.minStock),
         };
 
         setIsLoading(true);
@@ -101,9 +106,9 @@ export default function ProductsPage() {
         }
     };
 
-    const getStockVariant = (stock: number) => {
+    const getStockVariant = (stock: number, minStock: number) => {
         if (stock === 0) return "destructive";
-        if (stock <= 10) return "outline";
+        if (stock <= minStock) return "outline";
         return "secondary";
     }
 
@@ -113,9 +118,9 @@ export default function ProductsPage() {
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <div>
-                            <CardTitle className="font-headline">Produtos</CardTitle>
+                            <CardTitle className="font-headline">Produtos e Estoque</CardTitle>
                             <CardDescription>
-                                Gerencie os produtos vendidos em sua academia.
+                                Gerencie os produtos vendidos e o nível do estoque.
                             </CardDescription>
                         </div>
                         <Button onClick={handleAddNewClick}><PlusCircle className="mr-2 h-4 w-4" /> Adicionar Produto</Button>
@@ -142,7 +147,8 @@ export default function ProductsPage() {
                                         <TableCell className="font-medium">{product.name}</TableCell>
                                         <TableCell>{product.price.toFixed(2)}</TableCell>
                                         <TableCell>
-                                            <Badge variant={getStockVariant(product.stock)}>
+                                            <Badge variant={getStockVariant(product.stock, product.minStock)} className="gap-1">
+                                                {product.stock <= product.minStock && product.stock > 0 && <AlertTriangle className="h-3 w-3" />}
                                                 {product.stock > 0 ? `${product.stock} unidades` : "Esgotado"}
                                             </Badge>
                                         </TableCell>
@@ -176,14 +182,18 @@ export default function ProductsPage() {
                                 <Label htmlFor="name">Nome do Produto</Label>
                                 <Input id="name" value={productFormData.name} onChange={e => handleInputChange('name', e.target.value)} placeholder="Ex: Garrafa de Água" />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-3 gap-4">
                                 <div className="grid gap-2">
                                     <Label htmlFor="price">Preço (R$)</Label>
                                     <Input id="price" type="number" step="0.01" value={productFormData.price} onChange={e => handleInputChange('price', e.target.value)} placeholder="25.00" />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="stock">Estoque</Label>
+                                    <Label htmlFor="stock">Estoque Atual</Label>
                                     <Input id="stock" type="number" value={productFormData.stock} onChange={e => handleInputChange('stock', e.target.value)} placeholder="50" />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="minStock">Estoque Mínimo</Label>
+                                    <Input id="minStock" type="number" value={productFormData.minStock} onChange={e => handleInputChange('minStock', e.target.value)} placeholder="5" />
                                 </div>
                             </div>
                         </div>

@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { format, parseISO } from "date-fns"
-import { ArrowLeft, Dumbbell, Receipt, HeartPulse, Loader2, Shield, FileText, MapPin } from "lucide-react"
+import { ArrowLeft, Dumbbell, Receipt, HeartPulse, Loader2, Shield, FileText, MapPin, MessageSquare } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -13,20 +13,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-import { getMemberById, type Member } from "@/services/members"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/hooks/use-toast"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { getMemberById, updateMember, type Member } from "@/services/members"
 import { getAssessments, type Assessment } from "@/services/assessments"
 import { getPaymentsByStudentId, type Payment } from "@/services/payments"
+import { getWorkoutPlans, type WorkoutPlan } from "@/services/workouts"
 
 export default function MemberProfilePage() {
     const params = useParams()
     const router = useRouter()
     const memberId = params.id as string
+    const { toast } = useToast()
 
     const [member, setMember] = React.useState<Member | null>(null)
     const [assessments, setAssessments] = React.useState<Assessment[]>([])
     const [payments, setPayments] = React.useState<Payment[]>([])
+    const [workoutPlans, setWorkoutPlans] = React.useState<WorkoutPlan[]>([])
     const [isLoading, setIsLoading] = React.useState(true)
+    const [isSaving, setIsSaving] = React.useState(false);
+    const [muralMessage, setMuralMessage] = React.useState("");
 
     React.useEffect(() => {
         if (!memberId) return
@@ -34,19 +42,23 @@ export default function MemberProfilePage() {
         const fetchData = async () => {
             setIsLoading(true)
             try {
-                const [memberData, assessmentsData, paymentsData] = await Promise.all([
+                const [memberData, assessmentsData, paymentsData, plansData] = await Promise.all([
                     getMemberById(memberId),
-                    getAssessments(memberId), // Assuming getAssessments can filter by studentId
-                    getPaymentsByStudentId(memberId)
+                    getAssessments(memberId), 
+                    getPaymentsByStudentId(memberId),
+                    getWorkoutPlans()
                 ]);
 
                 setMember(memberData);
-                setAssessments(assessmentsData.filter(a => a.studentId === memberId));
+                if (memberData) {
+                    setAssessments(assessmentsData.filter(a => a.studentId === memberId));
+                    setMuralMessage(memberData.mural || "");
+                }
                 setPayments(paymentsData);
+                setWorkoutPlans(plansData);
 
             } catch (error) {
                 console.error("Failed to fetch member data:", error)
-                // Optionally, show a toast message
             } finally {
                 setIsLoading(false)
             }
@@ -54,6 +66,34 @@ export default function MemberProfilePage() {
 
         fetchData()
     }, [memberId])
+
+    const handleSaveMural = async () => {
+        if (!member) return;
+        setIsSaving(true);
+        try {
+            await updateMember(member.id, { mural: muralMessage });
+            toast({ title: "Mural Atualizado", description: "A mensagem foi salva e está visível para o aluno." });
+        } catch (error) {
+            toast({ title: "Erro ao salvar", variant: "destructive" });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+    
+    const handleAssignPlan = async (planId: string) => {
+        if (!member) return;
+        setIsSaving(true);
+        try {
+            await updateMember(member.id, { assignedPlanId: planId });
+            const updatedMember = await getMemberById(member.id); // Refetch member data
+            setMember(updatedMember);
+            toast({ title: "Plano Atribuído!", description: "O aluno agora tem um novo plano de treino." });
+        } catch (error) {
+            toast({ title: "Erro ao atribuir plano", variant: "destructive" });
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     if (isLoading) {
         return (
@@ -175,11 +215,12 @@ export default function MemberProfilePage() {
 
                 <div className="lg:col-span-2">
                     <Tabs defaultValue="payments">
-                        <TabsList className="grid w-full grid-cols-4">
+                        <TabsList className="grid w-full grid-cols-5">
                             <TabsTrigger value="payments"><Receipt className="mr-2" /> Pagamentos</TabsTrigger>
                             <TabsTrigger value="workouts"><Dumbbell className="mr-2" /> Treino</TabsTrigger>
                             <TabsTrigger value="assessments"><HeartPulse className="mr-2" /> Avaliações</TabsTrigger>
                             <TabsTrigger value="medical"><FileText className="mr-2" /> Atestados</TabsTrigger>
+                             <TabsTrigger value="mural"><MessageSquare className="mr-2" /> Mural</TabsTrigger>
                         </TabsList>
                         
                         <TabsContent value="payments" className="mt-4">
@@ -221,8 +262,29 @@ export default function MemberProfilePage() {
                                 <CardHeader>
                                     <CardTitle>Plano de Treino Atual</CardTitle>
                                 </CardHeader>
-                                <CardContent className="h-48 flex items-center justify-center text-muted-foreground">
-                                    <p>Funcionalidade de atribuição de treinos em breve.</p>
+                                <CardContent className="space-y-4">
+                                     <div className="grid w-full max-w-sm items-center gap-1.5">
+                                        <Label htmlFor="workout-plan">Atribuir Plano de Treino</Label>
+                                         <Select 
+                                            onValueChange={handleAssignPlan}
+                                            value={member.assignedPlanId || ""}
+                                            disabled={isSaving}
+                                        >
+                                            <SelectTrigger id="workout-plan">
+                                                <SelectValue placeholder="Selecione um plano de treino" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {workoutPlans.map(plan => (
+                                                    <SelectItem key={plan.id} value={plan.id}>
+                                                        {plan.name} ({plan.level})
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="h-24 flex items-center justify-center text-muted-foreground border-2 border-dashed rounded-md">
+                                        <p>Selecione um plano acima para atribuí-lo ao aluno.</p>
+                                    </div>
                                 </CardContent>
                             </Card>
                         </TabsContent>
@@ -265,14 +327,52 @@ export default function MemberProfilePage() {
                                 <CardHeader>
                                     <CardTitle>Atestados e Laudos Médicos</CardTitle>
                                 </CardHeader>
-                                <CardContent className="text-sm text-muted-foreground whitespace-pre-wrap">
-                                    {member.medicalNotes ? (
-                                        <p>{member.medicalNotes}</p>
-                                    ) : (
-                                        <div className="h-24 flex items-center justify-center">
-                                            <p>Nenhum atestado ou laudo registrado para este aluno.</p>
+                                <CardContent className="space-y-4">
+                                     <div className="grid gap-2">
+                                        <Label htmlFor="contractFile" className="flex items-center gap-2">
+                                            <FileText className="h-4 w-4" /> Anexar Atestado/Laudo
+                                        </Label>
+                                        <div className="flex items-center gap-2">
+                                            <input id="contractFile" type="file" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
+                                            <Button>Enviar</Button>
                                         </div>
-                                    )}
+                                    </div>
+                                    <Separator/>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="medicalNotes">Observações Médicas</Label>
+                                        <Textarea 
+                                            id="medicalNotes" 
+                                            defaultValue={member.medicalNotes} 
+                                            placeholder="Descreva aqui o conteúdo de atestados, laudos ou qualquer observação médica relevante."
+                                            rows={6}
+                                        />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                        <TabsContent value="mural" className="mt-4">
+                             <Card>
+                                <CardHeader>
+                                    <CardTitle>Mural de Recados</CardTitle>
+                                    <CardDescription>
+                                        Deixe uma mensagem, dica ou orientação que ficará visível no portal deste aluno.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="grid w-full gap-2">
+                                        <Label htmlFor="mural-message">Mensagem para o aluno</Label>
+                                        <Textarea 
+                                            id="mural-message"
+                                            placeholder="Ex: Não se esqueça de focar na execução correta do agachamento. Vamos corrigir na próxima aula!" 
+                                            rows={5}
+                                            value={muralMessage}
+                                            onChange={(e) => setMuralMessage(e.target.value)}
+                                        />
+                                    </div>
+                                    <Button onClick={handleSaveMural} disabled={isSaving}>
+                                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
+                                        Salvar no Mural
+                                    </Button>
                                 </CardContent>
                             </Card>
                         </TabsContent>

@@ -627,8 +627,7 @@ export default function AccessControlPage() {
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="contractFile" className="flex items-center gap-2"><FileText className="h-4 w-4" /> Cópia do Contrato</Label>
-                                    <Input id="contractFile" type="file" disabled />
-                                    <p className="text-xs text-muted-foreground">O upload de arquivos estará disponível em breve.</p>
+                                    <input id="contractFile" type="file" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
                                 </div>
                             </div>
                         </>

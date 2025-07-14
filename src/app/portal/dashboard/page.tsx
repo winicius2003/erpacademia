@@ -1,11 +1,10 @@
-
 "use client"
 
 import * as React from "react"
 import { format, parseISO, isSameDay } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import Image from "next/image"
-import { Loader2, Dumbbell, PartyPopper, MessageSquareWarning, CalendarX } from "lucide-react"
+import { Loader2, Dumbbell, PartyPopper, MessageSquareWarning, CalendarX, MessageSquare } from "lucide-react"
 
 import { getMemberById, type Member } from "@/services/members"
 import { getWorkoutPlanById, type WorkoutPlan } from "@/services/workouts"
@@ -16,7 +15,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 
 
 type PersonalAlert = {
-    type: 'birthday' | 'payment' | 'absence' | 'none';
+    type: 'birthday' | 'payment' | 'absence' | 'mural' | 'none';
     Icon: React.ElementType;
     title: string;
     message: string;
@@ -51,7 +50,15 @@ export default function StudentDashboardPage() {
                 if (memberData) {
                     const today = new Date();
                     const dob = parseISO(memberData.dob);
-                    if (isSameDay(today, dob)) {
+                    
+                    if (memberData.mural) { // Mural has top priority
+                        setPersonalAlert({
+                            type: 'mural',
+                            Icon: MessageSquare,
+                            title: 'Recado do seu Professor!',
+                            message: memberData.mural
+                        });
+                    } else if (isSameDay(today, dob)) {
                          setPersonalAlert({
                             type: 'birthday',
                             Icon: PartyPopper,
@@ -98,9 +105,9 @@ export default function StudentDashboardPage() {
         <div className="space-y-6">
 
             {personalAlert && (
-                <Alert className="bg-primary/5 border-primary/20">
-                    <personalAlert.Icon className="h-4 w-4 text-primary" />
-                    <AlertTitle className="font-headline text-primary">{personalAlert.title}</AlertTitle>
+                <Alert className={personalAlert.type === 'mural' ? "bg-blue-100 dark:bg-blue-900/30 border-blue-500/50" : "bg-primary/5 border-primary/20"}>
+                    <personalAlert.Icon className={`h-4 w-4 ${personalAlert.type === 'mural' ? 'text-blue-600' : 'text-primary'}`} />
+                    <AlertTitle className={`font-headline ${personalAlert.type === 'mural' ? 'text-blue-700 dark:text-blue-300' : 'text-primary'}`}>{personalAlert.title}</AlertTitle>
                     <AlertDescription>
                         {personalAlert.message}
                     </AlertDescription>

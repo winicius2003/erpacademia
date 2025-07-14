@@ -5,14 +5,15 @@ export type Product = {
     name: string;
     price: number;
     stock: number; // Current stock quantity
+    minStock: number; // Minimum stock to trigger alert
 };
 
 // In-Memory Database
 let products: Product[] = [
-    { id: 'prod-1', name: 'Garrafa de Água FitCore', price: 25.00, stock: 50 },
-    { id: 'prod-2', name: 'Toalha de Treino', price: 35.00, stock: 30 },
-    { id: 'prod-3', name: 'Barra de Proteína', price: 8.00, stock: 100 },
-    { id: 'prod-4', name: 'Coqueteleira', price: 45.00, stock: 25 },
+    { id: 'prod-1', name: 'Garrafa de Água FitCore', price: 25.00, stock: 50, minStock: 10 },
+    { id: 'prod-2', name: 'Toalha de Treino', price: 35.00, stock: 8, minStock: 5 },
+    { id: 'prod-3', name: 'Barra de Proteína', price: 8.00, stock: 100, minStock: 20 },
+    { id: 'prod-4', name: 'Coqueteleira', price: 45.00, stock: 3, minStock: 10 },
 ];
 let nextId = products.length + 1;
 
