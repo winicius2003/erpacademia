@@ -208,6 +208,33 @@ Se você precisa que alguém fora da sua rede Wi-Fi acesse a aplicação rodando
 
 Se não funcionar, é provável que seu provedor de internet utilize uma tecnologia chamada **CGNAT**, que impede o redirecionamento de portas. Nesse caso, ferramentas como `ngrok` ou `Tailscale` são as únicas alternativas.
 
+### 8. Publicando em um Servidor (Implantação)
+
+Para que sua aplicação fique disponível 24/7 para seus clientes sem depender da sua máquina, você precisa publicá-la em um servidor. Este projeto está configurado para ser implantado no **Firebase App Hosting**, um serviço que gerencia toda a infraestrutura de servidor para você.
+
+**Vantagens:**
+
+-   **Não precisa gerenciar servidores:** Você não se preocupa com atualizações de sistema operacional, segurança ou configuração de rede.
+-   **Escalabilidade Automática:** O Firebase aumenta ou diminui os recursos automaticamente com base no tráfego.
+-   **Implantação Simples:** Publicar uma nova versão é tão simples quanto executar um único comando.
+
+**Passos para Publicar:**
+
+1.  **Instale o Firebase CLI:** Se você ainda não tem, instale a ferramenta de linha de comando do Firebase.
+    ```bash
+    npm install -g firebase-tools
+    ```
+2.  **Faça Login na sua Conta Firebase:**
+    ```bash
+    firebase login
+    ```
+    Isso abrirá uma janela no seu navegador para você autenticar.
+3.  **Publique o Projeto:** Na pasta raiz do seu projeto, execute o comando de implantação:
+    ```bash
+    firebase deploy
+    ```
+O Firebase CLI irá construir a versão de produção do seu projeto e enviá-la para os servidores. Ao final do processo, ele fornecerá a **URL pública** onde sua aplicação estará acessível para todos. O arquivo `apphosting.yaml` no seu projeto já contém as configurações básicas para essa implantação.
+
 ## Banco de Dados e Persistência de Dados
 
 **Importante:** Este projeto utiliza um **banco de dados em memória** para simplificar a demonstração e o desenvolvimento local. Isso significa que toda a informação (alunos, pagamentos, treinos, etc.) é carregada a partir de arquivos internos e **qualquer alteração feita durante o uso será perdida quando o servidor de desenvolvimento for reiniciado**.
