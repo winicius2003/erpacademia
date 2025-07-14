@@ -96,7 +96,7 @@ export default function LandingPage() {
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center">
-          <Link href="#" className="mr-6 flex items-center space-x-2">
+          <Link href="/" className="mr-6 flex items-center space-x-2">
             <Logo className="h-6 w-6" />
             <span className="font-bold font-headline">FitCore</span>
           </Link>
@@ -210,7 +210,7 @@ export default function LandingPage() {
       <footer className="border-t bg-background">
         <div className="container grid items-start gap-8 pb-8 pt-12 md:grid-cols-4">
           <div className="flex flex-col gap-2 col-span-1">
-            <Link href="#" className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2">
               <Logo className="h-6 w-6" />
               <span className="font-bold font-headline">FitCore</span>
             </Link>
