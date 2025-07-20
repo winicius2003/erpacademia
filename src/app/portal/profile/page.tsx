@@ -3,14 +3,17 @@
 
 import * as React from "react"
 import { format, parseISO } from "date-fns"
-import { Loader2, User, FileSignature, CalendarDays, CheckCircle, AlertCircle, XCircle } from "lucide-react"
+import { Loader2, User, FileSignature, CalendarDays, CheckCircle, AlertCircle, XCircle, ScanFace, Camera, Video, VideoOff } from "lucide-react"
 
-import { getMemberById, type Member } from "@/services/members"
+import { getMemberById, updateMember, type Member } from "@/services/members"
 import { getAssessments, type Assessment } from "@/services/assessments"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 const statusConfig = {
     Ativo: { icon: CheckCircle, color: "text-green-500", label: "Ativo" },
@@ -23,7 +26,14 @@ export default function StudentProfilePage() {
     const [assessments, setAssessments] = React.useState<Assessment[]>([])
     const [isLoading, setIsLoading] = React.useState(true)
 
-    React.useEffect(() => {
+    const [hasCameraPermission, setHasCameraPermission] = React.useState<boolean | null>(null);
+    const [isRegisteringFace, setIsRegisteringFace] = React.useState(false);
+    const [isSavingFace, setIsSavingFace] = React.useState(false);
+    const videoRef = React.useRef<HTMLVideoElement>(null);
+    const { toast } = useToast();
+
+    const fetchUserData = React.useCallback(async () => {
+        setIsLoading(true)
         const sessionUser = sessionStorage.getItem("fitcore.user")
         if (!sessionUser) {
             setIsLoading(false)
@@ -32,27 +42,93 @@ export default function StudentProfilePage() {
 
         const parsedUser = JSON.parse(sessionUser)
 
-        async function fetchData() {
-            try {
-                const [memberData, assessmentsData] = await Promise.all([
-                    getMemberById(parsedUser.id),
-                    getAssessments(),
-                ]);
-                
-                setUser(memberData);
-                if (memberData) {
-                    setAssessments(assessmentsData.filter(a => a.studentId === memberData.id));
-                }
-
-            } catch (error) {
-                console.error("Failed to fetch student profile data:", error)
-            } finally {
-                setIsLoading(false)
+        try {
+            const [memberData, assessmentsData] = await Promise.all([
+                getMemberById(parsedUser.id),
+                getAssessments(),
+            ]);
+            
+            setUser(memberData);
+            if (memberData) {
+                setAssessments(assessmentsData.filter(a => a.studentId === memberData.id));
             }
+
+        } catch (error) {
+            console.error("Failed to fetch student profile data:", error)
+        } finally {
+            setIsLoading(false)
         }
-        
-        fetchData()
-    }, [])
+    }, []);
+
+    React.useEffect(() => {
+        fetchUserData();
+    }, [fetchUserData])
+
+    const getCameraPermission = async () => {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            toast({ variant: 'destructive', title: 'Recurso não suportado', description: 'Seu navegador não suporta acesso à câmera.' });
+            setHasCameraPermission(false);
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            setHasCameraPermission(true);
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+            }
+        } catch (error) {
+            console.error('Error accessing camera:', error);
+            setHasCameraPermission(false);
+            toast({
+                variant: 'destructive',
+                title: 'Acesso à Câmera Negado',
+                description: 'Por favor, habilite o acesso à câmera nas configurações do seu navegador.',
+            });
+        }
+    };
+
+    const stopCamera = () => {
+        if (videoRef.current && videoRef.current.srcObject) {
+            const stream = videoRef.current.srcObject as MediaStream;
+            stream.getTracks().forEach(track => track.stop());
+            videoRef.current.srcObject = null;
+        }
+    }
+
+    const handleStartRegistration = () => {
+        setIsRegisteringFace(true);
+        getCameraPermission();
+    }
+    
+    const handleCancelRegistration = () => {
+        stopCamera();
+        setIsRegisteringFace(false);
+    }
+    
+    const handleCaptureFace = async () => {
+        if (!videoRef.current || !user) return;
+        setIsSavingFace(true);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+        const context = canvas.getContext('2d');
+        context?.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg');
+
+        try {
+            await updateMember(user.id, { faceScanUrl: dataUrl });
+            await fetchUserData(); // Refresh user data to show new status
+            toast({ title: 'Rosto Cadastrado!', description: 'Seu cadastro facial foi concluído com sucesso.' });
+        } catch (error) {
+            toast({ title: 'Erro ao Cadastrar', variant: 'destructive', description: 'Não foi possível salvar sua foto.' });
+        } finally {
+            stopCamera();
+            setIsSavingFace(false);
+            setIsRegisteringFace(false);
+        }
+    }
 
     if (isLoading) {
         return <div className="flex h-64 w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
@@ -120,7 +196,7 @@ export default function StudentProfilePage() {
                         </CardContent>
                     </Card>
                 </div>
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-2 space-y-6">
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2"><CalendarDays /> Histórico de Avaliações</CardTitle>
@@ -154,6 +230,56 @@ export default function StudentProfilePage() {
                                 </TableBody>
                             </Table>
                         </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                             <CardTitle className="flex items-center gap-2"><ScanFace /> Reconhecimento Facial</CardTitle>
+                            <CardDescription>Cadastre seu rosto para ter um acesso mais rápido e seguro na catraca.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {isRegisteringFace ? (
+                                <div className="space-y-4">
+                                     <div className="relative aspect-video w-full bg-muted rounded-md overflow-hidden flex items-center justify-center">
+                                        <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
+                                        {hasCameraPermission === false && (
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-background/80">
+                                                <VideoOff className="h-12 w-12 text-destructive" />
+                                                <p className="mt-2 font-semibold">Câmera não encontrada</p>
+                                                <p className="text-sm text-muted-foreground">Verifique as permissões no seu navegador.</p>
+                                            </div>
+                                        )}
+                                     </div>
+                                </div>
+                            ) : user.faceScanUrl ? (
+                                <Alert variant="default" className="bg-green-50 dark:bg-green-900/30 border-green-500/50">
+                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                    <AlertTitle className="text-green-800 dark:text-green-300">Cadastro Facial Ativo</AlertTitle>
+                                    <AlertDescription>Seu rosto já está cadastrado! Se precisar, você pode registrar novamente.</AlertDescription>
+                                </Alert>
+                            ) : (
+                                 <Alert variant="destructive">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertTitle>Cadastro Facial Pendente</AlertTitle>
+                                    <AlertDescription>Você ainda não cadastrou seu rosto. Faça o cadastro para agilizar sua entrada.</AlertDescription>
+                                </Alert>
+                            )}
+                        </CardContent>
+                        <CardFooter className="flex gap-4">
+                            {isRegisteringFace ? (
+                                <>
+                                    <Button onClick={handleCaptureFace} disabled={!hasCameraPermission || isSavingFace}>
+                                        {isSavingFace ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Camera className="mr-2 h-4 w-4" />}
+                                        {isSavingFace ? 'Salvando...' : 'Cadastrar Rosto'}
+                                    </Button>
+                                    <Button variant="ghost" onClick={handleCancelRegistration}>Cancelar</Button>
+                                </>
+                            ) : (
+                                <Button onClick={handleStartRegistration}>
+                                    <Video className="mr-2 h-4 w-4" />
+                                    {user.faceScanUrl ? 'Registrar Novamente' : 'Iniciar Cadastro Facial'}
+                                </Button>
+                            )}
+                        </CardFooter>
                     </Card>
                 </div>
             </div>

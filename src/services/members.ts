@@ -1,5 +1,6 @@
 
 
+
 'use server';
 
 import { format, addMonths, differenceInDays, parseISO, subDays } from 'date-fns';
@@ -27,6 +28,7 @@ export type Member = {
   notes: string,
   mural?: string; // Recados do professor para o aluno
   accessPin?: string,
+  faceScanUrl?: string; // Data URI of the registered face
   fingerprintRegistered?: boolean,
   password?: string;
   loginMethod?: 'google' | 'password';

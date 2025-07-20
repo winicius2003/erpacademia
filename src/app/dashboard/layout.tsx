@@ -30,6 +30,7 @@ import {
   Handshake,
   FileClock,
   Search,
+  ScanFace,
 } from "lucide-react"
 import { usePathname, useRouter } from 'next/navigation'
 import { differenceInDays } from 'date-fns'
@@ -87,6 +88,7 @@ const navItems = [
   { href: "/dashboard/financial", icon: Wallet, label: "Financeiro (Pessoal)", altLabel: "Financeiro", permissionLabel: "Financeiro (Pessoal)" },
   { href: "/dashboard/crm", icon: HeartHandshake, label: "CRM" },
   { href: "/dashboard/frequency", icon: FileClock, label: "Frequência" },
+  { href: "/dashboard/facial-recognition", icon: ScanFace, label: "Reconhecimento Facial" },
   { href: "/dashboard/access-control", icon: UsersRound, label: "Colaboradores" },
   { href: "/dashboard/reports", icon: AreaChart, label: "Relatórios" },
   { href: "/dashboard/gympass", icon: Handshake, label: "Gympass" },
@@ -97,13 +99,13 @@ const navItems = [
 ]
 
 export const navPermissions: Record<Role, string[]> = {
-  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro (Geral)", "CRM", "Colaboradores", "Relatórios", "Configurações", "Assinatura", "Gympass", "Planos", "Produtos", "Frequência"],
+  Admin: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda", "Financeiro (Geral)", "CRM", "Colaboradores", "Relatórios", "Configurações", "Assinatura", "Gympass", "Planos", "Produtos", "Frequência", "Reconhecimento Facial"],
   Gerente: ["Painel", "Alunos", "Agenda", "Financeiro (Pessoal)", "CRM", "Colaboradores"],
-  Gestor: ["Painel", "Alunos", "Avaliações", "Agenda", "Financeiro (Geral)", "CRM", "Relatórios", "Planos", "Produtos", "Assinatura", "Gympass", "Frequência"],
+  Gestor: ["Painel", "Alunos", "Avaliações", "Agenda", "Financeiro (Geral)", "CRM", "Relatórios", "Planos", "Produtos", "Assinatura", "Gympass", "Frequência", "Reconhecimento Facial"],
   Professor: ["Painel", "Alunos", "Treinos", "Avaliações", "Agenda"],
   "Personal Trainer Externo": ["Painel", "Alunos", "Treinos", "Avaliações"],
-  Recepção: ["Alunos", "Agenda", "Financeiro (Pessoal)", "CRM", "Produtos"],
-  Estagiário: ["Alunos", "Agenda"],
+  Recepção: ["Alunos", "Agenda", "Financeiro (Pessoal)", "CRM", "Produtos", "Reconhecimento Facial"],
+  Estagiário: ["Alunos", "Agenda", "Treinos"],
   Impressão: [],
 };
 
