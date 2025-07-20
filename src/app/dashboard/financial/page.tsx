@@ -130,6 +130,7 @@ export default function FinancialPage() {
     const { toast } = useToast()
     const { status: subscriptionStatus } = useSubscription()
     const studentNameParam = searchParams.get('studentName')
+    const studentIdParam = searchParams.get('studentId')
 
     const [paymentAction, setPaymentAction] = React.useState<{studentId: string; studentName: string; planName: string; planPrice: string;} | null>(null);
     const [hasAttemptedRefetch, setHasAttemptedRefetch] = React.useState(false);
@@ -175,13 +176,13 @@ export default function FinancialPage() {
     const isSalesBlocked = subscriptionStatus === 'overdue' || subscriptionStatus === 'blocked';
     const hasFullAccess = user?.role === 'Admin' || user?.role === 'Gestor';
     
-    const defaultTab = hasFullAccess ? (studentNameParam ? "payments" : "cashflow") : "cashier_closing";
+    const defaultTab = hasFullAccess ? (studentIdParam ? "payments" : "cashflow") : "cashier_closing";
     const [activeTab, setActiveTab] = React.useState(defaultTab);
     
     React.useEffect(() => {
-        const newDefaultTab = hasFullAccess ? (studentNameParam ? "payments" : "cashflow") : "cashier_closing";
+        const newDefaultTab = hasFullAccess ? (studentIdParam ? "payments" : "cashflow") : "cashier_closing";
         setActiveTab(newDefaultTab);
-    }, [studentNameParam, hasFullAccess]);
+    }, [studentIdParam, hasFullAccess]);
 
 
     const fetchData = React.useCallback(async () => {
@@ -416,20 +417,24 @@ export default function FinancialPage() {
     const filteredPayments = React.useMemo(() => {
         const lowercasedSearch = paymentSearch.toLowerCase();
         
-        if (!lowercasedSearch) {
-            if (studentNameParam) {
-                const lowercasedStudentName = studentNameParam.toLowerCase();
-                return payments.filter(p => p.student.toLowerCase() === lowercasedStudentName);
-            }
+        if (!lowercasedSearch && !studentIdParam) {
             return payments;
         }
 
-        return payments.filter(payment =>
-            payment.student.toLowerCase().includes(lowercasedSearch) ||
-            (payment.transactionId && payment.transactionId.toLowerCase().includes(lowercasedSearch)) ||
-            payment.id.toLowerCase().includes(lowercasedSearch)
-        );
-    }, [payments, paymentSearch, studentNameParam]);
+        return payments.filter(payment => {
+            const matchesStudentId = studentIdParam ? payment.studentId === studentIdParam : true;
+            if (!matchesStudentId) return false;
+
+            if (lowercasedSearch) {
+                return (
+                    payment.student.toLowerCase().includes(lowercasedSearch) ||
+                    (payment.transactionId && payment.transactionId.toLowerCase().includes(lowercasedSearch)) ||
+                    payment.id.toLowerCase().includes(lowercasedSearch)
+                );
+            }
+            return true;
+        });
+    }, [payments, paymentSearch, studentIdParam]);
 
     const resetImportDialog = () => {
       setImportFile(null);
@@ -470,21 +475,21 @@ export default function FinancialPage() {
                  }
 
                  // Prioritize 'Nome' as the key identifier for the student
-                 const studentName = normalizedRow['nome'];
+                 const studentName = normalizedRow['nome'] || normalizedRow['nome do aluno'] || normalizedRow['aluno'];
 
                  if (!studentName) {
-                     currentErrors.push(`Linha ${index + 2}: A coluna "Nome" do aluno é obrigatória e não foi encontrada na sua planilha.`);
+                     currentErrors.push(`Linha ${index + 2}: A coluna "Nome do Aluno" é obrigatória e não foi encontrada na sua planilha.`);
                      return null;
                  }
                  
                  // Map other fields with fallbacks for different column names
                  const itemDescricao = normalizedRow['plano'] || normalizedRow['produto'] || normalizedRow['item descricao'];
-                 const valor = String(normalizedRow['valor'] || '').replace(',', '.');
+                 const valor = String(normalizedRow['valor'] || normalizedRow['preco'] || '').replace(',', '.');
                  const formaPagamento = normalizedRow['forma pagamento'] || normalizedRow['condicao pagamento'];
                  const dataPagamento = normalizedRow['data lancamento'] || normalizedRow['data termino'] || normalizedRow['data de cadastro'] || normalizedRow['data'];
 
                  // Validate required fields
-                 if (!itemDescricao) { currentErrors.push(`Linha ${index + 2}: Coluna 'Plano' ou 'Produto' não encontrada para o aluno "${studentName}".`); return null; }
+                 if (!itemDescricao) { currentErrors.push(`Linha ${index + 2}: Coluna 'Plano' ou 'Item Descrição' não encontrada para o aluno "${studentName}".`); return null; }
                  if (!valor || isNaN(parseFloat(valor))) { currentErrors.push(`Linha ${index + 2}: Valor inválido ou não encontrado para o aluno "${studentName}".`); return null; }
                  if (!formaPagamento) { currentErrors.push(`Linha ${index + 2}: 'Forma Pagamento' não encontrada para o aluno "${studentName}".`); return null; }
                  if (!dataPagamento) { currentErrors.push(`Linha ${index + 2}: Coluna de data ('Data Lançamento', 'Data Término' ou 'Data de Cadastro') não encontrada para o aluno "${studentName}".`); return null; }
@@ -783,7 +788,7 @@ export default function FinancialPage() {
                                         onChange={(e) => setPaymentSearch(e.target.value)}
                                     />
                                 </div>
-                                {studentNameParam && (<Button variant="outline" size="sm" onClick={clearFilter}><X className="mr-2 h-4 w-4" />Limpar filtro</Button>)}
+                                {studentIdParam && (<Button variant="outline" size="sm" onClick={clearFilter}><X className="mr-2 h-4 w-4" />Limpar filtro</Button>)}
                                 <Button variant="outline" onClick={() => { setIsImportDialogOpen(true); resetImportDialog(); }}>
                                     <Upload className="mr-2 h-4 w-4" /> Importar Excel
                                 </Button>
@@ -1075,3 +1080,5 @@ export default function FinancialPage() {
     </>
   )
 }
+
+    

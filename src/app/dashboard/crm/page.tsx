@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -14,7 +15,9 @@ import {
   UserMinus,
   CakeSlice,
   User,
+  WalletCards,
 } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -112,6 +115,7 @@ export default function CrmPage() {
   const [members, setMembers] = React.useState<Member[]>([]);
   const [isLoading, setIsLoading] = React.useState(true)
   const { toast } = useToast()
+  const router = useRouter();
 
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [isEditing, setIsEditing] = React.useState(false)
@@ -256,8 +260,8 @@ export default function CrmPage() {
     return { overdue: overdueMembers, absent: absentMembers, birthdays: birthdayMembers };
   }
 
-  const handleSendMessage = (phone: string, name: string, messageType: 'birthday' | 'absent') => {
-      if (!phone || !messageType) return;
+  const handleSendMessage = (phone: string, name: string, messageType: 'birthday' | 'absent' | 'overdue') => {
+      if (!phone) return;
       
       const cleanedPhone = phone.replace(/\D/g, '');
       let message = '';
@@ -266,6 +270,8 @@ export default function CrmPage() {
           message = `Olá, ${name}! A equipe da Academia Exemplo deseja a você um feliz aniversário! 🎉🎂 Muitas felicidades e ótimos treinos!`;
       } else if (messageType === 'absent') {
           message = `Olá, ${name}! Sentimos sua falta aqui na Academia Exemplo. Que tal voltar a treinar com a gente e manter o foco nos seus objetivos? Estamos te esperando! 💪😊`;
+      } else if (messageType === 'overdue') {
+          message = `Olá, ${name}. Identificamos uma pendência em sua mensalidade na Academia Exemplo. Por favor, procure a recepção para regularizar. Agradecemos a compreensão!`;
       }
 
       if (!message) return;
@@ -537,11 +543,12 @@ export default function CrmPage() {
                                             </div>
                                         </div>
                                         <div className="flex items-center">
-                                            <Link href={`/dashboard/financial?studentId=${member.id}&studentName=${member.name}`}>
-                                                <Button variant="ghost" size="icon" title="Ver Pagamentos">
-                                                    <MessageSquare className="h-4 w-4" />
-                                                </Button>
-                                            </Link>
+                                            <Button variant="ghost" size="icon" onClick={() => handleSendMessage(member.phone, member.name, 'overdue')} disabled={!member.phone} title="Enviar WhatsApp">
+                                                <MessageSquare className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" title="Ver Pagamentos" onClick={() => router.push(`/dashboard/financial?studentId=${member.id}&studentName=${encodeURIComponent(member.name)}`)}>
+                                                <WalletCards className="h-4 w-4" />
+                                            </Button>
                                             <Link href={`/dashboard/members/${member.id}`}>
                                                 <Button variant="ghost" size="icon" title="Ver Ficha">
                                                     <User className="h-4 w-4" />
@@ -612,3 +619,5 @@ export default function CrmPage() {
     </>
   )
 }
+
+    

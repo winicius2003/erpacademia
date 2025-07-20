@@ -119,7 +119,6 @@ export default function MembersPage() {
   const [members, setMembers] = React.useState<Member[]>([])
   const [plans, setPlans] = React.useState<Plan[]>([]);
   const [isLoading, setIsLoading] = React.useState(true)
-  const [filteredMembers, setFilteredMembers] = React.useState<Member[]>([]);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [isFormDialogOpen, setIsFormDialogOpen] = React.useState(false)
   const [isEditing, setIsEditing] = React.useState(false)
@@ -172,8 +171,8 @@ export default function MembersPage() {
     }
   }, [router]);
 
-  React.useEffect(() => {
-    if (!user) return;
+  const filteredMembers = React.useMemo(() => {
+    if (!user) return [];
 
     let displayList = members;
 
@@ -185,8 +184,16 @@ export default function MembersPage() {
       displayList = members.filter(m => m.professor === user.name);
     }
     
-    setFilteredMembers(displayList);
+    return displayList;
   }, [members, user, searchQuery]);
+
+  const memberCounts = React.useMemo(() => {
+    return {
+        all: members.length,
+        active: members.filter(m => m.status === 'Ativo').length,
+        overdue: members.filter(m => m.status === 'Atrasado').length,
+    }
+  }, [members]);
 
 
   const handleInputChange = (field: keyof MemberFormData, value: any) => {
@@ -846,10 +853,10 @@ export default function MembersPage() {
         <CardContent>
           <Tabs defaultValue="all">
             <TabsList>
-              <TabsTrigger value="all">Todos</TabsTrigger>
-              <TabsTrigger value="active">Ativos</TabsTrigger>
+              <TabsTrigger value="all">Todos <Badge variant="secondary" className="ml-2">{memberCounts.all}</Badge></TabsTrigger>
+              <TabsTrigger value="active">Ativos <Badge variant="secondary" className="ml-2">{memberCounts.active}</Badge></TabsTrigger>
               {user.role !== 'Professor' && (
-                <TabsTrigger value="overdue">Inadimplentes</TabsTrigger>
+                <TabsTrigger value="overdue">Inadimplentes <Badge variant="destructive" className="ml-2">{memberCounts.overdue}</Badge></TabsTrigger>
               )}
             </TabsList>
             <TabsContent value="all">
@@ -1113,3 +1120,5 @@ function MemberTable({
         </Table>
     )
 }
+
+    
