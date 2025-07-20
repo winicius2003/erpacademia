@@ -1,6 +1,7 @@
 
 
 
+
 'use server';
 
 import { format, addMonths, differenceInDays, parseISO, subDays } from 'date-fns';
@@ -47,7 +48,7 @@ const defaultAddress: Address = { street: 'Rua Fictícia', number: '123', neighb
 // --- In-Memory Database ---
 // status and attendanceStatus are now calculated dynamically.
 let members: Omit<Member, 'status' | 'attendanceStatus'>[] = [
-  { id: '1', name: 'João da Silva', email: 'joao.silva@example.com', password: '123', loginMethod: 'password', phone: '(11) 98765-4321', plan: 'Anual', expires: format(addMonths(new Date(), 10), 'yyyy-MM-dd'), createdAt: '2023-08-15', cpf: "111.222.333-44", rg: "12.345.678-9", rgIssuer: "SSP/SP", dob: '1990-05-10', address: defaultAddress, professor: 'Marcos Rocha', lastSeen: format(new Date(), 'yyyy-MM-dd'), workoutStatus: 'Completo', goal: 'Hipertrofia', notes: 'Relatou dor no ombro esquerdo.', accessPin: '1234', fingerprintRegistered: true, assignedPlanId: '1', medicalNotes: 'Atestado médico válido até 2025-01-01. Liberado para atividades de alto impacto.', theme: 'dark' },
+  { id: '1', name: 'João da Silva', email: 'joao.silva@example.com', password: '123', loginMethod: 'password', phone: '(11) 98765-4321', plan: 'Anual', expires: format(addMonths(new Date(), 10), 'yyyy-MM-dd'), createdAt: '2023-08-15', cpf: "111.222.333-44", rg: "12.345.678-9", rgIssuer: "SSP/SP", dob: '1990-05-10', address: defaultAddress, professor: 'Marcos Rocha', lastSeen: format(new Date(), 'yyyy-MM-dd'), workoutStatus: 'Completo', goal: 'Hipertrofia', notes: 'Relatou dor no ombro esquerdo.', accessPin: '1234', fingerprintRegistered: true, assignedPlanId: '1', medicalNotes: 'Atestado médico válido até 2025-01-01. Liberado para atividades de alto impacto.', theme: 'dark', faceScanUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=' },
   { id: '2', name: 'Maria Oliveira', email: 'maria.oliveira@gmail.com', loginMethod: 'google', phone: '(21) 91234-5678', plan: 'Mensal', expires: format(addMonths(new Date(), 1), 'yyyy-MM-dd'), createdAt: '2024-06-01', cpf: "222.333.444-55", rg: "23.456.789-0", rgIssuer: "SSP/RJ", dob: '1995-07-22', address: defaultAddress, professor: 'Fernando Costa', lastSeen: format(subDays(new Date(), 5), 'yyyy-MM-dd'), workoutStatus: 'Pendente', goal: 'Emagrecimento', notes: '', accessPin: '5678', fingerprintRegistered: false, theme: 'light' },
   { id: '3', name: 'Carlos Pereira', email: 'carlos.pereira@example.com', password: '123', loginMethod: 'password', phone: '(31) 95555-4444', plan: 'Trimestral', expires: format(addMonths(new Date(), 2), 'yyyy-MM-dd'), createdAt: '2024-05-10', cpf: "333.444.555-66", rg: "34.567.890-1", rgIssuer: "SSP/MG", dob: '1985-11-23', address: defaultAddress, professor: 'Marcos Rocha', lastSeen: format(subDays(new Date(), 2), 'yyyy-MM-dd'), workoutStatus: 'Completo', goal: 'Definição muscular', notes: 'Asma, usar bombinha se necessário.', accessPin: '9012', fingerprintRegistered: true, theme: 'light', mural: 'Lembre-se de focar na respiração durante o Leg Press! Vamos corrigir isso no próximo treino.' },
   { id: '4', name: 'Ana Costa', email: 'ana.costa@example.com', password: '123', loginMethod: 'password', phone: '(41) 98888-7777', plan: 'Anual', expires: format(addMonths(new Date(), 6), 'yyyy-MM-dd'), createdAt: '2024-07-01', cpf: "444.555.666-77", rg: "45.678.901-2", rgIssuer: "SSP/PR", dob: '2000-02-15', address: defaultAddress, professor: 'Marcos Rocha', lastSeen: format(subDays(new Date(), 10), 'yyyy-MM-dd'), workoutStatus: 'Pendente', goal: 'Condicionamento físico', notes: '', accessPin: '4444', fingerprintRegistered: false, theme: 'light' },
@@ -94,6 +95,12 @@ export async function getMembers(): Promise<Member[]> {
     }));
 
     return Promise.resolve(updatedMembers as Member[]);
+}
+
+export async function getMembersWithFaceScan(): Promise<Member[]> {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const membersWithFaces = members.filter(m => !!m.faceScanUrl);
+    return Promise.resolve(JSON.parse(JSON.stringify(membersWithFaces)));
 }
 
 
