@@ -280,6 +280,11 @@ export default function MembersPage() {
         toast({ title: "Dados Incompletos", description: "Nome, e-mail, CPF, data de nascimento e dados do plano são obrigatórios.", variant: "destructive" });
         return;
     }
+    
+    if (isUnderage && (!memberFormData.guardian.name || !memberFormData.guardian.cpf || !memberFormData.guardian.phone)) {
+        toast({ title: "Dados do Responsável", description: "Para alunos menores de idade, os dados do responsável são obrigatórios.", variant: "destructive" });
+        return;
+    }
 
     setIsLoading(true);
     try {
@@ -317,12 +322,17 @@ export default function MembersPage() {
             };
             const newMember = await addMember(addPayload as Omit<Member, 'id' | 'password' | 'loginMethod' | 'status' | 'attendanceStatus'>);
             
+            setIsFormDialogOpen(false);
+            
+            // Show credentials pop-up
+            setNewCredentials({ email: newMember.email, password: newMember.password });
+            setIsCredentialsDialogOpen(true);
+            
             const planDetails = plans.find(p => p.name === newMember.plan);
             const planPrice = planDetails ? planDetails.price : 0;
             
             toast({ title: "Aluno Adicionado", description: "Redirecionando para o pagamento inicial..." });
             
-            setIsFormDialogOpen(false);
             router.push(`/dashboard/financial?action=new_payment&studentId=${newMember.id}&studentName=${encodeURIComponent(newMember.name)}&planName=${encodeURIComponent(newMember.plan)}&planPrice=${planPrice}`);
         }
     } catch (error) {
