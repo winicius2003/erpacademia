@@ -13,10 +13,10 @@ import { z } from 'genkit';
 
 const RegisteredFaceSchema = z.object({
   studentId: z.string().describe("The unique identifier for the student."),
-  photoDataUri: z
-    .string()
+  photoDataUris: z
+    .array(z.string())
     .describe(
-      "The student's registered reference photo, as a data URI."
+      "An array of the student's registered reference photos (up to 3), as data URIs."
     ),
 });
 
@@ -49,13 +49,13 @@ const prompt = ai.definePrompt({
 
 You will be given:
 1.  A "live photo" captured from a webcam.
-2.  An array of "registered faces", each with a unique studentId and their corresponding photo.
+2.  An array of "registered faces", each with a unique studentId and an array of their corresponding reference photos (e.g., frontal, left profile, right profile).
 
 Your analysis must be very strict. You are looking for a high-confidence match.
 
--   Iterate through each registered face in the database.
--   Compare it against the live photo.
--   If you find a strong match, set 'matchFound' to true and return the 'studentId' of that registered face. The reasoning should be a simple confirmation.
+-   Iterate through each registered student in the database.
+-   Compare the live photo against all available reference photos for that student to get a confident match.
+-   If you find a strong match, set 'matchFound' to true and return the 'studentId' of that registered student. The reasoning should be a simple confirmation.
 -   If, after checking all registered faces, you do not find a high-confidence match, set 'matchFound' to false and 'studentId' to null. The reasoning should state that no match was found.
 
 Live Photo to identify:
@@ -65,7 +65,10 @@ Database of Registered Faces to search within:
 {{#each registeredFaces}}
 ---
 Student ID: {{{this.studentId}}}
-Photo: {{media url=this.photoDataUri}}
+Reference Photos:
+{{#each this.photoDataUris}}
+  {{media url=this}}
+{{/each}}
 ---
 {{/each}}
 `,

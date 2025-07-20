@@ -3,7 +3,7 @@
 
 import * as React from "react"
 import { format, parseISO } from "date-fns"
-import { Loader2, User, FileSignature, CalendarDays, CheckCircle, AlertCircle, XCircle, ScanFace, Camera, Video, VideoOff } from "lucide-react"
+import { Loader2, User, FileSignature, CalendarDays, CheckCircle, AlertCircle, XCircle, ScanFace, Camera, Video, VideoOff, ArrowRight } from "lucide-react"
 
 import { getMemberById, updateMember, type Member } from "@/services/members"
 import { getAssessments, type Assessment } from "@/services/assessments"
@@ -14,12 +14,19 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Progress } from "@/components/ui/progress"
 
 const statusConfig = {
     Ativo: { icon: CheckCircle, color: "text-green-500", label: "Ativo" },
     Atrasado: { icon: AlertCircle, color: "text-yellow-500", label: "Pendente" },
     Inativo: { icon: XCircle, color: "text-red-500", label: "Inativo" },
 }
+
+const faceRegistrationSteps = [
+    { title: "Foto Frontal", instruction: "Olhe diretamente para a câmera, com o rosto bem iluminado e sem acessórios (óculos, boné)." },
+    { title: "Perfil Esquerdo", instruction: "Vire lentamente o rosto para a sua direita, mostrando o lado esquerdo do seu rosto para a câmera." },
+    { title: "Perfil Direito", instruction: "Agora, vire lentamente o rosto para a sua esquerda, mostrando o lado direito." },
+];
 
 export default function StudentProfilePage() {
     const [user, setUser] = React.useState<Member | null>(null)
@@ -29,6 +36,9 @@ export default function StudentProfilePage() {
     const [hasCameraPermission, setHasCameraPermission] = React.useState<boolean | null>(null);
     const [isRegisteringFace, setIsRegisteringFace] = React.useState(false);
     const [isSavingFace, setIsSavingFace] = React.useState(false);
+    const [faceRegistrationStep, setFaceRegistrationStep] = React.useState(0);
+    const [capturedPhotos, setCapturedPhotos] = React.useState<string[]>([]);
+    
     const videoRef = React.useRef<HTMLVideoElement>(null);
     const { toast } = useToast();
 
@@ -98,6 +108,8 @@ export default function StudentProfilePage() {
 
     const handleStartRegistration = () => {
         setIsRegisteringFace(true);
+        setFaceRegistrationStep(0);
+        setCapturedPhotos([]);
         getCameraPermission();
     }
     
@@ -106,19 +118,32 @@ export default function StudentProfilePage() {
         setIsRegisteringFace(false);
     }
     
-    const handleCaptureFace = async () => {
-        if (!videoRef.current || !user) return;
-        setIsSavingFace(true);
-
+    const handleCaptureFace = () => {
+        if (!videoRef.current) return;
+        
         const canvas = document.createElement('canvas');
         canvas.width = videoRef.current.videoWidth;
         canvas.height = videoRef.current.videoHeight;
         const context = canvas.getContext('2d');
         context?.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
         const dataUrl = canvas.toDataURL('image/jpeg');
+        
+        setCapturedPhotos(prev => [...prev, dataUrl]);
+
+        if (faceRegistrationStep < faceRegistrationSteps.length - 1) {
+            setFaceRegistrationStep(prev => prev + 1);
+        } else {
+            // Last photo captured, now save all
+            handleSaveFaces([...capturedPhotos, dataUrl]);
+        }
+    }
+    
+    const handleSaveFaces = async (photos: string[]) => {
+        if (!user || photos.length !== 3) return;
+        setIsSavingFace(true);
 
         try {
-            await updateMember(user.id, { faceScanUrl: dataUrl });
+            await updateMember(user.id, { faceScanUrl: photos });
             await fetchUserData(); // Refresh user data to show new status
             toast({ title: 'Rosto Cadastrado!', description: 'Seu cadastro facial foi concluído com sucesso.' });
         } catch (error) {
@@ -249,8 +274,13 @@ export default function StudentProfilePage() {
                                             </div>
                                         )}
                                      </div>
+                                     <div className="space-y-2 text-center">
+                                        <p className="font-semibold">{faceRegistrationSteps[faceRegistrationStep].title}</p>
+                                        <p className="text-sm text-muted-foreground">{faceRegistrationSteps[faceRegistrationStep].instruction}</p>
+                                        <Progress value={((faceRegistrationStep + 1) / faceRegistrationSteps.length) * 100} className="w-1/2 mx-auto" />
+                                     </div>
                                 </div>
-                            ) : user.faceScanUrl ? (
+                            ) : (user.faceScanUrl && user.faceScanUrl.length >= 3) ? (
                                 <Alert variant="default" className="bg-green-50 dark:bg-green-900/30 border-green-500/50">
                                     <CheckCircle className="h-4 w-4 text-green-600" />
                                     <AlertTitle className="text-green-800 dark:text-green-300">Cadastro Facial Ativo</AlertTitle>
@@ -269,14 +299,17 @@ export default function StudentProfilePage() {
                                 <>
                                     <Button onClick={handleCaptureFace} disabled={!hasCameraPermission || isSavingFace}>
                                         {isSavingFace ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Camera className="mr-2 h-4 w-4" />}
-                                        {isSavingFace ? 'Salvando...' : 'Cadastrar Rosto'}
+                                        {isSavingFace 
+                                            ? 'Salvando...' 
+                                            : `Capturar ${faceRegistrationStep === faceRegistrationSteps.length - 1 ? 'e Finalizar' : ''}`
+                                        }
                                     </Button>
                                     <Button variant="ghost" onClick={handleCancelRegistration}>Cancelar</Button>
                                 </>
                             ) : (
                                 <Button onClick={handleStartRegistration}>
                                     <Video className="mr-2 h-4 w-4" />
-                                    {user.faceScanUrl ? 'Registrar Novamente' : 'Iniciar Cadastro Facial'}
+                                    {(user.faceScanUrl && user.faceScanUrl.length > 0) ? 'Registrar Novamente' : 'Iniciar Cadastro Facial'}
                                 </Button>
                             )}
                         </CardFooter>

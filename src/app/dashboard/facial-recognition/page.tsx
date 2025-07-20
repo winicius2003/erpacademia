@@ -54,7 +54,17 @@ export default function FacialRecognitionPage() {
             const livePhotoDataUri = canvas.toDataURL('image/jpeg');
 
             try {
-                const registeredFaces = membersWithFace.map(m => ({ studentId: m.id, photoDataUri: m.faceScanUrl! }));
+                const registeredFaces = membersWithFace
+                    .filter(m => m.faceScanUrl && m.faceScanUrl.length > 0)
+                    .map(m => ({ studentId: m.id, photoDataUris: m.faceScanUrl! }));
+
+                if (registeredFaces.length === 0) {
+                     if (intervalRef.current) clearInterval(intervalRef.current);
+                     setStatus('error');
+                     setStatusMessage('Nenhum aluno com cadastro facial encontrado.');
+                     return;
+                }
+                
                 const input: FacialSearchInput = { registeredFaces, livePhotoDataUri };
                 
                 const result = await searchFaceInDatabase(input);
@@ -175,7 +185,7 @@ export default function FacialRecognitionPage() {
                                 <AlertTitle className="text-2xl text-green-800 dark:text-green-300">Acesso Liberado!</AlertTitle>
                             </Alert>
                              <Avatar className="w-24 h-24 border-4 border-green-500/50">
-                                <AvatarImage src={foundMember.faceScanUrl} />
+                                <AvatarImage src={foundMember.faceScanUrl?.[0]} />
                                 <AvatarFallback><UserCircle className="w-full h-full text-muted-foreground"/></AvatarFallback>
                             </Avatar>
                             <p className="text-xl font-bold">{foundMember.name}</p>
