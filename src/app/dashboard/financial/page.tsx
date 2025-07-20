@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -108,6 +109,7 @@ type ImportedPayment = {
     formaPagamento: PaymentMethod,
     data: string, // YYYY-MM-DD
     idTransacao?: string,
+    hasValueError?: boolean;
 }
 
 const initialExpenseFormState = {
@@ -484,13 +486,18 @@ export default function FinancialPage() {
                  
                  // Map other fields with fallbacks for different column names
                  const itemDescricao = normalizedRow['plano'] || normalizedRow['produto'] || normalizedRow['item descricao'];
-                 const valor = String(normalizedRow['valor'] || normalizedRow['preco'] || '').replace(',', '.');
+                 let valor = String(normalizedRow['valor'] || normalizedRow['preco'] || '0').replace(',', '.');
+                 let hasValueError = false;
+                 if (isNaN(parseFloat(valor))) {
+                    currentErrors.push(`Linha ${index + 2}: Valor inválido para o aluno "${studentName}". Será importado como 0.`);
+                    valor = '0';
+                    hasValueError = true;
+                 }
                  const formaPagamento = normalizedRow['forma pagamento'] || normalizedRow['condicao pagamento'];
                  const dataPagamento = normalizedRow['data lancamento'] || normalizedRow['data termino'] || normalizedRow['data de cadastro'] || normalizedRow['data'];
 
                  // Validate required fields
                  if (!itemDescricao) { currentErrors.push(`Linha ${index + 2}: Coluna 'Plano' ou 'Item Descrição' não encontrada para o aluno "${studentName}".`); return null; }
-                 if (!valor || isNaN(parseFloat(valor))) { currentErrors.push(`Linha ${index + 2}: Valor inválido ou não encontrado para o aluno "${studentName}".`); return null; }
                  if (!formaPagamento) { currentErrors.push(`Linha ${index + 2}: 'Forma Pagamento' não encontrada para o aluno "${studentName}".`); return null; }
                  if (!dataPagamento) { currentErrors.push(`Linha ${index + 2}: Coluna de data ('Data Lançamento', 'Data Término' ou 'Data de Cadastro') não encontrada para o aluno "${studentName}".`); return null; }
 
@@ -508,6 +515,7 @@ export default function FinancialPage() {
                      formaPagamento: formaPagamento as PaymentMethod,
                      data: String(dataPagamento),
                      idTransacao: normalizedRow['id transacao'] || normalizedRow['no contrato'],
+                     hasValueError,
                  };
 
                  return payment;
@@ -1004,7 +1012,7 @@ export default function FinancialPage() {
               <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
                 {importErrors.length > 0 && (
                   <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
-                    <h3 className="font-bold mb-2">Erros Encontrados:</h3>
+                    <h3 className="font-bold mb-2">Avisos e Erros Encontrados:</h3>
                     <ul className="list-disc pl-5 space-y-1">
                       {importErrors.map((err, i) => <li key={i}>{err}</li>)}
                     </ul>
@@ -1023,7 +1031,7 @@ export default function FinancialPage() {
                   </TableHeader>
                   <TableBody>
                     {importPreview.map((p, index) => (
-                      <TableRow key={index} className={importErrors.some(e => e.startsWith(`Linha ${index + 2}`)) ? 'bg-destructive/10' : ''}>
+                      <TableRow key={index} className={cn(p.hasValueError && "bg-yellow-500/10")}>
                         <TableCell>{p.nome || p.email}</TableCell>
                         <TableCell>{p.itemDescricao}</TableCell>
                         <TableCell>{p.valor}</TableCell>
@@ -1046,7 +1054,7 @@ export default function FinancialPage() {
                  {importStep === 2 && (
                    <div className="flex gap-2">
                       <Button variant="outline" onClick={() => setImportStep(1)}>Voltar</Button>
-                      <Button onClick={handleConfirmImport} disabled={isImporting || importPreview.length === 0 || importErrors.length > 0}>
+                      <Button onClick={handleConfirmImport} disabled={isImporting || importPreview.length === 0}>
                         {isImporting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Confirmar e Importar {importPreview.length} Pagamentos
                       </Button>
