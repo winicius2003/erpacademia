@@ -486,13 +486,7 @@ export default function FinancialPage() {
                  
                  // Map other fields with fallbacks for different column names
                  const itemDescricao = normalizedRow['plano'] || normalizedRow['produto'] || normalizedRow['item descricao'];
-                 let valor = String(normalizedRow['valor'] || normalizedRow['preco'] || '0').replace(',', '.');
-                 let hasValueError = false;
-                 if (isNaN(parseFloat(valor))) {
-                    currentErrors.push(`Linha ${index + 2}: Valor inválido para o aluno "${studentName}". Será importado como 0.`);
-                    valor = '0';
-                    hasValueError = true;
-                 }
+                 const valor = String(normalizedRow['valor'] || normalizedRow['preco'] || '0');
                  const formaPagamento = normalizedRow['forma pagamento'] || normalizedRow['condicao pagamento'];
                  const dataPagamento = normalizedRow['data lancamento'] || normalizedRow['data termino'] || normalizedRow['data de cadastro'] || normalizedRow['data'];
 
@@ -515,7 +509,6 @@ export default function FinancialPage() {
                      formaPagamento: formaPagamento as PaymentMethod,
                      data: String(dataPagamento),
                      idTransacao: normalizedRow['id transacao'] || normalizedRow['no contrato'],
-                     hasValueError,
                  };
 
                  return payment;
